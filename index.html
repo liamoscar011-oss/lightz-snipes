@@ -101,6 +101,7 @@ main{padding-block:20px 40px}
 .tag{display:inline-block;font-size:.7rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:2px 6px;border-radius:4px;background:var(--surface-2);color:var(--muted);white-space:nowrap;vertical-align:1px}
 .tag.promo{background:var(--yellow);color:var(--on-yellow)}
 .tag.str{background:var(--blue-bg);color:var(--blue)}
+.tag.bad{background:var(--neg-bg);color:var(--neg)}
 .tier{display:inline-block;font-size:.7rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:2px 7px;border-radius:999px;border:1.5px solid currentColor;white-space:nowrap}
 .tier.low{color:var(--low)} .tier.mid{color:var(--mid)} .tier.high{color:var(--high)}
 .cloth{display:inline-grid;place-items:center;min-width:24px;height:22px;padding:0 5px;border-radius:5px;background:var(--navy);color:var(--on-navy);font-family:var(--mono);font-weight:600;font-size:.8rem;flex:none}
@@ -970,6 +971,9 @@ body:has(#cmpbar:not([hidden])) #slipbtn{bottom:calc(74px + env(safe-area-inset-
 
 /* ===== Promos tab ===== */
 .pr-mine{display:grid;gap:12px;align-content:start}
+.agr3{display:inline-flex;align-items:center;font-size:.72rem;font-weight:700;color:var(--pos);background:var(--pos-bg);border-radius:999px;padding:1px 7px;white-space:nowrap;margin-left:4px}
+.hp-ls{margin:0 0 4px}
+.hp-cm{margin:0;color:var(--muted);font-size:.9rem;line-height:1.45}
 .pr-bar{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;justify-content:space-between}
 .pr-b{padding:14px 16px;display:grid;gap:10px}
 .pr-bh{display:flex;gap:10px;align-items:center}
@@ -983,6 +987,19 @@ body:has(#cmpbar:not([hidden])) #slipbtn{bottom:calc(74px + env(safe-area-inset-
 .pr-o p{margin:0;font-size:.86rem;line-height:1.4;color:var(--muted)}
 .pr-o p.pr-x{color:var(--neg);font-weight:600;font-size:.8rem}
 .pr-l{font-size:.84rem;font-weight:600;justify-self:start}
+.pr-bar .seg button b{font-weight:700;opacity:.7;margin-left:2px}
+.pr-bar .seg{max-width:100%;overflow-x:auto;scrollbar-width:none;flex-wrap:nowrap;width:auto}
+.pr-w .snx-main,.pr-bar{min-width:0}
+.pr-bar .seg button{flex:none;white-space:nowrap}
+.pr-dir{padding:14px 16px;display:grid;gap:10px}
+.pr-dir summary{cursor:pointer;display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline;list-style-position:outside}
+.pr-dg{display:flex;flex-wrap:wrap;gap:6px}
+.pr-d{display:inline-flex;gap:6px;align-items:center;border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:.84rem;color:var(--ink);text-decoration:none;background:var(--surface)}
+.pr-d b{font-weight:600}
+.pr-d.mj b{font-weight:800}
+.pr-d.on{border-color:var(--blue);background:var(--blue-bg)}
+.pr-d i{font-style:normal;font-weight:800;font-size:.75rem;background:var(--blue);color:#fff;border-radius:999px;padding:0 6px}
+.pr-d:hover{border-color:var(--ink)}
 </style>
 
 <header class="top">
@@ -1165,6 +1182,8 @@ const clone = o => JSON.parse(JSON.stringify(o));
 const S = { tab: 'snipes', meet: null, raceId: null, tier: 'all', rtier: (() => { try { const v = localStorage.getItem('ls.rtier'); return ['low', 'mid', 'high'].includes(v) ? v : 'low'; } catch (e) { return 'low'; } })(), settings: clone(DEFAULTS), odds: {}, imported: [], bets: [], blackbook: [], open: new Set(), impPreview: null, pickDate: null,
   legs: [], q: { meet: null, set: 'main', budget: 20, picks: {} }, calWeek: null, why: new Set(), noteOpen: new Set(), shortlist: [], notes: {}, search: '' };
 const Live = { db: null, promos: [], days: [], date: null, cards: {}, raw: {}, res: {}, resAt: {}, odds: {}, oddsAt: {}, unsub: null, closed: null, closedAt: 0, closedBusy: false, cal: {} };
+// "Now a bet" alerts: the plan before the last price update, and the bets already announced
+const NOWBET = { tick: false, prev: null, said: null };
 function mergeSettings(s) {
   const d = clone(DEFAULTS);
   if (!s || typeof s !== 'object') return d;
@@ -1255,8 +1274,9 @@ function ovCard(date, c) {
       o.runners = (c.runners || []).filter(r => !sc.has(r.n));
       o.scr = [...new Set((c.scr || []).concat(gone.map(r => r.n + ' ' + r.name)))];
     }
-    if (ox.px) o.runners = (o.runners || []).map(r => { const p = ox.px[r.n]; return p ? Object.assign({}, r, { win: p[0] > 1 ? p[0] : r.win, place: p[1] > 1 ? p[1] : r.place }) : r; });
-    if (Live.oddsAt[date]) o.updatedAt = Live.oddsAt[date];
+    if (ox.px) o.runners = (o.runners || []).map(r => { const p = ox.px[r.n], h = ox.h && ox.h[r.n]; return p ? Object.assign({}, r, { win: p[0] > 1 ? p[0] : r.win, place: p[1] > 1 ? p[1] : r.place }, Array.isArray(h) && h.length > 1 ? { h } : {}) : r; });
+    if (ox.at || Live.oddsAt[date]) o.updatedAt = ox.at || Live.oddsAt[date];
+    if (ox.at) o.lateAt = ox.at;
   }
   if (rs) { o.status = 'closed'; o.result = rs; }
   return o;
@@ -1275,6 +1295,8 @@ function watchLive(db) {
   // Prices, scratchings and track ratings refreshed on race mornings, { races: { raceId: { track, scr: [n], px: { n: [win, place] } } } }
   const onOdds = snap => {
     const m = {}, at = {}; snap.docs.forEach(d => { if (d.exists) { const x = d.data(); if (x && x.date && x.races) { m[x.date] = x.races; at[x.date] = x.updatedAt; } } });
+    const was = Live.oddsAt && Live.oddsAt[Live.date];
+    if (was && at[Live.date] && at[Live.date] !== was) NOWBET.tick = true;
     Live.odds = m; Live.oddsAt = at; reOverlay(); renderAll();
   };
   const oddsAll = () => { try { db.collection('odds').onSnapshot(onOdds, () => {}); } catch (e) {} };
@@ -1440,6 +1462,10 @@ function formInfo(r, race, act, ctx) {
   const last = [...f].filter(c => POS[c]).slice(-3).reverse();
   if (last.length) add('Last ' + last.length + ' starts (latest first): ' + last.map(c => POS[c][1]).join(', '), [.5, .3, .2].reduce((s, w, i) => s + (last[i] ? w * POS[last[i]][0] : 0), 0), last[0] === '1' ? 'Won last start' : 'Last start ' + POS[last[0]][1]);
   else add('No race starts yet', 0, 'Debut');
+  { const ex = excuseOf(r);
+    if (ex && ex.kind === 'vet') add('Vet issue last start: ' + ex.why, -.12, ex.chip);
+    else if (ex && ex.kind === 'x') add('Had trouble last start: ' + ex.why, ex.up ? .12 : .1, ex.chip);
+    else if (ex && ex.kind === 'up') add('Form comment expects improvement: ' + ex.why, .04, ex.chip); }
   const tags = new Set(r.tags || []), wet = /soft|heavy/i.test(race.track || '');
   const nF = Math.max(act.length, 4), kTrk = ksRec(r, /^track$/i), kDst = ksRec(r, /^dist(ance)?\.?$/i);
   [['In Form', .25, 'In form'], ['Track Talent', .2, 'Track record'], ['Striking Dist.', .2, 'Distance record'], ['Proven Winner', .15, 'Proven winner'], ['Place Rate', .1, 'Places often'], ['Ready to Fire', .1, 'Ready to fire']]
@@ -1478,6 +1504,8 @@ function formInfo(r, race, act, ctx) {
   const mv = move(r);
   if (mv && mv.firm) add(`Firmed from ${odds$(mv.open)} to ${odds$(r.win)}`, .2, 'Firming');
   else if (mv && mv.drift) add(`Drifted from ${odds$(mv.open)} to ${odds$(r.win)}`, -.2, 'Drifting');
+  { const lm = moneyOf(r); if (lm && lm.k === 'firm' && !(mv && mv.firm)) add(`Backed late: ${odds$(lm.from)} to ${odds$(lm.to)} in the last ${lm.mins} minutes`, .12, 'Late money');
+    else if (lm && lm.k === 'drift' && !(mv && mv.drift)) add(`Eased late: ${odds$(lm.from)} to ${odds$(lm.to)}`, -.1, 'Drifting late'); }
   // Jockey and trainer, last 12 months (TAB), shrunk towards the average so small samples count less
   const jt = jtEffect(r);
   if (jt.j) add(`Jockey wins ${pct(jt.j.rate, 0)} of ${jt.j.s} rides (12 months)`, jt.j.v, Math.abs(jt.j.v) >= .05 ? (jt.j.v > 0 ? 'Hot jockey' : 'Cold jockey') : '');
@@ -1745,7 +1773,7 @@ function pickList(C) {
       if (HP.has(a.race.id + '_' + r.n)) return;
       const o = r.plan ? r.plan.o : r.best, other = act.reduce((m, x) => x !== r && x.p > m ? x.p : m, 0), mv = move(r);
       const g = growthOf(o), ok = o.type === 'place' ? (r.pPl || 0) >= 0.55 : r.p >= MIN_PICK;
-      const lk = r.p + 0.35 * (r.p - other) + 0.8 * Math.min(o.ev, 0) + (mv && mv.firm ? 0.02 : mv && mv.drift ? -0.02 : 0);
+      const lk = r.p + 0.35 * (r.p - other) + 0.8 * Math.min(o.ev, 0) + (mv && mv.firm ? 0.02 : mv && mv.drift ? -0.02 : 0) + (allAgree(a, r) ? 0.03 : 0);
       out.push({ a, r, o, tier: tierOf(o.odds), stake: r.plan ? r.plan.stake : 0, g, ok, lk });
     });
   });
@@ -2103,7 +2131,7 @@ function heroBest(all) {
   return `<section class="card hero" aria-label="Best bet right now">
     <div class="hero-l">
       <span class="hero-k">Best bet right now: ${esc(raceLabel(a.race))}${isFinite(ms) ? ` <span class="num">${clockTxt(ms)}</span> ${cdSpan(ms)}` : ''}</span>
-      <div class="hero-who">${silkPic(r, 'xl')}<div style="min-width:0"><b class="hero-name">${horseBtn(a, r, (inBlackbook(r.name) ? '★ ' : '') + esc(r.name))}</b><span>${meta}</span><span>${esc(shortLabel(o))}${o.promo ? ' <span class="tag promo">Promo</span>' : ''}</span></div></div>
+      <div class="hero-who">${silkPic(r, 'xl')}<div style="min-width:0"><b class="hero-name">${horseBtn(a, r, (inBlackbook(r.name) ? '★ ' : '') + esc(r.name))}</b><span>${meta}</span><span>${esc(shortLabel(o))}${o.promo ? ' <span class="tag promo">Promo</span>' : ''}${agreeMark(a, r)}</span></div></div>
       <div class="hero-acts">${statusOf(s)}${betBtns(a, r, o, s.stake)}${whyBtn(s)}${pickBtn(a.race.id, r)}${sbLink(a.race, true)}</div>
     </div>
     <div class="hero-figs">
@@ -2129,7 +2157,7 @@ function t11Row(s, rank) {
   const row = `<tr class="row${rank <= 3 ? ' top3' : ''}">
     <td class="c-rk"><span class="rk">${rank}</span></td>
     <td class="c-sk"><span class="sbox">${silkPic(r)}</span></td>
-    <td class="c-hn"><span class="hn"><b>${horseBtn(a, r, (bk ? '★ ' : '') + esc(r.name))}</b><span class="tier ${s.tier}" title="${esc(TIERS[s.tier][0])}, ${esc(TIERS[s.tier][1])}">${{ low: 'Low', mid: 'Mid', high: 'High' }[s.tier]}</span></span>
+    <td class="c-hn"><span class="hn"><b>${horseBtn(a, r, (bk ? '★ ' : '') + esc(r.name))}</b><span class="tier ${s.tier}" title="${esc(TIERS[s.tier][0])}, ${esc(TIERS[s.tier][1])}">${{ low: 'Low', mid: 'Mid', high: 'High' }[s.tier]}</span>${agreeMark(a, r)}</span>
       <span class="ln">${esc(raceLabel(a.race))}, ${raceWhen(a)}${a.race.dist ? ', ' + a.race.dist + 'm' : ''}</span>
       <span class="ln m">${[jockeyTxt(r), r.bar ? 'barrier ' + r.bar : ''].filter(Boolean).join(', ') || '&nbsp;'}</span></td>
     <td class="c-wy"><p class="wy" title="${esc(shortWhy(s))}">${esc(shortWhy(s))}</p><span class="sub">${whyBtn(s)}${pickBtn(a.race.id, r)}${o.promo ? '<span class="tag promo">Promo</span>' : ''}</span></td>
@@ -2154,15 +2182,20 @@ function t11(list) {
 
 /* ============================ PROMOS ============================ */
 // Bookie offers come from a public daily list (most bookies only show promos inside your account); Sportsbet ones you add yourself
-const PROMO_BOOKS = { betr: 'Betr', picklebet: 'Picklebet', swiftbet: 'SwiftBet', tab: 'TAB', ladbrokes: 'Ladbrokes', neds: 'Neds', palmerbet: 'Palmerbet', sportsbet: 'Sportsbet', pointsbet: 'PointsBet', bet365: 'bet365', unibet: 'Unibet', betdeluxe: 'BetDeluxe', boombet: 'BoomBet', bluebet: 'BlueBet', topsport: 'TopSport', playup: 'PlayUp', betright: 'BetRight', dabble: 'Dabble', midasbet: 'MidasBet', ladbroke: 'Ladbrokes' };
-const PROMO_COL = { Betr: '#ff4f1f', Picklebet: '#1f9d55', SwiftBet: '#0b5cff', TAB: '#00754a', Ladbrokes: '#e2001a', Neds: '#ff7a00', Palmerbet: '#0a2e5c', Sportsbet: '#0a2240', PointsBet: '#ed1c24', bet365: '#126e51', Unibet: '#147b45' };
+// Every Australian-licensed online bookie (ACMA register of licensed wagering providers, Nov 2026; the TAB's state licences
+// merged into one). The big racing bookies come first on the Promos tab.
+const BOOK_DIR = [["123bet","123bet.com.au"],["Allbets","allbets.com.au"],["BaggyBet","baggybet.com"],["Ballr Bet","ballrbet.com"],["BearBet","bearbet.com.au"],["Bet Alpha","betalpha.au"],["Bet Bunker","betbunker.com.au"],["Bet Buzz","betbuzz.au"],["Bet Dash","betdash.com.au"],["Bet Dragon","betdragon.au"],["Bet Legends","betlegends.com.au"],["BetNation","betnation.com.au"],["BetRight","betright.com.au"],["Bet Supreme","betsupreme.com.au"],["Bet You Can","betyoucan.au"],["bet365","bet365.com.au"],["Bet777","bet777.com.au"],["Betabets","betabets.com.au"],["BetAces","betaces.com.au"],["BetAus","betaus.com.au"],["BetBetBet","betbetbet.net.au"],["BetBlitz","betblitz.com.au"],["Betchamps","betchamps.com.au"],["BetDeluxe","betdeluxe.com.au"],["BetEstate","betestate.com.au"],["BetExpress","betexpress.com.au"],["Betfair","betfair.com.au"],["BetFans","betfans.com.au"],["Betfocus","betfocus.com.au"],["BetGalaxy","betgalaxy.com.au"],["BetGold","betgold.com.au"],["Betit","betit.com.au"],["BetJet","betjet.com.au"],["BetLocal","betlocal.com.au"],["Betnova","betnova.com.au"],["Betnow","betnow.com.au"],["BetPinnacle","betpinnacle.com.au"],["BetProfessor","betprofessor.com.au"],["Betr","betr.com.au"],["BetRaven","betraven.com.au"],["BetReal","betreal.com.au"],["BetStation","betstation.com.au"],["Betzooka","betzooka.com.au"],["BigBet","bigbet.com.au"],["BlondeBet","blondebet.com.au"],["Boostbet","boostbet.com.au"],["BossBet","bossbet.com.au"],["Business-Bet","businessbet.com.au"],["Capital Bet","capitalbet.com.au"],["Cash Cage","cashcage.com.au"],["Chasebet","chasebet.com.au"],["ChromaBet","chromabet.com.au"],["ClubBet","clubbet.au"],["Colossalbet","colossalbet.com.au"],["CrownBet","crownbet.com.au"],["Dabble","dabble.com.au"],["Dafabet","dafabet.com.au"],["DashBet","dashbet.com.au"],["Donnie Bet","donniebet.com.au"],["EarlyCrow","earlycrow.bet"],["EliteBet","elitebet.com.au"],["EpicOdds","epicodds.com.au"],["FatBet","fatbet.com.au"],["Gamblr","gamblr.com.au"],["GemBet","gembet.com.au"],["GoldBet","goldbet.com.au"],["GRSBet","grsbet.com.au"],["HAVABET","havabet.com.au"],["HOT Bet","hotbet.com.au"],["Infomarket","infomarket.com.au"],["Jimmy Bet","jimmybet.com.au"],["JuicyBet","juicybet.com.au"],["Junglebet","junglebet.com.au"],["JustBet","justbet.com.au"],["Knucklebet","knucklebet.com.au"],["Ladbrokes","ladbrokes.com.au"],["LaserBet","laserbet.com.au"],["Let's Bet","letsbet.net.au"],["LightningBet","lightningbet.com.au"],["MarantelliBet","marantellibet.com"],["McBet","mcbet.com.au"],["Midasbet","midasbet.com.au"],["MightyBet","mightybet.com.au"],["Millennial Bet","millennialbet.com.au"],["MintBet","mintbet.au"],["Multis.com.au","multis.com.au"],["MyBet","mybet.com.au"],["Neds","neds.com.au"],["Next2Go","next2go.com.au"],["Nextbet","nextbet.com.au"],["Ninjabet","ninjabet.com.au"],["Noisy","noisy.com.au"],["Oke Bet","okebet.com.au"],["OnlyBets","onlybets.com.au"],["Palmerbet","palmerbet.com"],["Pandabet","pandabet.com.au"],["Picklebet","picklebet.com"],["Picnicbet","picnicbet.com"],["PlayUp","playup.com.au/betting"],["PlayWest","playwestbet.com"],["PointsBet","pointsbet.com.au"],["PonyBet","ponybet.com.au"],["Premiumbet","premiumbet.com.au"],["PulseBet","pulsebet.com.au"],["Punt123","punt123.bet"],["Puntnow","puntnow.com.au"],["PuntSport","puntsport.com.au"],["PuntX","puntx.com.au"],["PuntZone","puntzone.com.au"],["QuestBet","questbet.com.au"],["Readybet","readybet.com.au"],["RealBookie","realbookie.com.au"],["RedBet","redbet.com.au"],["Ripper Bet","ripperbet.au"],["RiverBet","riverbet.com.au"],["Rob Waterhouse","robwaterhouse.com"],["Rooster Bet","roosterbet.com.au"],["Sportsbet","sportsbet.com.au"],["StableBet","stablebet.com.au"],["Star Sports","starsports.com.au"],["SteakBet","steakbet.com.au"],["Surge","surge.com.au"],["SwiftBet","swiftbet.com.au"],["TAB","tab.com.au"],["TABtouch","tabtouch.mobi"],["Teambet","teambet.com.au"],["Titanbet","titanbet.com.au"],["Topbet","topbet.au"],["TradieBET","tradie.bet"],["TrueBet","truebet.com.au"],["UltraBet","ultrabet.com.au"],["Unibet","unibet.com.au"],["UPCOZ","upcoz.com"],["UpYaGo","upyago.com.au"],["VicBet","vicbet.com"],["Wannabet","wannabet.com.au"],["Wellbet","wellbet.com.au"],["WinnersBet","winnersbet.com.au"],["Wishbet","wishbet.com.au"],["WizBet","wizbet.com.au"],["XBet","xbet.net.au"],["Xcelbet","xcelbet.com.au"],["YesBet","yesbet.com.au"],["YouBetcha","youbetcha.au"]];
+const BOOK_MAJOR = ["Sportsbet","TAB","Ladbrokes","Neds","PointsBet","bet365","Betr","Unibet","Picklebet","Palmerbet","BetDeluxe","Dabble","PlayUp","Bet Right","SwiftBet","Betfair","TABtouch"];
+const bkKey = v => String(v || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+const PROMO_BOOKS = Object.assign(Object.fromEntries(BOOK_DIR.map(([n]) => [bkKey(n), n])), { ladbroke: 'Ladbrokes', tabcorp: 'TAB', boombet: 'BoomBet', bluebet: 'BlueBet', topsport: 'TopSport', betrightcom: 'BetRight' });
+const PROMO_COL = { TABtouch: '#00754a', Betfair: '#ffb80c', Dabble: '#6b2bd9', PlayUp: '#00a19a', BetRight: '#1b3a6b', BetDeluxe: '#111d4a', Betr: '#ff4f1f', Picklebet: '#1f9d55', SwiftBet: '#0b5cff', TAB: '#00754a', Ladbrokes: '#e2001a', Neds: '#ff7a00', Palmerbet: '#0a2e5c', Sportsbet: '#0a2240', PointsBet: '#ed1c24', bet365: '#126e51', Unibet: '#147b45' };
 const DAYS7 = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
 const reEsc = v => v.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 function parseOffer(it, venues) {
   const title = String(it.title || '').replace(/!+$/, ''), text = String(it.text || ''), t = title + '. ' + text;
-  const key = String(it.book || '').toLowerCase().replace(/[^a-z]/g, '').replace(/logo$/, '');
-  let book = PROMO_BOOKS[key] || '';
-  if (!book) { const m = /(?:bookmaker|with)\s+(?:the\s+)?([A-Z][A-Za-z0-9]+)/.exec(text) || /at (?:the )?([A-Z][A-Za-z0-9]+)$/.exec(title); book = m ? (PROMO_BOOKS[m[1].toLowerCase()] || m[1]) : 'Other'; }
+  const key = bkKey(it.book).replace(/logo$/, '');
+  let book = PROMO_BOOKS[key] || PROMO_BOOKS[key.replace(/\d+$/, '')] || '';
+  if (!book) { const m = /(?:bookmaker|with)\s+(?:the\s+)?([A-Z][A-Za-z0-9]+)/.exec(text) || /at (?:the )?([A-Z][A-Za-z0-9]+)$/.exec(title) || /^([A-Z][A-Za-z0-9]+)(?:’|')s\b/.exec(title); book = m ? (PROMO_BOOKS[bkKey(m[1])] || m[1]) : 'Other'; }
   const venue = venues.find(v => new RegExp('\\b' + reEsc(v) + '\\b', 'i').test(title)) || venues.find(v => new RegExp('\\bat ' + reEsc(v) + '\\b', 'i').test(text)) || '';
   const allMeets = /any australian|australian (?:horse )?racing|all australian/i.test(t);
   const named = venue || (allMeets ? '' : ((/day at ([A-Z][A-Za-z' ]+?)\s+(?:Races?\b|\d+%|Bet|Bonus|Double|Odds|Money|Winning|Exotic)/.exec(title) || /^([A-Z][A-Za-z' ]+?) Races\b/.exec(title) || [])[1] || ''));
@@ -2175,25 +2208,33 @@ function parseOffer(it, venues) {
   else if (/selected races/i.test(t)) races = 'selected races';
   let type = 'Offer', places = '';
   const pm = /2nd(?:,\s*3rd)?(?:,?\s*(?:or|&|and)\s*(3rd|4th))?/i.exec(t); if (pm) places = pm[0].replace(/\s+/g, ' ');
-  if (/exotic|quinella|trifecta|first 4/i.test(t)) type = 'Exotics bonus';
-  else if (pm && /(back|reload|refund|rescue)/i.test(t)) type = (/money back|cash back|stake back as cash/i.test(t) && !/bonus/i.test(t) ? 'Money back' : 'Bonus back') + ' if ' + places;
+  if (/switch/i.test(title) && /double/i.test(t) && pm) type = 'Double winnings or bonus back if ' + places;
+  else if (/exotic|quinella|trifecta|first 4|quaddie|quadrella/i.test(t) && /bonus|boost|%/i.test(t) && !/bet back|money back|if any leg fails/i.test(t)) type = 'Exotics boost';
+  else if (pm && /(back|reload|refund|rescue|insurance)/i.test(t)) type = (/money back|cash back|stake back as cash/i.test(t) && !/bonus/i.test(t) ? 'Money back' : 'Bonus back') + ' if ' + places;
+  else if (/multi ?guard|leg fails|one leg|1 leg|any leg/i.test(t)) type = 'Multi or quaddie insurance';
+  else if (/race rescue|refund|insurance/i.test(t)) type = 'Money back offer';
   else if ((m = /(\d{1,3})%\s*(?:boosted\s*)?winnings?\s*boost|boosted winnings|(\d{1,3})% winning/i.exec(t))) type = 'Winnings boost' + ((m[1] || m[2]) ? ' ' + (m[1] || m[2]) + '%' : '');
-  else if (/double your (?:fixed odds )?winnings/i.test(t)) type = 'Double winnings';
-  else if (/odds surge|price push|boosted odds|odds boost|price boost/i.test(t)) type = 'Odds boost';
-  else if (/bet back|stake back/i.test(t)) type = 'Bet back';
-  else if (/bonus bet/i.test(t)) type = 'Bonus bet';
+  else if (/double your (?:fixed odds )?winnings|double winnings/i.test(t)) type = 'Double winnings';
+  else if (/odds surge|price push|boosted odds|odds boost|price boost|super ?price|power ?price/i.test(t)) type = 'Odds boost';
+  else if (/mega multi|multi boost|boosted multi|multi(?:bet)? bonus/i.test(t)) type = 'Multi boost';
+  else if (/top fluc|best (?:of )?(?:the )?(?:best )?odds|best tote/i.test(t)) type = 'Best price';
+  else if (/bet ?backs?|stake back|reload/i.test(t)) type = 'Bet back';
+  else if (/bonus bet|bonus cash/i.test(t)) type = 'Bonus bet';
+  const cat = /back|insurance|refund|rescue|bonus back/i.test(type) ? 'return' : /boost|double|best price/i.test(type) ? 'boost' : 'other';
   const max = (m = /up to \$(\d[\d,]*)/i.exec(t)) ? '$' + m[1] : '';
   const dm = /\b(?:this|on)\s+(sunday|monday|tuesday|wednesday|thursday|friday|saturday)\b/i.exec(t) || /\b(sunday|monday|tuesday|wednesday|thursday|friday|saturday)\b/i.exec(t);
   const day = dm ? dm[1].toLowerCase() : '';
   const ex = (m = /excl\.?\s*[^.!]*?\bWA\b[^.!]*/i.exec(t)) ? m[0].trim() : '';
-  return { book, title, text, url: it.url || '', venue: named, known: !!venue, allMeets, races: allMeets && !races ? 'all races' : races, type, max, day, excl: ex };
+  return { book, title, text, url: it.url || '', venue: named, known: !!venue, allMeets, races: allMeets && !races ? 'all races' : races, type, cat, max, day, excl: ex };
 }
 function promoOffers(C) {
-  const doc = Live.promos && Live.promos[0];
+  const doc = (Live.promos || []).find(d => d.date === currentDate()) || (Live.promos && Live.promos[0]);
   if (!doc) return { doc: null, list: [] };
   const venues = [...new Set([...(Live.days || []).flatMap(x => (x.meetings || []).map(mm => mm.venue)), ...C.list.map(a => a.race.venue), ...Object.values(Live.cal || {}).flatMap(c => (c.meetings || []).map(mm => mm.venue || mm))].filter(v => typeof v === 'string' && v.length > 2))].sort((a, b) => b.length - a.length);
   const cur = currentDate(), wd = cur ? DAYS7[new Date(cur + 'T12:00:00').getDay()] : '', meets = new Set(C.list.map(a => a.race.venue.toLowerCase()));
-  const list = doc.items.map(it => { const o = parseOffer(it, venues); o.onCard = o.known && meets.has(o.venue.toLowerCase()) && (!o.day || o.day === wd); o.anyRace = o.allMeets && (!o.day || o.day === wd); return o; });
+  // the list runs over a few days: drop offers that name a different weekday from the doc's race day
+  const dw = DAYS7[new Date(doc.date + 'T12:00:00').getDay()];
+  const list = doc.items.map(it => parseOffer(it, venues)).filter(o => !o.day || o.day === dw).map(o => { o.onCard = o.known && meets.has(o.venue.toLowerCase()) && (!o.day || o.day === wd); o.anyRace = o.allMeets && (!o.day || o.day === wd); return o; });
   return { doc, list };
 }
 function promoBadge() {
@@ -2201,26 +2242,42 @@ function promoBadge() {
   let n = 0; try { n = LASTC ? promoOffers(LASTC).list.filter(o => o.onCard).length : 0; } catch (e) {}
   el.innerHTML = 'Promos' + (n ? `<span class="cnt">${n}</span>` : '');
 }
+// Every licensed bookie, with today's public offers counted. Bookies without public offers still link to their site,
+// where offers show once you're logged in.
+function bookDir(list) {
+  const n = {}; list.forEach(o => { n[o.book] = (n[o.book] || 0) + 1; });
+  const rank = b => { const i = BOOK_MAJOR.indexOf(b); return i < 0 ? 99 : i; };
+  const books = BOOK_DIR.slice().sort((x, y) => (n[y[0]] ? 1 : 0) - (n[x[0]] ? 1 : 0) || rank(x[0]) - rank(y[0]) || x[0].localeCompare(y[0]));
+  const extra = Object.keys(n).filter(b => b !== 'Other' && !BOOK_DIR.some(x => x[0] === b));
+  const withOffers = books.filter(x => n[x[0]]).length + extra.length;
+  return `<details class="card pr-dir" ${S.pdir ? 'open' : ''}><summary><b>All ${BOOK_DIR.length} licensed bookies</b><span class="muted">${withOffers} with public offers today. Tap one to open its site.</span></summary>
+    <div class="pr-dg">${extra.map(b => `<span class="pr-d on"><b>${esc(b)}</b><i>${n[b]}</i></span>`).join('')}${books.map(([b, d]) => `<a class="pr-d${n[b] ? ' on' : ''}${BOOK_MAJOR.includes(b) ? ' mj' : ''}" href="https://${esc(d)}" target="_blank" rel="noopener"><b>${esc(b)}</b>${n[b] ? `<i>${n[b]}</i>` : ''}</a>`).join('')}</div>
+    <p class="muted" style="font-size:.8rem;margin:0">From the ACMA register of Australian-licensed betting sites. Betting with an unlicensed site isn't protected by Australian law.</p>
+  </details>`;
+}
 function renderPromos(C) {
-  const { doc, list } = promoOffers(C), f = S.pfilter || 'card';
-  const shown = f === 'card' ? list.filter(o => o.onCard || o.anyRace) : list;
+  const { doc, list } = promoOffers(C), f = S.pfilter || 'card', ty = S.ptype || 'all';
+  const base = f === 'card' ? list.filter(o => o.onCard || o.anyRace) : list;
+  const nCat = k => base.filter(o => o.cat === k).length;
+  const shown = ty === 'all' ? base : base.filter(o => o.cat === ty);
   const by = {}; shown.forEach(o => (by[o.book] = by[o.book] || []).push(o));
   const books = Object.keys(by).sort((a, b) => by[b].length - by[a].length || a.localeCompare(b));
   const tag = (txt, cls = '') => txt ? `<span class="tag ${cls}">${esc(txt)}</span>` : '';
   const card = o => `<article class="pr-o${o.onCard ? ' on' : ''}">
       <b class="pr-t">${esc(o.title)}</b>
-      <div class="pr-tags">${tag(o.type, 'promo')}${o.venue ? tag(o.venue + (o.races && o.races !== 'all races' ? ' ' + o.races : ''), 'str') : o.races ? tag(o.races) : ''}${o.day ? tag(o.day[0].toUpperCase() + o.day.slice(1)) : ''}${o.max ? tag('up to ' + o.max) : ''}${o.onCard ? tag('On your card', 'go') : ''}</div>
+      <div class="pr-tags">${tag(o.type, o.cat === 'boost' ? 'str' : 'promo')}${o.venue ? tag(o.venue + (o.races && o.races !== 'all races' ? ' ' + o.races : ''), 'str') : o.races ? tag(o.races) : ''}${o.day ? tag(o.day[0].toUpperCase() + o.day.slice(1)) : ''}${o.max ? tag('up to ' + o.max) : ''}${o.onCard ? tag('On your card', 'go') : ''}</div>
       <p>${esc(o.text)}</p>
       ${o.excl ? `<p class="pr-x">${esc(o.excl)}</p>` : ''}
       ${o.url ? `<a href="${esc(o.url)}" target="_blank" rel="noopener" class="pr-l">Full terms ↗</a>` : ''}
     </article>`;
   let h = `<div class="head-row"><h2>Promos</h2><p>Racing offers the bookies are running today, and the Sportsbet promos the picks use.</p></div>`;
   h += `<div class="snx pr-w"><div class="snx-main">`;
-  h += `<div class="pr-bar"><div class="seg" role="group" aria-label="Which offers"><button data-act="pfilter" data-v="card" aria-pressed="${f === 'card'}">For your race day</button><button data-act="pfilter" data-v="all" aria-pressed="${f === 'all'}">All offers</button></div><span class="muted" style="font-size:.84rem">${doc ? `${list.length} offers, read ${esc(timeTxt(doc.updatedAt) || '')} ${esc(dateTxt(doc.date))}` : ''}</span></div>`;
+  h += `<div class="pr-bar"><div class="seg" role="group" aria-label="Which offers"><button data-act="pfilter" data-v="card" aria-pressed="${f === 'card'}">For your race day</button><button data-act="pfilter" data-v="all" aria-pressed="${f === 'all'}">All offers</button></div><div class="seg" role="group" aria-label="Offer type">${[['all', 'Everything', base.length], ['return', 'Bet returns', nCat('return')], ['boost', 'Boosts', nCat('boost')], ['other', 'Other', nCat('other')]].map(([k, l, n]) => `<button data-act="ptype" data-v="${k}" aria-pressed="${ty === k}">${l} <b class="num">${n}</b></button>`).join('')}</div><span class="muted" style="font-size:.84rem">${doc ? `${list.length} offers, read ${esc(timeTxt(doc.updatedAt) || '')} ${esc(dateTxt(doc.date))}` : ''}</span></div>`;
   if (!doc) h += `<div class="card empty"><h3>No bookie offers loaded yet</h3><p class="muted">They load with the race-day runs, the night before and on race morning.</p></div>`;
-  else if (!shown.length) h += `<div class="card empty"><h3>No offers for the meetings on your card</h3><p class="muted">Switch to All offers to see everything the bookies are running.</p></div>`;
+  else if (!shown.length) h += `<div class="card empty"><h3>${ty === 'all' ? 'No offers for the meetings on your card' : 'None of these for ' + (f === 'card' ? 'your race day' : 'today')}</h3><p class="muted">${f === 'card' ? 'Switch to All offers to see everything the bookies are running.' : 'Try another offer type.'}</p></div>`;
   else h += books.map(b => `<section class="card pr-b"><div class="pr-bh"><span class="pr-chip" style="background:${PROMO_COL[b] || '#5d6e84'}">${esc(b)}</span><span class="muted">${by[b].length} offer${by[b].length > 1 ? 's' : ''}</span></div><div class="pr-g">${by[b].map(card).join('')}</div></section>`).join('');
   h += `<p class="muted" style="font-size:.82rem">Most bookies only show promos inside your account, so these come from a public daily list at justhorseracing.com.au. Many exclude WA customers or WA races: check the full terms first.</p>`;
+  h += bookDir(list);
   h += `</div><aside class="pr-mine"><div class="card panel"><h3 style="margin:0 0 4px">Your Sportsbet promos</h3><p class="d" style="margin:0">Sportsbet only shows promos inside your account. Turn on the ones in your Sportsbet app here and the picks and stakes use them.</p></div>${promoCards(C)}</aside></div>`;
   $('#v-promos').innerHTML = h;
 }
@@ -2271,6 +2328,43 @@ function agreeChip(a, r) {
   const k = g.n >= 4 || (g.n === g.of) ? 'hi' : g.n >= 3 ? 'md' : '';
   return `<span class="agr ${k}" title="${esc('Backed by: ' + g.who.join(', ') + (g.miss.length ? '. Not: ' + g.miss.join(', ') : ''))}">${g.n}/${g.of} agree</span>`;
 }
+// Second opinion, shown quietly: our top pick is also the market favourite and the outside ratings/tips agree
+// (TAB's rating when the card has it, otherwise Sportsbet's tipster).
+function allAgree(a, r) {
+  if (!r || !a.ranked[0] || a.ranked[0].n !== r.n) return false;
+  const g = agreeOf(a, r);
+  if (!g.who.includes('Market favourite')) return false;
+  const outside = ["TAB's rating", 'TAB top rated', 'Sportsbet tipster'], have = a._ag.filter(x => outside.includes(x[0]));
+  return have.length > 0 && have.every(x => x[1] === r.n);
+}
+const agreeMark = (a, r) => allAgree(a, r) ? `<span class="agr3" title="Our pick, the favourite and the outside ratings all have this horse on top">✓ All agree</span>` : '';
+// Last-start trouble from the form comment on the card (the comment is written for this start, so "last time" means its latest run)
+const EXC = [
+  ['Slow away last start', /slow(ly)? (away|to begin|out|into stride)|missed the (start|kick|break|jump)|began (awkward|poor|slow)|dwelt|blew the start|lost ground at the start/i],
+  ['Held up last start', /held up|no clear run|(couldn't|could not|didn't|did not) get (a )?(clear|run)|shut in|blocked|in traffic|nowhere to go|denied a run|awkwardly placed/i],
+  ['Raced wide last start', /(three|four|five|3|4|5)[- ]wide|wide (without cover|throughout|all the way|the whole way)|caught wide|raced wide|forced wide|wide trip|parked/i],
+  ['Checked last start', /checked|steadied|hampered|crowded|bumped|interfered|tightened|clipped heels|stumbled|blundered|severe interference/i],
+  ['Unlucky last start', /unlucky|no luck|luckless|forgive|excuse/i],
+  ['Going excuse', /found the (going|ground|track) too|struggled in the (heavy|wet|soft|firm|rain)|(didn't|did not) handle the (going|track|wet|heavy|ground)|not suited by the (going|track|wet|ground)/i],
+  ['Pace excuse', /not run to suit|no pace|slowly run|tempo (didn't|did not) suit|muddling/i],
+  ['Gear trouble', /lost (a |its )?(plate|shoe)|gear (failure|issue)|saddle (slipped|shifted)|bit through|bridle/i],
+  ['Over-raced last start', /over-?raced|pulled hard|raced (too )?keen|fought (the|for its|for her|for his) head|(wouldn't|would not) settle/i]
+];
+const EXC_OLD = /\b(two|three|four|2|3|4) (starts|runs|outings) (ago|back)|(last|previous|earlier) prep|last campaign|previous campaign/i;
+const EXC_VET = /pull(ed|s)? up (lame|sore|distressed|badly|with)|\blame\b|\bbled\b|bleeder|cardiac|arrhythmia|tied up|heat stress|respiratory distress/i;
+const EXC_UP = /(look|looking) for (an )?improve|improved showing|bound to (be )?improve|(can|should|will) (atone|bounce back|improve)|possible improver|better than (it|the result|the run) (looks|suggests)|too bad to be true|eye-?catching/i;
+function excuseOf(r) {
+  if (r._exc !== undefined) return r._exc;
+  const cm = String(r.cm || ''); if (!cm) return (r._exc = null);
+  const ss = (cm.match(/[^.!?]+[.!?]*/g) || []).map(x => x.trim()).filter(x => x && !EXC_OLD.test(x));
+  let k = '', why = '';
+  for (const x of ss) { const e = EXC.find(([, re]) => re.test(x)); if (e) { k = e[0]; why = x; break; } }
+  const vet = ss.find(x => EXC_VET.test(x)), up = ss.some(x => EXC_UP.test(x));
+  const won = r.ls && r.ls.pl === 1;
+  return (r._exc = vet ? { kind: 'vet', chip: 'Vet issue last start', why: vet } : k && !won ? { kind: 'x', chip: k, why, up } : up && !won ? { kind: 'up', chip: 'Should improve', why: ss.find(x => EXC_UP.test(x)) || '' } : null);
+}
+const ordN = n => n + ((n % 100 >= 11 && n % 100 <= 13) ? 'th' : ['th', 'st', 'nd', 'rd'][n % 10] || 'th');
+const lsTxt = r => r.ls ? `${r.ls.pl ? ordN(r.ls.pl) + (r.ls.of ? ' of ' + r.ls.of : '') : 'Ran'} at ${r.ls.tk || '?'}${r.ls.mg && r.ls.pl !== 1 ? ', beaten ' + r.ls.mg : ''}${r.ls.d ? ', ' + dateTxt(r.ls.d) : ''}` : '';
 // Late money: compares each bookie's price now with its price up to 4 hours ago, from the refresh's price history ("h").
 const MONEY_PCT = 0.15;
 function moneyOf(r) {
@@ -2732,6 +2826,7 @@ function openHorse(raceId, n) {
     ${figs ? `<div class="hp-figs">${figs}</div>` : ''}
     <div class="hp-acts">${live && o ? betBtns(a, r, o, r.plan ? r.plan.stake : 0) : ''}${pickBtn(race.id, r)}<button class="pk-btn ${inCmp ? 'on' : ''}" data-act="cmp" data-race="${esc(race.id)}" data-n="${r.n}" aria-pressed="${inCmp}">${inCmp ? '✓ Comparing' : '+ Compare'}</button><button class="pk-btn ${bk ? 'on' : ''}" data-act="bbtoggle" data-name="${esc(r.name)}" aria-pressed="${bk}">${bk ? '★ In blackbook' : '☆ Blackbook'}</button>${sbLink(race, true)}</div>
     ${bkItem && bkItem.note ? `<p class="hp-note"><b>Your note:</b> ${esc(bkItem.note)}</p>` : ''}
+    ${r.cm || r.ls ? (() => { const ex = excuseOf(r); return `<section><h4>Last start</h4>${r.ls ? `<p class="hp-ls"><b>${esc(lsTxt(r))}</b>${ex ? ` <span class="tag ${ex.kind === 'vet' ? 'bad' : 'str'}">${esc(ex.chip)}</span>` : ''}</p>` : ex ? `<p><span class="tag ${ex.kind === 'vet' ? 'bad' : 'str'}">${esc(ex.chip)}</span></p>` : ''}${r.cm ? `<p class="hp-cm">${esc(r.cm)}</p>` : ''}</section>`; })() : ''}
     <section><h4>Form</h4><div class="hp-form">${formLong(r.form)}<span class="muted">${r.form ? 'oldest to latest; x = a break between runs' : 'No starts yet'}</span></div></section>
     <section><h4>Records</h4>${keyStatsHtml(r, race)}</section>
     <section class="hp-2"><div><h4>Jockey and trainer</h4><p>${r.j ? `<b>${esc(r.j)}</b>${jt.j ? `, wins ${pct(jt.j.rate, 0)} of ${jt.j.s} rides (12 months)` : ''}${topJ(r.j) ? ' <span class="tag">Top jockey</span>' : ''}` : 'Jockey not listed'}<br>${r.t ? `Trainer <b>${esc(r.t)}</b>${jt.t ? `, wins ${pct(jt.t.rate, 0)} of ${jt.t.s} starters` : ''}` : ''}</p></div>
@@ -2865,7 +2960,7 @@ function openSlip() {
   S.sheet = { k: 'slip' };
   $('#sheet-root').innerHTML = `<div class="sheet-bg" data-act="closesheet"><div class="card sheet slip" role="dialog" aria-modal="true" aria-label="Bet slip">
     <div class="hp-h"><div class="hp-t"><b class="hp-name" style="font-size:1.6rem">Today's bet slip</b><span>${left.length} to place, ${money(left.reduce((s, x) => s + x.stake, 0))}. Place each one in the Sportsbet app, then tick it here.</span></div><button class="btn sm" data-act="closesheet">Close</button></div>
-    <div class="acts-r" style="flex-wrap:wrap"><button class="btn sm" data-act="copyslip">Copy all</button><button class="btn sm ${ALERT.on ? 'pri' : ''}" data-act="alerts" aria-pressed="${ALERT.on}">${ALERT.on ? 'Jump alerts on' : 'Turn on jump alerts'}</button><span class="muted" style="font-size:.8rem">Alerts come 5 minutes before each planned or pinned race, while the app is open.</span></div>
+    <div class="acts-r" style="flex-wrap:wrap"><button class="btn sm" data-act="copyslip">Copy all</button><button class="btn sm ${ALERT.on ? 'pri' : ''}" data-act="alerts" aria-pressed="${ALERT.on}">${ALERT.on ? 'Jump alerts on' : 'Turn on jump alerts'}</button><span class="muted" style="font-size:.8rem">Alerts come 5 minutes before each planned or pinned race, and when a late price check turns a Watch horse into a bet, while the app is open. Bets found by the late checks also go to your phone.</span></div>
     ${xs.length ? `<ol class="slip-l">${xs.map(x => `<li class="${x.logged ? 'done' : ''}">
       <span class="sl-t"><b class="num">${isFinite(x.ms) ? clockTxt(x.ms) : '—'}</b>${isFinite(x.ms) ? cdSpan(x.ms) : ''}</span>
       ${silkPic(x.r)}
@@ -2891,6 +2986,7 @@ function alertTick() {
     toast(x.t + '. ' + x.b); });
 }
 setInterval(alertTick, 20000);
+document.addEventListener('toggle', e => { if (e.target && e.target.classList && e.target.classList.contains('pr-dir')) S.pdir = e.target.open; }, true);
 async function toggleAlerts() {
   if (!ALERT.on) {
     if ('Notification' in window && Notification.permission === 'default') { try { await Notification.requestPermission(); } catch (e) {} }
@@ -2903,9 +2999,74 @@ function copySlip() {
   const xs = slipItems(LASTC || compute()).filter(x => !x.logged);
   copyText(xs.map(x => `${isFinite(x.ms) ? clockTxt(x.ms) + ' ' : ''}${betText(x.a.race, x.r, x.o)} ${money(x.stake)}`).join('\n') || 'No bets to place');
 }
+// "Now a bet": after a price update, a runner that was only worth watching is now in the staking plan
+const planKeys = C => { const m = new Map(); ((C.plan && C.plan.items) || []).forEach(i => { if (!jumped(i.a.race)) m.set(i.a.race.id + '_' + i.r.n + '_' + i.o.type, i); }); return m; };
+function nowBetCheck(C) {
+  const cur = planKeys(C), prev = NOWBET.prev, tick = NOWBET.tick;
+  NOWBET.prev = cur; NOWBET.tick = false;
+  if (!prev || !tick) return;
+  if (!NOWBET.said) NOWBET.said = new Set(LS.get('ls_nowbet', []));
+  const fresh = [...cur].filter(([k]) => !prev.has(k) && !NOWBET.said.has(k)).map(([k, i]) => (NOWBET.said.add(k), i));
+  if (!fresh.length) return;
+  LS.set('ls_nowbet', [...NOWBET.said].slice(-300));
+  const line = i => { const ms = startMs(i.a.race); return `${i.r.name}, ${raceLabel(i.a.race)}${isFinite(ms) ? ' ' + clockTxt(ms) : ''}: ${shortLabel(i.o)} at ${odds$(i.o.odds)}, bet ${money(i.stake)}`; };
+  fresh.slice(0, 3).forEach(i => {
+    try { if (ALERT.on && 'Notification' in window && Notification.permission === 'granted') new Notification('Now a bet: ' + i.r.name, { body: line(i), tag: 'nb-' + i.a.race.id + '-' + i.r.n, icon: 'icons/icon-192.png' }); } catch (e) {}
+  });
+  toast(fresh.length === 1 ? 'Now a bet: ' + line(fresh[0]) : `${fresh.length} new bets after the price update: ${fresh.slice(0, 3).map(i => i.r.name).join(', ')}${fresh.length > 3 ? '…' : ''}. Open the bet slip.`);
+}
+// For the race-day runs in the signed-in app tab. lsUpcoming lists today's races jumping soon (not refreshed in the
+// last 10 minutes); lsLate saves fresh Sportsbet prices for some races (keeping a short price history per runner)
+// and reports the bets those races now have, flagging ones not reported before.
+function lateReport(C, ids) {
+  const want = new Set(ids), seen = new Set(LS.get('ls_late_seen', [])), bets = [], watch = [];
+  C.list.forEach(a => { if (!want.has(a.race.id) || a.closed) return;
+    const ms = startMs(a.race), when = isFinite(ms) ? clockTxt(ms) : '';
+    a.act.forEach(r => { if (!r.plan) return; const o = r.plan.o, k = a.race.id + '_' + r.n + '_' + o.type;
+      bets.push({ race: raceLabel(a.race), jumps: when, n: r.n, horse: r.name, bet: shortLabel(o), odds: o.odds, stake: r.plan.stake, edge: Math.round(o.ev * 100) + '%', isNew: !seen.has(k), k }); });
+    const top = a.ranked[0];
+    if (top && !top.plan && !top.scr) { const t = targetFor(a, top); if (t && t > top.win) watch.push({ race: raceLabel(a.race), jumps: when, horse: top.name, now: top.win, needs: t }); }
+  });
+  bets.forEach(b => seen.add(b.k)); LS.set('ls_late_seen', [...seen].slice(-400));
+  return { refreshed: ids.length, bets: bets.map(b => { const { k, ...x } = b; return x; }), watch };
+}
+window.lsUpcoming = async (fromMin = 12, toMin = 45, D) => {
+  const day = D || perthToday();
+  if (Live.db && Live.date !== day) { S.pickDate = day; subscribeDay(day); }
+  for (let i = 0; i < 20 && !Object.keys(Live.cards[day] || {}).length; i++) await new Promise(r => setTimeout(r, 400));
+  const now = Date.now(), ox = Live.odds[day] || {}, res = Live.res[day] || {};
+  return Object.values(Live.cards[day] || {}).filter(c => !res[c.id] && c.status !== 'closed').map(c => ({ c, ms: startMs(c) }))
+    .filter(x => isFinite(x.ms) && x.ms - now >= fromMin * 60000 && x.ms - now <= toMin * 60000)
+    .filter(x => { const a = ox[x.c.id] && ox[x.c.id].at; return !a || now - Date.parse(a) > 10 * 60000; })
+    .sort((x, y) => x.ms - y.ms)
+    .map(x => ({ id: x.c.id, path: String(x.c.url || '').replace(/^https?:\/\/(www\.)?sportsbet\.com\.au/, ''), jumps: clockTxt(x.ms), mins: Math.round((x.ms - now) / 60000), label: raceLabel(x.c) }));
+};
+window.lsLate = async (D, races, note) => {
+  if (!window.lsGet || !window.lsWrite) throw new Error('lsLate needs the signed-in app');
+  const old = (await window.lsGet('odds/' + D)) || {}, out = Object.assign({}, old.races || {});
+  const nowIso = new Date().toISOString(), nowMin = Math.round(Date.now() / 60000), oldAt = old.updatedAt ? Math.round(Date.parse(old.updatedAt) / 60000) : 0;
+  const ids = [];
+  Object.entries(races || {}).forEach(([id, x]) => {
+    if (!x || !x.px || !Object.keys(x.px).length) return;
+    const prev = out[id] || {}, pAt = prev.at ? Math.round(Date.parse(prev.at) / 60000) : oldAt, h = {};
+    Object.keys(x.px).forEach(n => {
+      const hh = prev.h && Array.isArray(prev.h[n]) ? prev.h[n].slice() : [];
+      if (!hh.length && prev.px && prev.px[n] && prev.px[n][0] > 1 && pAt) hh.push([pAt, prev.px[n][0]]);
+      if (x.px[n][0] > 1) hh.push([nowMin, x.px[n][0]]);
+      if (hh.length) h[n] = hh.slice(-8);
+    });
+    out[id] = { track: x.track || prev.track || '', scr: Array.isArray(x.scr) ? x.scr : (prev.scr || []), px: x.px, h, at: nowIso };
+    ids.push(id);
+  });
+  const doc = { date: D, updatedAt: nowIso, note: note || old.note || 'Sportsbet prices', races: out };
+  const w = await window.lsWrite([{ op: 'set', path: 'odds/' + D, data: doc }]);
+  Live.odds[D] = out; Live.oddsAt[D] = nowIso; NOWBET.tick = true; reOverlay();
+  let C = null; try { C = compute(); } catch (e) {}
+  return Object.assign({ written: w.written }, C ? lateReport(C, ids) : { refreshed: ids.length, bets: [], watch: [] });
+};
 // Things that live outside the page sections: bet slip button, compare bar, alerts, an open pop-up
 function extrasPaint(C) {
-  try { slipBtn(C); cmpBar(); alertList(C); } catch (e) {}
+  try { slipBtn(C); cmpBar(); alertList(C); nowBetCheck(C); } catch (e) {}
   const el = $('#sheet-root .sheet'); if (!el || !S.sheet) return;
   const top = el.scrollTop;
   if (S.sheet.k === 'horse' && el.classList.contains('hp')) openHorse(S.sheet.raceId, S.sheet.n);
@@ -2936,7 +3097,7 @@ function raceCard(a) {
     ${a.rs.map(r => runnerRow(a, r)).join('')}
     ${a.closed ? '' : `<div class="cleg"><span><i style="background:var(--chi)"></i>High chance (25%+)</span><span><i style="background:var(--cmd)"></i>Mid (10–25%)</span><span><i style="background:var(--clo)"></i>Low (under 10%)</span>${bestPickOf(a) ? '<span><i style="background:var(--best)"></i>Best pick</span>' : '<span>No best pick: nothing clears the betting bar at these prices</span>'}</div>`}
   </article>`;
-  h += `<p class="muted" style="font-size:.85rem">${liveOn() ? 'Prices refresh about 8am Perth on race mornings.' : 'Prices are from the saved card.'} Type a live price into any box (edited boxes turn yellow) or paste the full card in Paste card.${(r0.tips || []).length ? ' Sportsbet tipster: ' + r0.tips.join('-') + '.' : ''}</p>`;
+  h += `<p class="muted" style="font-size:.85rem">${liveOn() ? 'Prices refresh about 8am Perth on race mornings, then again about 30 minutes before each race.' : 'Prices are from the saved card.'} Type a live price into any box (edited boxes turn yellow) or paste the full card in Paste card.${(r0.tips || []).length ? ' Sportsbet tipster: ' + r0.tips.join('-') + '.' : ''}</p>`;
   return h;
 }
 /* ---- form guide (TAB form feed, stored per runner as r.fm by the evening load) ---- */
@@ -4106,6 +4267,7 @@ document.addEventListener('click', e => {
     case 'tksplit': TK.split = t.dataset.v; renderAll(); break;
     case 'tkwk': TK.wk = Math.min(0, (TK.wk || 0) + +t.dataset.d); renderAll(); break;
     case 'pfilter': S.pfilter = t.dataset.v; renderAll(); break;
+    case 'ptype': S.ptype = t.dataset.v; renderAll(); break;
     case 'rtier': S.rtier = t.dataset.v; try { localStorage.setItem('ls.rtier', S.rtier); } catch (e) {} renderAll(); break;
     case 'reloadres': loadClosed(true); toast('Checking for new results'); break;
     case 'exportall': exportAll(t); break;

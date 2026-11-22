@@ -1,6 +1,6 @@
 ---
 name: lightz-snipes-raceday
-description: Load and refresh Oscar's Lightz Snipes horse-racing app from Sportsbet - night-before race cards, race-morning prices and scratchings, and evening results. Use for scheduled race-day runs or when Oscar asks to load, refresh or fix Lightz Snipes cards, odds or results.
+description: Load and refresh Oscar's Lightz Snipes horse-racing app from Sportsbet - night-before race cards, race-morning prices and scratchings, late price checks before each race, and evening results. Use for scheduled race-day runs or when Oscar asks to load, refresh or fix Lightz Snipes cards, odds, late prices or results.
 ---
 
 # Lightz Snipes race-day update
@@ -9,12 +9,13 @@ Lightz Snipes is Oscar's betting-analysis app. Its home is **https://liamoscar01
 
 This skill fills the app's race data from Sportsbet, which Oscar bets with, by reading Sportsbet pages in the **built-in browser** on his computer (the cloud workspace can't reach Sportsbet or Supabase). Writes go through the app itself, open and signed in, in a second tab of the same browser.
 
-There are three jobs. Work out which one from the request or schedule prompt; if unclear, use Perth time: evening before a race day = **night**, race-day morning = **morning**, race-day evening = **results**.
+There are four jobs. Work out which one from the request or schedule prompt; if unclear, use Perth time: evening before a race day = **night**, race-day morning = **morning**, during the racing = **late**, race-day evening = **results**.
 
 | Job | When | Writes |
 |---|---|---|
 | night | ~6:30pm Perth the evening before | `cards/<id>` for every race (once) + `days/<date>` |
 | morning | ~8am Perth on race day | `odds/<date>` (prices, scratchings, track) |
+| late | every 30 minutes, ~9am-7pm Perth on race day | `odds/<date>` for the races jumping in the next 12-45 minutes |
 | results | ~8:30pm Perth on race day | `results/<date>` |
 
 Dates are Perth dates (YYYY-MM-DD). Race ids are `<date>_<venue-slug>_r<no>`, e.g. `2026-11-21_kembla-grange_r4`.
@@ -32,7 +33,7 @@ Dates are Perth dates (YYYY-MM-DD). Race ids are `<date>_<venue-slug>_r<no>`, e.
 1. Load the built-in browser tools in one ToolSearch call (`mcp__remote-devices__Claude_Browser__`, max_results 64) and read the `built-in-browser` skill if listed. If the browser can't be reached, stop: report that Oscar's computer looks asleep/offline or the Claude app is closed, and that the next run will catch up.
 2. **App tab:** `preview_start` with `https://liamoscar011-oss.github.io/lightz-snipes/`, wait about 3 seconds, then run `window.lsWhoami && window.lsWhoami()` with `javascript_tool`. You need `{signedIn: true}`. Anything else: use the Fallback below for the writes (the Sportsbet reading is the same).
 3. **Sportsbet tab:** `preview_start` with `https://www.sportsbet.com.au/racing-schedule/horse/today`.
-4. Check the reader is installed in the Sportsbet tab: `localStorage.lsxv` must be `"3"`. If not, get the setter text from the app tab with `(await window.lsGet('tools/raceday')).setter` (Fallback: `db_get tools/raceday` on the artifact) and run that text exactly, with `javascript_tool`, in the Sportsbet tab.
+4. Check the reader is installed in the Sportsbet tab: `localStorage.lsxv` must be `"4"`. If not, get the setter text from the app tab with `(await window.lsGet('tools/raceday')).setter` (Fallback: `db_get tools/raceday` on the artifact) and run that text exactly, with `javascript_tool`, in the Sportsbet tab.
 
 The reader runs in the Sportsbet tab as `new Function('mode', localStorage.lsx)(MODE)` and returns a JSON string:
 - `'day'` on a schedule/results page -> `{meetings: [{date, venue, slug, races, nz, urls: [path per race]}], results: {raceId: [1st, 2nd, 3rd, ...]}}`
@@ -45,6 +46,8 @@ Read many races per round trip with `browser_batch`: pairs of `navigate` (full U
 - `await lsGet('days/2026-11-25')` -> the doc's data, or `null`
 - `await lsList('cards', 'date', '2026-11-25')` -> ids of that day's cards
 - `await lsWrite([{op: 'set', path: 'cards/<id>', data: {...}}, ...])` -> `{written, deleted}`. Ops: `set` (whole doc), `merge` (fields into the existing doc), `delete`. Put about 20 cards per call; the data travels inside the script text.
+- `await lsUpcoming(12, 45)` -> today's races jumping in 12-45 minutes that weren't refreshed in the last 10 minutes: `[{id, path, jumps, mins, label}]`
+- `await lsLate(D, {<raceId>: {track, scr, px}, ...}, note)` -> saves fresh prices into `odds/D` (keeps the other races and a short price history per runner) and returns `{written, refreshed, bets: [{race, jumps, n, horse, bet, odds, stake, edge, isNew}], watch: [{race, jumps, horse, now, needs}]}`. `isNew` = a bet not reported by an earlier morning or late run.
 
 ## 2. Night job (load cards for date D)
 
@@ -61,17 +64,27 @@ Read many races per round trip with `browser_batch`: pairs of `navigate` (full U
 1. If `days/D` doesn't exist, run the night job for D first, then continue.
 2. Navigate to `/racing-schedule/D` (today: `/racing-schedule/horse/today`) and run `'day'` to get fresh race URLs for the meetings in `days/D`.
 3. Read `'odds'` for every race that hasn't started yet.
-4. `lsGet('odds/D')` (may be null). Write `odds/D` with `set`, keeping any races from the old doc you didn't refresh:
-   `{date: D, updatedAt: <ISO now>, note: "Sportsbet prices, <day> <time> Perth", races: {<raceId>: {track, scr, px}}}`
+4. Save them in the app tab with `JSON.stringify(await lsLate(D, {<raceId>: {track, scr, px}, ...}, "Sportsbet prices, <day> <time> Perth"))` (drop the `id` field from each reader result; it's the key). It keeps races you didn't refresh. In the Fallback, write `odds/D` with `set` instead: `{date: D, updatedAt: <ISO now>, note, races: {<raceId>: {track, scr, px}}}`, keeping the old doc's other races.
 5. Do the Promos step for D.
+6. Summary: also list the day's bets from the `lsLate` result (horse, race, time, bet, stake), most edge first, up to 6.
+
+## Late job (price check about 30 minutes before each race)
+
+Morning prices miss late money and late scratchings. This job refreshes only the races about to jump, so Watch horses that drift out to the price they need become bets in time. It runs about every 30 minutes on race days and must stay quick and quiet.
+1. Set up as in section 1, but the app tab **must** be signed in (no Fallback for this job): if `lsWhoami()` isn't `{signedIn: true}`, reply in one line that the app isn't signed in on his computer's Claude browser and stop.
+2. In the app tab: `JSON.stringify(await lsUpcoming(12, 45))`. Empty list: reply "No races in the next 45 minutes" and stop. Don't open Sportsbet and don't notify.
+3. In the Sportsbet tab (reader check as in section 1), read `'odds'` for each race: navigate to `https://www.sportsbet.com.au` + `path`, then run the reader (use `browser_batch` for several races). If a `path` is empty, get the race URLs from `'day'` on `/racing-schedule/horse/today`.
+4. Save with `JSON.stringify(await lsLate(D, {<raceId>: {track, scr, px}, ...}, "Late Sportsbet prices, <time> Perth"))` in the app tab, D = today's Perth date.
+5. Bets with `isNew: true` are the point of this job. If there are any, send one push notification (the `PushNotification` tool, if this session has it) under 200 characters, e.g. `New bet: Starward #4, Rosehill R8 12:50pm, Win $9.80, bet $3` (up to 2 bets, then "+N more in the app"), and start the reply with the same lines. Otherwise reply in one line, e.g. "Refreshed 3 races, no new bets", and don't notify.
+6. Never place, suggest placing or add bets anywhere: Oscar places them himself.
 
 ## Promos step (end of the night and morning jobs)
 
 Bookies only show promos inside an account, so the app's Promos tab uses a public daily list of racing offers. Only read the page: no sign-ups, logins or clicks on any offer.
 1. `preview_start` with `https://www.justhorseracing.com.au/promotions`.
-2. Run this with `javascript_tool` in that tab:
-   `JSON.stringify([...document.querySelectorAll('article.postcontent')].slice(0, 40).map(a => { const l = a.querySelector('h2 a'), img = a.querySelector('.bologo img'), src = img ? img.getAttribute('src') || '' : ''; return { title: l ? l.textContent.trim() : '', url: l ? l.href : '', book: (src.match(/bmlogos\/([a-z]+)/i) || [])[1] || '', text: ((a.querySelector('p') || {}).textContent || '').trim() }; }).filter(x => x.title))`
-3. Write `promos/D` with `set`: `{date: D, updatedAt: <ISO now>, source: "justhorseracing.com.au", items: <the array>}`. If the page fails or returns nothing, skip this step and say so in the summary.
+2. Run this with `javascript_tool` in that tab (it reads list pages 1-3 of the same public site, about 60 offers):
+   `const pick = doc => [...doc.querySelectorAll('article.postcontent')].map(a => { const l = a.querySelector('h2 a'), img = a.querySelector('.bologo img'), src = img ? img.getAttribute('src') || '' : ''; return { title: l ? l.textContent.trim() : '', url: l ? new URL(l.getAttribute('href'), location.origin).href : '', book: (src.match(/bmlogos\/([a-z0-9]+)/i) || [])[1] || '', text: ((a.querySelector('p') || {}).textContent || '').trim().slice(0, 400) }; }).filter(x => x.title); let all = pick(document); for (const n of [2, 3]) { try { const h = await (await fetch('/promotions/page/' + n + '/')).text(); all = all.concat(pick(new DOMParser().parseFromString(h, 'text/html'))); } catch (e) {} } const seen = new Set(); JSON.stringify(all.filter(x => x.url && !seen.has(x.url) && seen.add(x.url)).slice(0, 90))`
+3. Write `promos/D` with `set`: `{date: D, updatedAt: <ISO now>, source: "justhorseracing.com.au", items: <the array>}`. The app drops offers for other weekdays and sorts them into bet returns, boosts and other. If the page fails or returns nothing, skip this step and say so in the summary.
 
 ## 4. Results job (date D, usually today)
 
@@ -89,14 +102,14 @@ If the app tab isn't signed in or won't load, do the same job against the artifa
 
 ## 5. Finish
 
-Reply with 2-4 lines: what was loaded (meetings, races, results count), anything skipped or failed, and when the next run is. Don't keep retrying Sportsbet if pages keep failing: report and stop.
+Reply with 2-4 lines: what was loaded (meetings, races, results count), anything skipped or failed, and when the next run is (the late job replies in one line unless there's a new bet). Don't keep retrying Sportsbet if pages keep failing: report and stop.
 
 ## Data shapes the app reads
 
 - `days/<date>`: `{date, meetings: [{venue, slug, state, track, races}], note, updatedAt}`
-- `cards/<id>`: `{id, date, venue, state, track, no, dist, name, start (ISO UTC), status: 'open', jump: null, result: null, url, tips: [n], onpace: [n], scr: ["n Name"], runners: [{n, name, bar, wt, form, j, t, flucs, win, place, tags, fu?, ks?, silk?, esp?}], updatedAt}` (`ks`: the form guide's key stats, e.g. `{"Track": "2:1-0-1", "Distance": "5:2-1-0"}`; `silk`: Sportsbet's silks image URL; `esp`: expected settling position for the speed map; all optional)
-- `odds/<date>`: `{date, updatedAt, note, races: {id: {track, scr: [n], px: {"n": [win, place]}}}}`
+- `cards/<id>`: `{id, date, venue, state, track, no, dist, name, start (ISO UTC), status: 'open', jump: null, result: null, url, tips: [n], onpace: [n], scr: ["n Name"], runners: [{n, name, bar, wt, form, j, t, flucs, win, place, tags, fu?, ks?, silk?, esp?, cm?, ls?, spd?}], updatedAt}` (`ks`: the form guide's key stats, e.g. `{"Track": "2:1-0-1", "Distance": "5:2-1-0"}`; `silk`: Sportsbet's silks image URL; `esp`: expected settling position for the speed map; `cm`: the form comment, which the app reads for last-start trouble such as slow away, held up or raced wide; `ls`: last start `{d, tk, pl, of, mg}`; `spd`: Sportsbet's early-speed figure; all optional)
+- `odds/<date>`: `{date, updatedAt, note, races: {id: {track, scr: [n], px: {"n": [win, place]}, h?: {"n": [[minute, win], ...]}, at?}}}` (`h` and `at` come from `lsLate`: price history and when that race was last refreshed)
 - `results/<date>`: `{date, updatedAt, note, r: {id: [n, n, n]}}`
-- `tools/raceday`: `{setter, lsxv}` - the one-line script that installs the Sportsbet reader into the browser (`localStorage.lsx`, version `lsxv = "3"`). The app hands out the newest setter when the saved one is older.
+- `tools/raceday`: `{setter, lsxv}` - the one-line script that installs the Sportsbet reader into the browser (`localStorage.lsx`, version `lsxv = "4"`). The app hands out the newest setter when the saved one is older.
 - `promos/<date>`: `{date, updatedAt, source, items: [{title, url, book, text}]}` - bookie offers from the public list, shown on the Promos tab.
 - `calendar/<date>` is an old week-view index; optional.
