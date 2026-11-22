@@ -84,7 +84,7 @@ Reply with 2-4 lines: what was loaded (meetings, races, results count), anything
 ## Data shapes the app reads
 
 - `days/<date>`: `{date, meetings: [{venue, slug, state, track, races}], note, updatedAt}`
-- `cards/<id>`: `{id, date, venue, state, track, no, dist, name, start (ISO UTC), status: 'open', jump: null, result: null, url, tips: [n], onpace: [n], scr: ["n Name"], runners: [{n, name, bar, wt, form, j, t, flucs, win, place, tags, fu?, ks?, silk?}], updatedAt}` (`ks`: the form guide's key stats, e.g. `{"Track": "2:1-0-1", "Distance": "5:2-1-0"}`; `silk`: Sportsbet's silks image URL; both optional)
+- `cards/<id>`: `{id, date, venue, state, track, no, dist, name, start (ISO UTC), status: 'open', jump: null, result: null, url, tips: [n], onpace: [n], scr: ["n Name"], runners: [{n, name, bar, wt, form, j, t, flucs, win, place, tags, fu?, ks?, silk?, esp?}], updatedAt}` (`ks`: the form guide's key stats, e.g. `{"Track": "2:1-0-1", "Distance": "5:2-1-0"}`; `silk`: Sportsbet's silks image URL; `esp`: expected settling position for the speed map; all optional)
 - `odds/<date>`: `{date, updatedAt, note, races: {id: {track, scr: [n], px: {"n": [win, place]}}}}`
 - `results/<date>`: `{date, updatedAt, note, r: {id: [n, n, n]}}`
 - `tools/raceday`: `{setter, lsxv}` - the one-line script that installs the Sportsbet reader into the browser (`localStorage.lsx`, version `lsxv = "3"`). The app hands out the newest setter when the saved one is older.

@@ -233,7 +233,8 @@ main{padding-block:20px 40px}
 .pk-w b{font-size:1.05rem}
 .pk-w span{font-size:.84rem;color:var(--muted)}
 .nm{min-width:0}
-.nm .l1{display:flex;align-items:center;gap:6px;min-width:0}
+.nm .l1{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;min-width:0}
+.nm .l1 > b{flex:0 1 auto;max-width:100%}
 .nm b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600;font-size:1rem}
 .nm .l2{font-size:.8rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
 .odds2{display:grid;grid-template-columns:1fr 1fr;gap:6px}
@@ -835,6 +836,137 @@ svg.plc .hit{fill:transparent;cursor:crosshair}
   .top .top-in .top-meta .pill-top.bank{font-family:var(--head);font-stretch:80%;font-weight:800;font-size:1.35rem;padding:10px 12px}
   main.wrap,footer .wrap{max-width:1500px;margin:0;padding-inline:32px}
 }
+/* ===== Horse profile, speed map, compare, track guide, bet slip, tracker extras ===== */
+.hname{appearance:none;border:0;background:none;padding:0;margin:0;font:inherit;color:inherit;text-align:left;cursor:pointer;text-decoration:underline;text-decoration-color:color-mix(in srgb,currentColor 30%,transparent);text-underline-offset:3px}
+.hname:hover{text-decoration-color:currentColor}
+.t11 .hn .hname{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+.sheet.hp,.sheet.cmpw,.sheet.slip{width:min(760px,100%);max-height:min(88vh,100% - 20px);gap:14px;padding:18px 20px}
+@media (min-width:900px){.sheet-bg:has(.hp,.cmpw,.slip){place-items:center}}
+.hp-h{display:flex;gap:14px;align-items:center}
+.hp-h > .btn{margin-left:auto;align-self:flex-start}
+.hp-t{display:grid;gap:2px;min-width:0}
+.hp-t span{font-size:.88rem;color:var(--muted)}
+.hp-name{font-family:var(--head);font-stretch:70%;font-weight:900;font-size:2.2rem;line-height:1}
+.hp-figs{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px}
+.hp-figs div{background:var(--surface-2);border-radius:10px;padding:8px 10px;display:grid}
+.hp-figs small{font-size:.76rem;color:var(--muted)}
+.hp-figs b{font-family:var(--head);font-stretch:80%;font-weight:800;font-size:1.4rem;font-variant-numeric:tabular-nums}
+.hp-figs b.pos{color:var(--pos)} .hp-figs b.neg{color:var(--neg)}
+.hp-acts{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.hp-note{margin:0;padding:8px 10px;border-radius:8px;background:var(--surface-2);font-size:.9rem}
+.hp section{display:grid;gap:6px}
+.hp h4{margin:0;font-size:.95rem}
+.hp-2{grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px!important}
+.hp-2 p{margin:0;font-size:.9rem;line-height:1.5}
+.hp-form{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:.84rem}
+.fch.lg i{width:22px;height:24px;font-size:.82rem}
+.fch.lg i.x{width:12px}
+.hp-ks{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:6px}
+.hp-ks div{border:1px solid var(--line);border-radius:8px;padding:6px 9px;display:grid}
+.hp-ks div.hl{border-color:var(--blue);background:var(--blue-bg)}
+.hp-ks small{font-size:.74rem;color:var(--muted)}
+.hp-ks b{font-variant-numeric:tabular-nums}
+.hp-ks span{font-size:.72rem;color:var(--muted)}
+.hp-tags{margin:0;display:flex;flex-wrap:wrap;gap:4px;align-items:center;font-size:.86rem}
+.hp-mv{display:grid;gap:4px;color:var(--muted);font-size:.86rem}
+.hp-mv.up{color:var(--pos)} .hp-mv.down{color:var(--neg)}
+.hp-mv span{color:var(--ink)}
+.spark{width:240px;max-width:100%;height:48px}
+.hp-t2{width:100%;font-size:.88rem}
+.hp-t2 td{padding:5px 6px;border-top:1px solid var(--line)}
+.hp .why{grid-column:auto}
+.smap{border-top:1px solid var(--line);padding:10px 16px 12px}
+.smap summary{cursor:pointer;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;font-size:.95rem}
+.smap summary .muted{font-size:.8rem}
+.sm-grid{display:grid;gap:8px;margin-top:10px;background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--turf,#145c3e) 10%,transparent));border-radius:10px;padding:8px}
+.sm-col{display:flex;flex-wrap:wrap;gap:4px;align-content:flex-start;min-width:0}
+.sm-col .sm-h{flex:1 0 100%}
+.sm-h{font-size:.78rem;font-weight:700;color:var(--muted)}
+.sm-r{flex:0 1 auto;max-width:100%;appearance:none;border:1px solid var(--line);background:var(--surface);color:inherit;font:inherit;border-radius:8px;padding:3px 8px 3px 4px;display:grid;grid-template-columns:22px minmax(0,auto) auto;gap:6px;align-items:center;text-align:left;cursor:pointer;font-size:.8rem;min-height:32px}
+.sm-r:hover{border-color:var(--blue)}
+.sm-r.bet{border-color:var(--yellow);box-shadow:inset 3px 0 0 var(--yellow)}
+.sm-r :is(.silk,.silkpic){width:22px;height:24px}
+.sm-r span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sm-r small{color:var(--muted);font-size:.72rem}
+.sm-e{font-size:.78rem}
+.sm-dir{font-size:.74rem;color:var(--muted);text-align:right;margin-top:4px}
+.sm-note{font-size:.8rem;margin:4px 0 0}
+.cmp-btn{display:block;margin-top:6px;width:28px;height:28px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--blue);font-weight:700;cursor:pointer;font-size:.85rem}
+.cmp-btn[aria-pressed="true"]{background:var(--blue);color:var(--on-pri);border-color:var(--blue)}
+.cmpbar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:30;display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px 10px 8px 14px;box-shadow:0 6px 24px rgba(0,0,0,.18);max-width:calc(100% - 28px);font-size:.9rem}
+.cb-l{min-width:0}
+@media (min-width:1100px){.cmpbar{left:calc(50% + 116px)}}
+.cmpt{width:100%;border-collapse:collapse;font-size:.88rem}
+.cmpt th,.cmpt td{padding:7px 8px;border-top:1px solid var(--line);text-align:left;vertical-align:top}
+.cmpt thead th{border-top:0;vertical-align:bottom}
+.cmpt thead .hname{display:grid;justify-items:start;gap:4px;text-decoration:none}
+.cmpt tbody th{color:var(--muted);font-weight:600;white-space:nowrap;width:1%}
+.cmpt small{display:block;color:var(--muted);font-size:.76rem}
+.cmpt .best{font-weight:800;color:var(--pos)}
+.tg{padding:16px 18px;display:grid;gap:12px;margin-bottom:12px}
+.tg-h{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}
+.tg-h h3{margin:0}
+.tg-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}
+.tg-stats div{background:var(--surface-2);border-radius:10px;padding:8px 10px;display:grid}
+.tg-stats small,.tg-stats span{font-size:.76rem;color:var(--muted)}
+.tg-stats b{font-size:1.15rem;font-variant-numeric:tabular-nums}
+.tg-stats b.pos{color:var(--pos)} .tg-stats b.neg{color:var(--neg)}
+.tg-bias{display:grid;gap:6px}
+.tg-bh{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;font-size:.92rem}
+.tg-bh .muted{font-size:.8rem}
+.tg-bias p{margin:0;font-size:.88rem}
+.tg-bar{display:grid;grid-template-columns:130px minmax(0,1fr) 90px;gap:10px;align-items:center;font-size:.86rem}
+.tg-tr{position:relative;height:10px;border-radius:5px;background:var(--surface-2)}
+.tg-tr i{position:absolute;left:0;top:0;bottom:0;border-radius:5px;background:var(--blue)}
+.tg-tr em{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--ink);margin-left:-1px}
+.tg-bar b small{color:var(--muted);font-weight:500}
+.tg-res{width:100%;font-size:.88rem}
+.tg-res th{text-align:left;font-size:.78rem;color:var(--muted);font-weight:600;padding:4px 6px}
+.tg-res td{padding:6px;border-top:1px solid var(--line);vertical-align:middle}
+.tg-w{display:inline-flex;gap:6px;align-items:center}
+.tg-w :is(.silk,.silkpic){width:22px;height:24px}
+#slipbtn{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:31;display:inline-flex;gap:8px;align-items:center;border:0;border-radius:999px;padding:12px 16px;background:var(--yellow);color:var(--on-yellow);font:inherit;font-weight:700;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.22);min-height:48px}
+#slipbtn b{background:var(--on-yellow);color:var(--yellow);border-radius:999px;min-width:22px;height:22px;display:inline-grid;place-items:center;font-size:.8rem;padding:0 6px}
+#slipbtn span{font-weight:600;opacity:.85;font-variant-numeric:tabular-nums}
+body:has(#cmpbar:not([hidden])) #slipbtn{bottom:calc(74px + env(safe-area-inset-bottom,0px))}
+.slip-l{list-style:none;margin:0;padding:0;display:grid}
+.slip-l li{display:grid;grid-template-columns:76px 36px minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:9px 0;border-top:1px solid var(--line)}
+.slip-l li.done{opacity:.6}
+.sl-t{display:grid;gap:2px;justify-items:start}
+.sl-w{display:grid;min-width:0}
+.sl-w small{font-size:.8rem;color:var(--muted)}
+.sl-s{font-size:1.05rem}
+@media (max-width:560px){.slip-l li{grid-template-columns:62px 30px minmax(0,1fr) auto;grid-template-areas:"t s w a" "t s m m"}.sl-t{grid-area:t}.slip-l li > :is(.silk,.silkpic){grid-area:s}.sl-w{grid-area:w}.sl-a{grid-area:a}.sl-s{grid-area:m;font-size:.9rem}}
+.tkm .ph,.tkb .ph,.tkw .ph{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;justify-content:space-between}
+.tkm .ph h3,.tkb .ph h3,.tkw .ph h3{margin:0}
+.tkm-t{width:100%;font-size:.9rem;margin-top:8px}
+.tkm-t th{text-align:left;font-size:.78rem;color:var(--muted);font-weight:600;padding:4px 6px}
+.tkm-t td{padding:6px;border-top:1px solid var(--line)}
+.tkm-t .n{text-align:right;font-variant-numeric:tabular-nums}
+.tkm-t .bar-h,.tkm-t .bar-c{width:28%}
+.pb{position:relative;display:block;height:10px}
+.pb::before{content:"";position:absolute;left:50%;top:-3px;bottom:-3px;width:1px;background:var(--line)}
+.pb i{position:absolute;top:0;bottom:0;border-radius:3px}
+.pb.up i{left:50%;background:var(--pos)}
+.pb.down i{right:50%;background:var(--neg)}
+.bankc{width:100%;height:auto;margin-top:8px;font-size:13px}
+.bankc text{fill:var(--muted)}
+.bankc .grid{stroke:var(--line);stroke-width:1}
+.bankc .base{stroke:var(--muted);stroke-width:1;stroke-dasharray:4 4}
+.bankc .ln{fill:none;stroke:var(--blue);stroke-width:2;stroke-linejoin:round}
+.bankc .ar{fill:color-mix(in srgb,var(--blue) 12%,transparent)}
+.bankc .dd{fill:var(--neg);stroke:var(--surface);stroke-width:2}
+.bankc .hit{fill:transparent}
+.bankc .hit:hover{fill:color-mix(in srgb,var(--ink) 6%,transparent)}
+.tkb-s,.tkw .stats{margin-top:10px}
+.tkb-s{grid-template-columns:repeat(3,minmax(0,1fr));border:1px solid var(--line);border-radius:var(--r)}
+.tkb-s > div:nth-child(3n+1){border-left:0}
+.tkb-s > div:nth-child(n+4){border-top:1px solid var(--line)}
+.tkw .stats{grid-template-columns:repeat(5,minmax(0,1fr));border:1px solid var(--line);border-radius:var(--r)}
+@media (max-width:700px){.tkb-s,.tkw .stats{grid-template-columns:repeat(2,minmax(0,1fr))}.tkb-s > div,.tkw .stats > div{border-left:0!important;border-top:1px solid var(--line)}}
+.tkw .v.sm{font-size:1.05rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tkw-tips{margin-top:10px;padding:10px 12px;border-radius:8px;background:var(--surface-2);font-size:.9rem}
+.tkw-tips ul{margin:4px 0 0;padding-left:18px}
 </style>
 
 <header class="top">
@@ -1888,7 +2020,7 @@ function heroBest(all) {
   return `<section class="card hero" aria-label="Best bet right now">
     <div class="hero-l">
       <span class="hero-k">Best bet right now: ${esc(raceLabel(a.race))}${isFinite(ms) ? ` <span class="num">${clockTxt(ms)}</span> ${cdSpan(ms)}` : ''}</span>
-      <div class="hero-who">${silkPic(r, 'xl')}<div style="min-width:0"><b class="hero-name">${inBlackbook(r.name) ? '★ ' : ''}${esc(r.name)}</b><span>${meta}</span><span>${esc(shortLabel(o))}${o.promo ? ' <span class="tag promo">Promo</span>' : ''}</span></div></div>
+      <div class="hero-who">${silkPic(r, 'xl')}<div style="min-width:0"><b class="hero-name">${horseBtn(a, r, (inBlackbook(r.name) ? '★ ' : '') + esc(r.name))}</b><span>${meta}</span><span>${esc(shortLabel(o))}${o.promo ? ' <span class="tag promo">Promo</span>' : ''}</span></div></div>
       <div class="hero-acts">${statusOf(s)}${betBtns(a, r, o, s.stake)}${whyBtn(s)}${pickBtn(a.race.id, r)}${sbLink(a.race, true)}</div>
     </div>
     <div class="hero-figs">
@@ -1914,7 +2046,7 @@ function t11Row(s, rank) {
   const row = `<tr class="row${rank <= 3 ? ' top3' : ''}">
     <td class="c-rk"><span class="rk">${rank}</span></td>
     <td class="c-sk"><span class="sbox">${silkPic(r)}</span></td>
-    <td class="c-hn"><span class="hn"><b>${bk ? '★ ' : ''}${esc(r.name)}</b><span class="tier ${s.tier}" title="${esc(TIERS[s.tier][0])}, ${esc(TIERS[s.tier][1])}">${{ low: 'Low', mid: 'Mid', high: 'High' }[s.tier]}</span></span>
+    <td class="c-hn"><span class="hn"><b>${horseBtn(a, r, (bk ? '★ ' : '') + esc(r.name))}</b><span class="tier ${s.tier}" title="${esc(TIERS[s.tier][0])}, ${esc(TIERS[s.tier][1])}">${{ low: 'Low', mid: 'Mid', high: 'High' }[s.tier]}</span></span>
       <span class="ln">${esc(raceLabel(a.race))}, ${raceWhen(a)}${a.race.dist ? ', ' + a.race.dist + 'm' : ''}</span>
       <span class="ln m">${[jockeyTxt(r), r.bar ? 'barrier ' + r.bar : ''].filter(Boolean).join(', ') || '&nbsp;'}</span></td>
     <td class="c-wy"><p class="wy" title="${esc(shortWhy(s))}">${esc(shortWhy(s))}</p><span class="sub">${whyBtn(s)}${pickBtn(a.race.id, r)}${o.promo ? '<span class="tag promo">Promo</span>' : ''}</span></td>
@@ -2317,7 +2449,8 @@ function renderTracks(C) {
     return `<button class="rchip ${x.closed ? 'closed' : ''}" data-act="race" data-race="${x.race.id}" aria-current="${a && a.race.id === x.race.id}">R${x.race.no}${isFinite(ms) ? `<span class="tm">${clockTxt(ms)}</span>` : ''}${dot ? '<span class="dot" title="Bet in your plan"></span>' : ''}${bk ? '<span class="bk">★</span>' : ''}</button>`;
   }).join('')}</div>`;
   const tb = biasFor(Object.assign({}, r0, { no: 99 }));
-  if (tb) h += `<div class="notice"><p><b>Track bias today</b> (${tb.n} races run): inside barriers placed ${tb.aIn} times vs ${tb.eIn.toFixed(1)} expected${tb.eLd > 0.5 ? `; on-pace runners ${tb.aLd} vs ${tb.eLd.toFixed(1)}` : ''}. ${Math.abs(tb.inside) >= .2 || Math.abs(tb.lead) >= .2 ? biasTxt(tb) + ', so the form rating adjusts the races still to come.' : 'No clear bias yet.'}</p></div>`;
+  if (!a) h += trackGuide(arr, r0);
+  else if (tb) h += `<div class="notice"><p><b>Track bias today</b> (${tb.n} races run): inside barriers placed ${tb.aIn} times vs ${tb.eIn.toFixed(1)} expected${tb.eLd > 0.5 ? `; on-pace runners ${tb.aLd} vs ${tb.eLd.toFixed(1)}` : ''}. ${Math.abs(tb.inside) >= .2 || Math.abs(tb.lead) >= .2 ? biasTxt(tb) + ', so the form rating adjusts the races still to come.' : 'No clear bias yet.'}</p></div>`;
   if (!a) h += `<div class="card meet">${arr.map(raceLine).join('')}</div>`;
   else h += raceCard(a);
   $('#v-tracks').innerHTML = h;
@@ -2376,6 +2509,254 @@ function pickBox(a) {
 }
 const LS = { get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} } };
 const HP = new Set(LS.get('ls_hidepk', [])), PINS = new Set(LS.get('ls_pins', []));
+S.cmp = (LS.get('ls_cmp', []) || []).filter(c => c && c.raceId).slice(-3); S.sheet = null;
+let LASTC = null;
+
+/* ============================ HORSE PROFILE, SPEED MAP, COMPARE, TRACK GUIDE ============================ */
+const horseBtn = (a, r, inner) => `<button type="button" class="hname" data-act="horse" data-race="${esc(a.race.id)}" data-n="${r.n}" title="Open ${esc(r.name)}'s profile">${inner}</button>`;
+// A runner, analysed, on any loaded day
+function runnerCtx(raceId, n) {
+  const C = LASTC || compute(); let a = C.list.find(x => x.race.id === raceId);
+  if (!a) { const race = findRace(raceId); if (!race) return null; try { a = analyseCached(race); } catch (e) { return null; } }
+  const r = a && (a.act.find(x => x.n === n) || a.rs.find(x => x.n === n));
+  return r ? { a, r } : null;
+}
+const POS_NAME = i => ['1st', '2nd', '3rd'][i] || (i + 1) + 'th';
+const winPcRec = v => { const m = /^(\d+):(\d+)-(\d+)-(\d+)$/.exec(String(v || '').replace(/\s+/g, '')); return m && +m[1] ? `${Math.round(+m[2] / +m[1] * 100)}% won, ${Math.round((+m[2] + +m[3] + +m[4]) / +m[1] * 100)}% placed` : ''; };
+function keyStatsHtml(r, race) {
+  const cond = ((race.track || '').match(/^(\w+)/) || [])[1] || '';
+  const hl = k => /^(track|dist|distance)$/i.test(k) || (cond && new RegExp('^' + cond, 'i').test(k));
+  const ks = r.ks || {}, keys = Object.keys(ks);
+  if (keys.length) return `<div class="hp-ks">${keys.map(k => `<div class="${hl(k) ? 'hl' : ''}"><small>${esc(k)}</small><b>${esc(recFmt(ks[k]))}</b><span>${winPcRec(ks[k])}</span></div>`).join('')}</div>`;
+  if (r.fm && r.fm.st) { const st = r.fm.st, L = { car: 'Career', trk: 'This track', dst: 'This distance', td: 'Track and distance', firm: 'Firm', good: 'Good', soft: 'Soft', heavy: 'Heavy', f1: '1st up', s2: '2nd up' };
+    const ks2 = Object.keys(L).filter(k => st[k]); if (ks2.length) return `<div class="hp-ks">${ks2.map(k => `<div><small>${L[k]}</small><b>${rec(st[k])}</b><span>${winPc(st[k])} won</span></div>`).join('')}</div>`; }
+  const bits = [];
+  if (r.fu) bits.push(`<div><small>1st up</small><b>${esc(recFmt(r.fu))}</b><span>${winPcRec(r.fu)}</span></div>`);
+  const tags = r.tags || [];
+  return (bits.length ? `<div class="hp-ks">${bits.join('')}</div>` : '') + (tags.length ? `<p class="hp-tags">Sportsbet flags: ${tags.map(t => `<span class="tag">${esc(t)}</span>`).join(' ')}</p>` : '') +
+    (!bits.length && !tags.length ? '<p class="muted">No form-guide stats on this card. Track and distance records come in with the next race-day load.</p>' : '<p class="muted" style="font-size:.8rem">Full track, distance and going records come in with the next race-day load.</p>');
+}
+function sparkline(vals) {
+  const v = vals.filter(x => x > 1); if (v.length < 2) return '';
+  const W = 240, H = 48, lo = Math.min(...v), hi = Math.max(...v), sx = i => 6 + i * (W - 12) / (v.length - 1), sy = x => hi === lo ? H / 2 : 6 + (x - lo) / (hi - lo) * (H - 12);
+  const pts = v.map((x, i) => `${sx(i).toFixed(1)},${sy(x).toFixed(1)}`).join(' ');
+  return `<svg class="spark" viewBox="0 0 ${W} ${H}" role="img" aria-label="Price moves: ${v.map(odds$).join(', ')}"><polyline points="${pts}" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>${v.map((x, i) => `<circle cx="${sx(i).toFixed(1)}" cy="${sy(x).toFixed(1)}" r="${i === v.length - 1 ? 4 : 2.5}" fill="currentColor"><title>${i === v.length - 1 ? 'Now' : i ? 'Then' : 'Open'} ${odds$(x)}</title></circle>`).join('')}</svg>`;
+}
+// Every other run of this horse in the race days loaded into the app, with where it finished
+function horseHistory(name, exceptId) {
+  const k = normName(name), seen = new Set([exceptId]), out = [];
+  const pool = closedRaces().concat(dayRaces ? dayRaces() : []);
+  pool.forEach(race => { if (seen.has(race.id)) return; const r = (race.runners || []).find(x => normName(x.name) === k); if (!r) return; seen.add(race.id);
+    const res = Array.isArray(race.result) ? race.result : null, i = res ? res.indexOf(r.n) : -1;
+    out.push({ race, r, fin: res ? (i >= 0 ? POS_NAME(i) : 'Unplaced') : 'Not run yet', won: i === 0, placed: i > 0 && i < 3 }); });
+  return out.sort((x, y) => (y.race.date || '').localeCompare(x.race.date || '')).slice(0, 8);
+}
+const settleTxt = (a, r) => { const k = settleOf(a, r); return k >= 0 ? SETTLE[k] : !(r.esp || r.sp) && Array.isArray(a.race.onpace) && a.race.onpace.length && !a.act.some(x => x.esp || x.sp) ? 'Off the pace' : ''; };
+function openHorse(raceId, n) {
+  const x = runnerCtx(raceId, n); if (!x) { toast('That horse is not on a loaded card'); return; }
+  const { a, r } = x, race = a.race, live = !a.closed && r.p !== undefined && !r.scr;
+  S.sheet = { k: 'horse', raceId, n };
+  const o = r.plan ? r.plan.o : r.best, ch = o ? chanceOf(r, o) : r.p, mv = move(r), jt = jtEffect(r);
+  const res = Array.isArray(race.result) ? race.result : null, fin = res ? res.indexOf(r.n) : -1;
+  const ms = startMs(race), bk = inBlackbook(r.name), bkItem = S.blackbook.find(h => normName(h.name) === normName(r.name));
+  const meta = [`#${r.n}`, r.bar ? 'barrier ' + r.bar : '', r.wt ? r.wt + 'kg' : '', settleTxt(a, r) ? 'settles ' + settleTxt(a, r).toLowerCase() : ''].filter(Boolean).join(', ');
+  const fig = (k, v, cls = '') => `<div><small>${k}</small><b class="${cls}">${v}</b></div>`;
+  let figs = '';
+  if (live) figs = fig('Sportsbet', odds$(r.win)) + fig('Win chance', pct(r.p, 0)) + fig('Fair price', r.p > 0 ? odds$(1 / r.p) : '—') + (o ? fig(esc(shortLabel(o)) + ' edge', evTxt(o.ev), evCls(o.ev)) : '') + (a.places && r.pPl ? fig('Place chance', pct(r.pPl, 0)) : '');
+  else if (res) figs = fig('Finished', fin >= 0 ? POS_NAME(fin) : 'Unplaced', fin === 0 ? 'pos' : '') + (r.win > 1 ? fig('Price', odds$(r.win)) : '');
+  else if (r.scr) figs = fig('Status', 'Scratched');
+  const w = live && o ? whyInfo({ a, r, o, stake: r.plan ? r.plan.stake : 0 }) : null;
+  const hist = horseHistory(r.name, race.id);
+  const mine = S.bets.filter(b => normName(b.name) === normName(r.name)).sort((p, q) => q.ts - p.ts);
+  const minePL = mine.reduce((s, b) => s + (b.result === 'pending' ? 0 : plOfBet(b)), 0);
+  const flucs = (r.flucs || []).concat(r.win > 1 && (!r.flucs || r.flucs[r.flucs.length - 1] !== r.win) ? [r.win] : []);
+  const inCmp = S.cmp.some(c => c.raceId === race.id && c.n === r.n);
+  $('#sheet-root').innerHTML = `<div class="sheet-bg" data-act="closesheet"><div class="card sheet hp" role="dialog" aria-modal="true" aria-label="${esc(r.name)} profile">
+    <div class="hp-h">${silkPic(r, 'xl')}<div class="hp-t"><b class="hp-name">${bk ? '★ ' : ''}${esc(r.name)}</b><span>${meta}</span><span>${esc(raceLabel(race))}${race.dist ? ', ' + race.dist + 'm' : ''}${race.track ? ', ' + esc(race.track) : ''}${isFinite(ms) ? `, <span class="num">${clockTxt(ms)}</span> ${a.closed ? '' : cdSpan(ms)}` : ''}</span></div><button class="btn sm" data-act="closesheet" aria-label="Close profile">Close</button></div>
+    ${figs ? `<div class="hp-figs">${figs}</div>` : ''}
+    <div class="hp-acts">${live && o ? betBtns(a, r, o, r.plan ? r.plan.stake : 0) : ''}${pickBtn(race.id, r)}<button class="pk-btn ${inCmp ? 'on' : ''}" data-act="cmp" data-race="${esc(race.id)}" data-n="${r.n}" aria-pressed="${inCmp}">${inCmp ? '✓ Comparing' : '+ Compare'}</button><button class="pk-btn ${bk ? 'on' : ''}" data-act="bbtoggle" data-name="${esc(r.name)}" aria-pressed="${bk}">${bk ? '★ In blackbook' : '☆ Blackbook'}</button>${sbLink(race, true)}</div>
+    ${bkItem && bkItem.note ? `<p class="hp-note"><b>Your note:</b> ${esc(bkItem.note)}</p>` : ''}
+    <section><h4>Form</h4><div class="hp-form">${formLong(r.form)}<span class="muted">${r.form ? 'oldest to latest; x = a break between runs' : 'No starts yet'}</span></div></section>
+    <section><h4>Records</h4>${keyStatsHtml(r, race)}</section>
+    <section class="hp-2"><div><h4>Jockey and trainer</h4><p>${r.j ? `<b>${esc(r.j)}</b>${jt.j ? `, wins ${pct(jt.j.rate, 0)} of ${jt.j.s} rides (12 months)` : ''}${topJ(r.j) ? ' <span class="tag">Top jockey</span>' : ''}` : 'Jockey not listed'}<br>${r.t ? `Trainer <b>${esc(r.t)}</b>${jt.t ? `, wins ${pct(jt.t.rate, 0)} of ${jt.t.s} starters` : ''}` : ''}</p></div>
+      <div><h4>Price moves</h4>${flucs.length >= 2 ? `<div class="hp-mv ${mv && mv.firm ? 'up' : mv && mv.drift ? 'down' : ''}">${sparkline(flucs)}<span>Opened ${odds$(flucs[0])}, now ${odds$(flucs[flucs.length - 1])}${mv && mv.firm ? ': firming (money coming)' : mv && mv.drift ? ': drifting' : ''}</span></div>` : '<p class="muted">No price moves on the card.</p>'}</div></section>
+    ${w ? `<section><h4>Why we like it</h4><div class="why"><p class="lead">${esc(w.lead)}</p>${w.pts.length ? `<p>${w.pts.map(esc).join(' ')}</p>` : ''}${w.pro.length ? `<div><div class="k">In its favour</div><ul class="pro">${w.pro.map(t => `<li>${esc(t)}</li>`).join('')}</ul></div>` : ''}${w.con.length ? `<div><div class="k">Against it</div><ul class="con">${w.con.map(t => `<li>${esc(t)}</li>`).join('')}</ul></div>` : ''}<p><b>${esc(w.verdict)}</b></p></div></section>` : ''}
+    <section><h4>Other runs on your loaded days</h4>${hist.length ? `<table class="tbl hp-t2"><tbody>${hist.map(h => `<tr><td class="num">${esc(dateTxt(h.race.date))}</td><td>${esc(raceLabel(h.race))}${h.race.dist ? ', ' + h.race.dist + 'm' : ''}</td><td class="${h.won ? 'pos' : ''}"><b>${h.fin}</b></td><td class="num">${h.r.win > 1 ? odds$(h.r.win) : ''}</td></tr>`).join('')}</tbody></table>` : '<p class="muted">None yet. Its runs show here as more race days load.</p>'}</section>
+    <section><h4>Your bets on ${esc(r.name)}</h4>${mine.length ? `<table class="tbl hp-t2"><tbody>${mine.slice(0, 8).map(b => { const pl = b.result === 'pending' ? null : plOfBet(b); return `<tr><td class="num">${esc(dateTxt(perthDay(b.ts)))}</td><td>${esc(b.race || '')}</td><td>${esc(b.label || b.type || '')} ${b.odds ? odds$(b.odds) : ''}</td><td class="num ${pl === null ? '' : pl >= 0 ? 'pos' : 'neg'}">${pl === null ? 'Pending' : (pl >= 0 ? '+' : '') + money(pl, 2)}</td></tr>`; }).join('')}</tbody></table><p class="muted" style="font-size:.84rem">${mine.length} bet${mine.length > 1 ? 's' : ''}, ${minePL >= 0 ? '+' : ''}${money(minePL, 2)} overall.</p>` : '<p class="muted">You haven’t bet on this horse yet.</p>'}</section>
+    ${r.fm ? formPanel(race, r) : ''}
+  </div></div>`;
+}
+// Long form line: up to 10 starts, the same boxes as the top 10
+function formLong(f) {
+  const s = String(f || '').replace(/[^0-9x]/gi, '').slice(-10);
+  if (!s) return '';
+  return `<span class="fch lg" role="img" aria-label="Form, oldest to latest: ${esc(s)}">${[...s].map(c => { const x = c.toLowerCase(); return `<i class="${x === '1' ? 'w' : x === '2' || x === '3' ? 'p' : x === 'x' ? 'x' : ''}">${x}</i>`; }).join('')}</span>`;
+}
+
+// Speed map: where each runner is expected to settle. Sportsbet's settling position when the card has it, TAB's code, else Sportsbet's on-pace list.
+const SETTLE = ['Leader', 'On pace', 'Midfield', 'Back'];
+function settleOf(a, r) {
+  const e = String(r.esp || '').toLowerCase();
+  if (e) { if (/lead/.test(e)) return 0; if (/pace|handy|prominent|forward|on the speed/.test(e)) return 1; if (/mid/.test(e)) return 2; if (/back|rear|last|behind|off the pace/.test(e)) return 3; }
+  if (r.sp === 'L') return 0; if (r.sp === 'M') return 2; if (r.sp === 'B') return 3;
+  return Array.isArray(a.race.onpace) && a.race.onpace.includes(r.n) ? 1 : -1;
+}
+function speedMap(a) {
+  const rs = a.act.filter(r => !r.scr); if (rs.length < 3) return '';
+  const full = rs.some(r => r.esp || r.sp);
+  if (!full && !(Array.isArray(a.race.onpace) && a.race.onpace.length)) return '';
+  const cols = full ? [[3, 'Back'], [2, 'Midfield'], [1, 'On pace'], [0, 'Leader']] : [[2, 'Off the pace'], [1, 'On pace']];
+  const cat = r => { const k = settleOf(a, r); return full ? k : (k < 0 ? 2 : k); };
+  const unk = full ? rs.filter(r => settleOf(a, r) < 0) : [];
+  return `<details class="smap" open><summary><b>Speed map</b> <span class="muted">where each runner should settle, inside barriers first</span></summary>
+    <div class="sm-grid" style="grid-template-columns:repeat(${cols.length},minmax(0,1fr))">${cols.map(([k, lab]) => { const list = rs.filter(r => cat(r) === k).sort((x, y) => (x.bar || 99) - (y.bar || 99));
+      return `<div class="sm-col"><div class="sm-h">${lab} <span class="muted">${list.length}</span></div>${list.map(r => `<button type="button" class="sm-r ${r.plan && !a.closed ? 'bet' : ''}" data-act="horse" data-race="${esc(a.race.id)}" data-n="${r.n}" title="${esc(r.name)}, barrier ${r.bar || '?'}">${silkPic(r)}<span><b>${r.n}</b> ${esc(r.name)}</span><small>${r.bar ? 'b' + r.bar : ''}</small></button>`).join('') || '<span class="muted sm-e">none</span>'}</div>`; }).join('')}</div>
+    <div class="sm-dir" aria-hidden="true">direction of running →</div>
+    ${!full ? '<p class="muted sm-note">This card only lists who goes forward. A full map comes with the next race-day load.</p>' : unk.length ? `<p class="muted sm-note">Not mapped: ${unk.map(r => r.n).join(', ')}.</p>` : ''}
+  </details>`;
+}
+
+// Compare: up to three runners side by side
+function toggleCmp(raceId, n) {
+  const i = S.cmp.findIndex(c => c.raceId === raceId && c.n === n);
+  if (i >= 0) S.cmp.splice(i, 1); else { S.cmp.push({ raceId, n }); if (S.cmp.length > 3) S.cmp.shift(); }
+  LS.set('ls_cmp', S.cmp); renderAll();
+}
+function cmpBar() {
+  let el = $('#cmpbar'); if (!el) { el = document.createElement('div'); el.id = 'cmpbar'; el.className = 'cmpbar'; document.body.appendChild(el); }
+  const xs = S.cmp.map(c => runnerCtx(c.raceId, c.n)).filter(Boolean);
+  el.hidden = !xs.length;
+  el.innerHTML = xs.length ? `<span class="cb-l">Compare: ${xs.map(x => `<b>${esc(x.r.name)}</b>`).join(', ')}</span><span class="acts-r">${xs.length > 1 ? '<button class="btn sm pri" data-act="cmpshow">Compare</button>' : '<span class="muted" style="font-size:.84rem">add one more</span>'}<button class="btn sm" data-act="cmpclear">Clear</button></span>` : '';
+}
+function openCompare() {
+  const xs = S.cmp.map(c => runnerCtx(c.raceId, c.n)).filter(Boolean); if (xs.length < 2) return;
+  S.sheet = { k: 'cmp' };
+  const row = (lab, f) => `<tr><th scope="row">${lab}</th>${xs.map(x => `<td>${f(x)}</td>`).join('')}</tr>`;
+  const live = x => !x.a.closed && x.r.p !== undefined && !x.r.scr, ob = x => x.r.plan ? x.r.plan.o : x.r.best;
+  const best = (f, hi = true) => { const v = xs.map(x => live(x) ? f(x) : NaN); const m = hi ? Math.max(...v.filter(isFinite)) : Math.min(...v.filter(isFinite)); return x => isFinite(f(x)) && f(x) === m && xs.length > 1 ? ' class="best"' : ''; };
+  const bP = best(x => x.r.p), bE = best(x => ob(x) ? ob(x).ev : NaN);
+  const cell = (x, mark, v) => `<span${mark(x)}>${v}</span>`;
+  $('#sheet-root').innerHTML = `<div class="sheet-bg" data-act="closesheet"><div class="card sheet cmpw" role="dialog" aria-modal="true" aria-label="Compare horses">
+    <div class="hp-h"><div class="hp-t"><b class="hp-name" style="font-size:1.6rem">Compare</b><span>Best figure in each row is highlighted.</span></div><button class="btn sm" data-act="closesheet">Close</button></div>
+    <div class="tblwrap"><table class="cmpt"><thead><tr><th></th>${xs.map(x => `<th scope="col">${horseBtn(x.a, x.r, silkPic(x.r) + '<b>' + esc(x.r.name) + '</b>')}</th>`).join('')}</tr></thead><tbody>
+      ${row('Race', x => esc(raceLabel(x.a.race)) + (x.a.race.dist ? ', ' + x.a.race.dist + 'm' : ''))}
+      ${row('Sportsbet', x => x.r.win > 1 ? odds$(x.r.win) : '—')}
+      ${row('Win chance', x => live(x) ? cell(x, bP, pct(x.r.p, 0)) : '—')}
+      ${row('Fair price', x => live(x) && x.r.p > 0 ? odds$(1 / x.r.p) : '—')}
+      ${row('Best bet', x => live(x) && ob(x) ? `${esc(shortLabel(ob(x)))} ${cell(x, bE, evTxt(ob(x).ev))}` : '—')}
+      ${row('Form', x => formChips(x.r.form))}
+      ${row('Barrier', x => x.r.bar || '—')}
+      ${row('Weight', x => x.r.wt ? x.r.wt + 'kg' : '—')}
+      ${row('Settles', x => settleTxt(x.a, x.r) || '—')}
+      ${row('Jockey', x => esc(x.r.j || '—') + (jtEffect(x.r).j ? `<small>${pct(jtEffect(x.r).j.rate, 0)} wins, 12 mths</small>` : ''))}
+      ${row('Trainer', x => esc(x.r.t || '—'))}
+      ${row('Track record', x => recCell(x.r, 'track'))}
+      ${row('Distance record', x => recCell(x.r, 'dist'))}
+      ${row('Price move', x => { const m = move(x.r); return m ? (m.firm ? `<span class="pos">Firming from ${odds$(m.open)}</span>` : m.drift ? `<span class="neg">Drifting from ${odds$(m.open)}</span>` : 'Steady') : '—'; })}
+      ${row('In its favour', x => { const p = ((x.r.fi && x.r.fi.chips) || []).filter(c => c[1] === 'good').map(c => esc(c[0])); return p.length ? p.join(', ') : '—'; })}
+      ${row('Against it', x => { const p = ((x.r.fi && x.r.fi.chips) || []).filter(c => c[1] === 'bad').map(c => esc(c[0])); return p.length ? p.join(', ') : '—'; })}
+    </tbody></table></div>
+    <div class="acts-r" style="justify-content:flex-end"><button class="btn sm" data-act="cmpclear">Clear compare</button></div>
+  </div></div>`;
+}
+
+// Track guide for one meeting: condition, today's results, favourites, our top pick, bias, your record here
+function trackGuide(arr, r0) {
+  const run = arr.filter(a => Array.isArray(a.race.result) && a.race.result.length).sort((x, y) => x.race.no - y.race.no);
+  const tb = biasFor(Object.assign({}, r0, { no: 99 }));
+  let favW = 0, pickW = 0, pickP = 0; const bars = [];
+  const rows = run.map(a => {
+    const res = a.race.result, w = a.rs.find(r => r.n === res[0]), fav = a.act.filter(r => r.win > 1).sort((x, y) => x.win - y.win)[0], tp = a.ranked[0];
+    if (fav && fav.n === res[0]) favW++;
+    const ti = tp ? res.indexOf(tp.n) : -1; if (ti === 0) pickW++; if (ti >= 0 && ti < 3) pickP++;
+    if (w && w.bar) bars.push(w.bar);
+    const pl = res.slice(1, 3).map(n => { const r = a.rs.find(x => x.n === n); return r ? `${n} ${esc(r.name)}` : n; }).join(', ');
+    return `<tr><td class="num">R${a.race.no}</td><td>${w ? `<span class="tg-w">${silkPic(w)}${horseBtn(a, w, esc(w.name))}<span class="muted num">${w.win > 1 ? odds$(w.win) : ''}${w.bar ? ', b' + w.bar : ''}</span></span>` : '#' + res[0]}</td><td class="muted">${pl}</td><td>${tp ? `${esc(tp.name)} <span class="${ti === 0 ? 'pos' : ti > 0 && ti < 3 ? '' : 'neg'}">${ti === 0 ? 'won' : ti > 0 && ti < 3 ? POS_NAME(ti) : 'missed'}</span>` : ''}</td></tr>`;
+  });
+  const mine = S.bets.filter(b => String(b.race || '').replace(/ R\d+$/, '') === r0.venue && b.result !== 'pending' && b.result !== 'scratched');
+  const myPL = mine.reduce((s, b) => s + plOfBet(b), 0), myW = mine.filter(b => settle(b).ret > 0).length;
+  const bar = (lab, act, exp) => { const mx = Math.max(act, exp, 1); return `<div class="tg-bar"><span>${lab}</span><span class="tg-tr"><i style="width:${(act / mx * 100).toFixed(0)}%"></i><em style="left:${(exp / mx * 100).toFixed(0)}%" title="Expected ${exp.toFixed(1)}"></em></span><b class="num">${act} <small>vs ${exp.toFixed(1)}</small></b></div>`; };
+  const next = arr.filter(a => !a.closed).sort((x, y) => (startMs(x.race) || 0) - (startMs(y.race) || 0))[0];
+  return `<section class="card tg" aria-label="Track guide">
+    <div class="tg-h"><h3>Track guide</h3><span class="muted">${esc(r0.track || 'Condition not listed')}${next && isFinite(startMs(next.race)) ? `, next R${next.race.no} <span class="num">${clockTxt(startMs(next.race))}</span>` : ''}</span></div>
+    <div class="tg-stats">
+      <div><small>Races run</small><b>${run.length} of ${arr.length}</b></div>
+      <div><small>Favourites won</small><b>${run.length ? `${favW} of ${run.length}` : '—'}</b></div>
+      <div><small>Our top pick won</small><b>${run.length ? `${pickW} of ${run.length}` : '—'}</b><span>${run.length ? `placed in ${pickP}` : ''}</span></div>
+      <div><small>Winning barriers</small><b>${bars.length ? bars.join(', ') : '—'}</b></div>
+      <div><small>Your bets here</small><b class="${myPL >= 0 ? 'pos' : 'neg'}">${mine.length ? (myPL >= 0 ? '+' : '') + money(myPL, 0) : '—'}</b><span>${mine.length ? `${myW} of ${mine.length} won` : 'none yet'}</span></div>
+    </div>
+    ${tb ? `<div class="tg-bias"><div class="tg-bh"><b>Bias today</b><span class="muted">places so far vs what the prices expected</span></div>${bar('Inside barriers', tb.aIn, tb.eIn)}${tb.eLd > 0.5 ? bar('On-pace runners', tb.aLd, tb.eLd) : ''}<p>${Math.abs(tb.inside) >= .2 || Math.abs(tb.lead) >= .2 ? esc(biasTxt(tb)) + '. The form rating adjusts the races still to come.' : 'No clear bias yet.'}</p></div>` : `<p class="muted" style="margin:0">Bias shows once 3 races are run.</p>`}
+    ${rows.length ? `<div class="tblwrap"><table class="tbl tg-res"><thead><tr><th>Race</th><th>Winner</th><th>2nd, 3rd</th><th>Our top pick</th></tr></thead><tbody>${rows.join('')}</tbody></table></div>` : ''}
+  </section>`;
+}
+
+/* ============================ BET SLIP + JUMP ALERTS ============================ */
+function slipItems(C) {
+  return ((C.plan && C.plan.items) || []).filter(i => !i.a.closed && !jumped(i.a.race))
+    .map(i => Object.assign({}, i, { ms: startMs(i.a.race), logged: !!loggedBet(i.a.race.id, i.r.n, i.o.type) }))
+    .sort((x, y) => (isFinite(x.ms) ? x.ms : 9e15) - (isFinite(y.ms) ? y.ms : 9e15));
+}
+function slipBtn(C) {
+  let el = $('#slipbtn'); if (!el) { el = document.createElement('button'); el.id = 'slipbtn'; el.type = 'button'; el.dataset.act = 'slip'; document.body.appendChild(el); }
+  const xs = slipItems(C), left = xs.filter(x => !x.logged);
+  el.hidden = !xs.length || S.tab === 'settings' || S.tab === 'paste';
+  el.innerHTML = `Bet slip <b>${left.length}</b><span>${money(left.reduce((s, x) => s + x.stake, 0))}</span>`;
+  el.setAttribute('aria-label', `Bet slip: ${left.length} bets to place`);
+}
+function openSlip() {
+  const C = LASTC || compute(), xs = slipItems(C), left = xs.filter(x => !x.logged);
+  S.sheet = { k: 'slip' };
+  $('#sheet-root').innerHTML = `<div class="sheet-bg" data-act="closesheet"><div class="card sheet slip" role="dialog" aria-modal="true" aria-label="Bet slip">
+    <div class="hp-h"><div class="hp-t"><b class="hp-name" style="font-size:1.6rem">Today's bet slip</b><span>${left.length} to place, ${money(left.reduce((s, x) => s + x.stake, 0))}. Place each one in the Sportsbet app, then tick it here.</span></div><button class="btn sm" data-act="closesheet">Close</button></div>
+    <div class="acts-r" style="flex-wrap:wrap"><button class="btn sm" data-act="copyslip">Copy all</button><button class="btn sm ${ALERT.on ? 'pri' : ''}" data-act="alerts" aria-pressed="${ALERT.on}">${ALERT.on ? 'Jump alerts on' : 'Turn on jump alerts'}</button><span class="muted" style="font-size:.8rem">Alerts come 5 minutes before each planned or pinned race, while the app is open.</span></div>
+    ${xs.length ? `<ol class="slip-l">${xs.map(x => `<li class="${x.logged ? 'done' : ''}">
+      <span class="sl-t"><b class="num">${isFinite(x.ms) ? clockTxt(x.ms) : '—'}</b>${isFinite(x.ms) ? cdSpan(x.ms) : ''}</span>
+      ${silkPic(x.r)}
+      <span class="sl-w">${horseBtn(x.a, x.r, '<b>' + esc(x.r.name) + '</b>')}<small>${esc(raceLabel(x.a.race))}, #${x.r.n}, ${esc(shortLabel(x.o))} at ${odds$(x.o.odds)}</small></span>
+      <b class="sl-s num">${money(x.stake)}</b>
+      <span class="sl-a">${x.logged ? '<span class="status go">Placed ✓</span>' : `<button class="btn sm pri" data-act="placed" data-race="${esc(x.a.race.id)}" data-n="${x.r.n}" data-type="${x.o.type}" data-stake="${x.stake}">Placed ✓</button>`}</span>
+    </li>`).join('')}</ol>` : '<p class="muted">Nothing left to place today.</p>'}
+  </div></div>`;
+}
+const ALERT = { on: !!LS.get('ls_alerts', false), seen: new Set(LS.get('ls_alerted', [])), list: [] };
+function alertList(C) {
+  const out = [];
+  ((C.plan && C.plan.items) || []).forEach(i => { const ms = startMs(i.a.race); if (isFinite(ms)) out.push({ id: i.a.race.id, ms, t: `${raceLabel(i.a.race)} jumps in 5 minutes`, b: `Bet ${money(i.stake)} ${shortLabel(i.o)} on ${i.r.name} at ${odds$(i.o.odds)}` }); });
+  C.list.forEach(a => { if (!PINS.has(a.race.id) || out.some(x => x.id === a.race.id)) return; const ms = startMs(a.race); if (isFinite(ms)) out.push({ id: a.race.id, ms, t: `${raceLabel(a.race)} jumps in 5 minutes`, b: 'Pinned race' + (a.ranked[0] ? `. Top pick ${a.ranked[0].name} at ${odds$(a.ranked[0].win)}` : '') }); });
+  ALERT.list = out;
+}
+function alertTick() {
+  if (!ALERT.on) return;
+  const now = Date.now();
+  ALERT.list.forEach(x => { const d = x.ms - now; if (d > 5 * 60000 || d < -60000 || ALERT.seen.has(x.id)) return;
+    ALERT.seen.add(x.id); LS.set('ls_alerted', [...ALERT.seen].slice(-300));
+    try { if ('Notification' in window && Notification.permission === 'granted') new Notification(x.t, { body: x.b, tag: x.id, icon: 'icons/icon-192.png' }); } catch (e) {}
+    toast(x.t + '. ' + x.b); });
+}
+setInterval(alertTick, 20000);
+async function toggleAlerts() {
+  if (!ALERT.on) {
+    if ('Notification' in window && Notification.permission === 'default') { try { await Notification.requestPermission(); } catch (e) {} }
+    ALERT.on = true;
+    toast('Notification' in window && Notification.permission === 'granted' ? 'Jump alerts on' : 'Jump alerts on, inside the app only: this browser is blocking notifications');
+  } else { ALERT.on = false; toast('Jump alerts off'); }
+  LS.set('ls_alerts', ALERT.on); renderAll();
+}
+function copySlip() {
+  const xs = slipItems(LASTC || compute()).filter(x => !x.logged);
+  copyText(xs.map(x => `${isFinite(x.ms) ? clockTxt(x.ms) + ' ' : ''}${betText(x.a.race, x.r, x.o)} ${money(x.stake)}`).join('\n') || 'No bets to place');
+}
+// Things that live outside the page sections: bet slip button, compare bar, alerts, an open pop-up
+function extrasPaint(C) {
+  try { slipBtn(C); cmpBar(); alertList(C); } catch (e) {}
+  const el = $('#sheet-root .sheet'); if (!el || !S.sheet) return;
+  const top = el.scrollTop;
+  if (S.sheet.k === 'horse' && el.classList.contains('hp')) openHorse(S.sheet.raceId, S.sheet.n);
+  else if (S.sheet.k === 'slip' && el.classList.contains('slip')) openSlip();
+  else if (S.sheet.k === 'cmp' && el.classList.contains('cmpw')) { if (S.cmp.length > 1) openCompare(); else closeSheet(); }
+  const el2 = $('#sheet-root .sheet'); if (el2) el2.scrollTop = top;
+}
 const BKCOL = { Sportsbet: '#0a2240;color:#ffd200', TABtouch: '#6a2cd8', TAB: '#6a2cd8', Picklebet: '#1f9d55', Betr: '#29a8e0', Ladbrokes: '#e2001a', Neds: '#ff7a00', PointsBet: '#ed1c24', Other: '#5d6e84' };
 const cdBar = ms => isFinite(ms) ? `<div class="cdbar" data-start="${ms}"><i></i></div>` : '';
 function cdBarPaint() { document.querySelectorAll('.cdbar[data-start]').forEach(el => { const d = +el.dataset.start - Date.now(), f = Math.max(0, Math.min(1, d / 7200000)); const i = el.firstChild; if (!i) return; i.style.width = (d <= 0 ? 100 : (1 - f) * 100).toFixed(1) + '%'; i.style.background = d <= 0 ? '#9aa4b2' : d < 5 * 60000 ? '#d62d2d' : d < 20 * 60000 ? '#f0a020' : '#1f9d55'; }); }
@@ -2394,6 +2775,7 @@ function raceCard(a) {
     </div>
     ${pickBox(a)}
     ${raceStrip(a)}
+    ${speedMap(a)}
     <div class="rr-h"><span></span><span>Runner</span><span>Sportsbet · flucs</span><span>Chance</span><span>Your bet</span><span></span></div>
     ${a.rs.map(r => runnerRow(a, r)).join('')}
     ${a.closed ? '' : `<div class="cleg"><span><i style="background:var(--chi)"></i>High chance (25%+)</span><span><i style="background:var(--cmd)"></i>Mid (10–25%)</span><span><i style="background:var(--clo)"></i>Low (under 10%)</span>${bestPickOf(a) ? '<span><i style="background:var(--best)"></i>Best pick</span>' : '<span>No best pick: nothing clears the betting bar at these prices</span>'}</div>`}
@@ -2461,7 +2843,7 @@ function runnerRow(a, r0) {
   const isBest = live && bestPickOf(a) === r, cx = live ? chanceCls(r.p) : '';
   return `<div class="rr ${r.scr ? 'scr' : ''} ${r.plan && !a.closed ? 'planned' : ''} ${isBest ? 'bestp' : cx}">
     <div class="c-s">${silk(r.name)}</div>
-    <div class="c-n nm"><div class="l1"><span class="cloth ${r.rank === 1 ? 'lead' : ''}">${r.n}</span><b>${esc(r.name)}</b><span class="muted" style="font-size:.85rem">(${r.bar})</span>${r.plan && !a.closed ? `<span class="betbadge">BET ${money(r.plan.stake)} ${r.plan.o.type === 'place' ? 'PLACE' : r.plan.o.type === 'win' ? 'WIN' : 'PROMO'}</span>` : ''}${isBest ? '<span class="tag bestp">Best pick</span>' : ''}${S.bets.some(b => b.raceId === a.race.id && b.n === r.n && b.result !== 'scratched') ? '<span class="stampbet">✓ BET PLACED</span>' : ''}${live ? agreeChip(a, r) + moneyChip(r) : ''}${live && !r.scr ? (() => { const bp = bestPrice(r); return Object.keys(r.odds || {}).length && bp.v > r.win * 1.005 ? `<span class="bestbk" style="background:${bookOf(bp.k).bg};color:${bookOf(bp.k).fg}">Best ${esc(bookOf(bp.k).short || bookOf(bp.k).name)} ${odds$(bp.v)}</span>` : ''; })() : ''}<button class="star ${bk ? 'on' : ''}" data-act="bbtoggle" data-name="${esc(r.name)}" aria-label="${bk ? 'Remove from' : 'Add to'} blackbook" title="${bk ? 'In your blackbook' : 'Add to blackbook'}">${bk ? '★ Blackbook' : '+ Blackbook'}</button>${tag}${r.scr ? '' : pickBtn(a.race.id, r)}</div>
+    <div class="c-n nm"><div class="l1"><span class="cloth ${r.rank === 1 ? 'lead' : ''}">${r.n}</span><b>${horseBtn(a, r, esc(r.name))}</b><span class="muted" style="font-size:.85rem">(${r.bar})</span>${r.plan && !a.closed ? `<span class="betbadge">BET ${money(r.plan.stake)} ${r.plan.o.type === 'place' ? 'PLACE' : r.plan.o.type === 'win' ? 'WIN' : 'PROMO'}</span>` : ''}${isBest ? '<span class="tag bestp">Best pick</span>' : ''}${S.bets.some(b => b.raceId === a.race.id && b.n === r.n && b.result !== 'scratched') ? '<span class="stampbet">✓ BET PLACED</span>' : ''}${live ? agreeChip(a, r) + moneyChip(r) : ''}${live && !r.scr ? (() => { const bp = bestPrice(r); return Object.keys(r.odds || {}).length && bp.v > r.win * 1.005 ? `<span class="bestbk" style="background:${bookOf(bp.k).bg};color:${bookOf(bp.k).fg}">Best ${esc(bookOf(bp.k).short || bookOf(bp.k).name)} ${odds$(bp.v)}</span>` : ''; })() : ''}<button class="star ${bk ? 'on' : ''}" data-act="bbtoggle" data-name="${esc(r.name)}" aria-label="${bk ? 'Remove from' : 'Add to'} blackbook" title="${bk ? 'In your blackbook' : 'Add to blackbook'}">${bk ? '★ Blackbook' : '+ Blackbook'}</button>${tag}${r.scr ? '' : pickBtn(a.race.id, r)}</div>
       <div class="l2">${r.wt ? 'W: ' + r.wt + 'kg · ' : ''}${r.form ? 'F: <span class="num">' + esc(r.form) + '</span>' : ''}</div>${!r.scr && r.win > 1 ? (() => { const op = (r.flucs && r.flucs[0]) || r.win, ch = (r.win - op) / op; return `<div class="opn"><span>Open <b>${odds$(op)}</b></span><span class="ar">→</span><span>Now <b>${odds$(r.win)}</b></span>${Math.abs(ch) >= 0.005 ? `<span class="mvp ${ch < 0 ? 'in' : 'out'}">${ch < 0 ? '▼ firmed' : '▲ drifted'} ${Math.abs(ch * 100).toFixed(0)}%</span>` : '<span class="mvp">no move</span>'}${(() => { const fl = r.flucs || []; const lst = fl.length ? fl[fl.length - 1] : 0; if (!(lst > 1) || Math.abs(r.win - lst) / lst < 0.005) return ''; const c = (r.win - lst) / lst; return `<span class="mvp ${c < 0 ? 'in' : 'out'}" title="Since the last price change">${c < 0 ? '▼' : '▲'} ${Math.abs(c * 100).toFixed(0)}% latest</span>`; })()}</div>`; })() : ''}<div class="l2">${sub}</div>${clsLine(a.race, r)}${noteLine(key)}
       ${live && r.fi && r.fi.chips.length ? `<div class="chips">${r.fi.chips.slice(0, 5).map(c => `<span class="chip ${c[1]}">${esc(c[0])}</span>`).join('')}</div>` : ''}</div>
     <div class="c-o odds2">
@@ -2475,7 +2857,7 @@ function runnerRow(a, r0) {
       ${a.places ? `<div class="row"><span class="track"><span class="fill pl" style="width:${(r.pPl * 100).toFixed(0)}%"></span></span><span class="v">${pct(r.pPl, 0)}</span></div>` : ''}
       <span class="fair">fair ${odds$(1 / r.p)} · form ${r.fi.score >= 0 ? '+' : MINUS}${Math.abs(r.fi.score).toFixed(1)}</span>` : `<span class="muted">${r.scr ? 'Scratched' : ''}</span>`}</div>
     <div class="c-b pb">${bet}</div>
-    <div class="c-x"><button class="more-btn" data-act="more" data-key="${key}" aria-expanded="${open}" aria-label="More for ${esc(r.name)}">${open ? MINUS : '+'}</button></div>
+    <div class="c-x"><button class="more-btn" data-act="more" data-key="${key}" aria-expanded="${open}" aria-label="More for ${esc(r.name)}">${open ? MINUS : '+'}</button>${r.scr ? '' : (() => { const on = S.cmp.some(c => c.raceId === a.race.id && c.n === r.n); return `<button class="cmp-btn" data-act="cmp" data-race="${esc(a.race.id)}" data-n="${r.n}" aria-pressed="${on}" aria-label="Compare ${esc(r.name)}" title="${on ? 'Remove from compare' : 'Compare'}">⇄</button>`; })()}</div>
     ${open ? `<div class="more-in">
       <div style="display:grid;gap:10px;align-content:start">
         <div class="field"><label for="m-${key}">My price (optional)</label><input id="m-${key}" type="number" inputmode="decimal" step="0.01" min="1.01" value="${r.mine || ''}" data-edit="mine" data-key="${key}" placeholder="Betfair or your rating"><span class="hint" style="font-size:.8rem;color:var(--muted)">Replaces the market's fair price for this horse.</span></div>
@@ -3047,7 +3429,7 @@ function priceCheck(bets) {
   const verdict = xs.length < 30 ? 'Still early: give it 30 or more bets before reading much into it.' : avg > 0.02 && beat / xs.length > 0.5 ? 'You are regularly beating the final price, which is a good sign.' : avg < -0.02 ? 'You are mostly getting worse than the final price, so the bets are probably costing you over time.' : 'About level with the final price so far.';
   return `<div class="notice"><p><b>Price check:</b> you got a better price than the final one on <b>${beat} of ${xs.length}</b> bets, ${avg >= 0 ? 'by' : 'down'} <b>${Math.abs(avg * 100).toFixed(1)}%</b> on average. ${verdict} <span class="muted">Final price = the last one the live refresh saw before the jump. Boosted bets and multis aren't counted.</span></p></div>`;
 }
-const TK = { per: 'all', book: 'all', res: 'all', q: '', add: false };
+const TK = { per: 'all', book: 'all', res: 'all', q: '', add: false, split: 'type', wk: 0 };
 const perthDay = ts => { try { return new Intl.DateTimeFormat('en-CA', { timeZone: 'Australia/Perth' }).format(new Date(ts)); } catch (e) { return isoDay(new Date(ts)); } };
 const tkBook = b => b.book || 'Sportsbet';
 const BOOKN = { SB: 'Sportsbet', TAB: 'TABtouch', Betr: 'Betr' };
@@ -3089,6 +3471,113 @@ function tkTable(title, rows, opt = {}) {
   return `<div class="panel" style="padding-top:6px"><h4 style="margin:8px 0 4px">${title}</h4><table class="tbl" style="width:100%">${list.map(r => `<tr><td>${esc(r.k)}</td><td class="num">${r.w}/${r.n}</td><td class="num">${Math.round(r.w / r.n * 100)}%</td><td class="num ${r.pl >= 0 ? 'pos' : 'neg'}"><b>${r.pl >= 0 ? '+' : ''}${money(r.pl)}</b></td></tr>`).join('')}</table>${opt.note ? `<p class="muted" style="font-size:.78rem;margin:4px 0 0">${opt.note}</p>` : ''}</div>`;
 }
 const PROMOS = ['Money back 2nd', 'Bonus back 2nd/3rd', 'Bonus back 2nd-4th', 'Winnings boost', 'Odds boost', 'Bonus bet', 'Other'];
+/* ---------- where you make money, bank and losing runs, weekly recap ---------- */
+const settledBet = b => b.result !== 'pending' && b.result !== 'scratched';
+const BT_NAME = { win: 'Win', place: 'Place', bb: 'Promo: bonus back', boost: 'Promo: boost', bonus: 'Bonus bet', multi: 'Multi' };
+let VSTATE = null;
+function venueState(v) {
+  if (!VSTATE) { VSTATE = {}; (Live.days || []).forEach(d => (d.meetings || []).forEach(m => { if (m.state) VSTATE[m.venue] = m.state; })); allRaces().forEach(r => { if (r.state && !VSTATE[r.venue]) VSTATE[r.venue] = r.state; }); }
+  return VSTATE[v] || '';
+}
+const edgeBand = b => typeof b.ev !== 'number' ? 'Not recorded' : b.ev < 0 ? 'Below 0%' : b.ev < 0.05 ? '0 to 5%' : b.ev < 0.15 ? '5 to 15%' : '15% or more';
+const TK_SPLITS = [
+  ['type', 'Bet type', b => BT_NAME[b.type] || b.label || 'Other'],
+  ['day', 'Day', b => { try { return new Date(b.ts).toLocaleDateString('en-AU', { weekday: 'long', timeZone: 'Australia/Perth' }); } catch (e) { return ''; } }],
+  ['state', 'State', b => venueState(String(b.race || '').replace(/ R\d+$/, '')) || 'Unknown'],
+  ['price', 'Price', b => b.odds > 1 ? TIERS[tierOf(b.odds)][0] + ' (' + TIERS[tierOf(b.odds)][1] + ')' : 'Unknown'],
+  ['edge', 'Edge', edgeBand]
+];
+function tkMoney(bets) {
+  const set = bets.filter(b => settledBet(b) && b.type !== 'multi');
+  if (set.length < 3) return '';
+  const k = TK.split || 'type', sp = TK_SPLITS.find(s => s[0] === k) || TK_SPLITS[0];
+  const rows = tkGroup(set, sp[2]).sort((x, y) => y.pl - x.pl), mx = Math.max(...rows.map(r => Math.abs(r.pl)), 1);
+  const best = rows[0], worst = rows[rows.length - 1];
+  return `<div class="card panel tkm"><div class="ph"><h3>Where you make money</h3><div class="seg" role="group" aria-label="Split by">${TK_SPLITS.map(s => `<button data-act="tksplit" data-v="${s[0]}" aria-pressed="${s[0] === k}">${s[1]}</button>`).join('')}</div></div>
+    <div class="tblwrap"><table class="tbl tkm-t"><thead><tr><th>${sp[1]}</th><th class="n">Bets</th><th class="n">Won</th><th class="n">Staked</th><th class="n">Profit</th><th class="n">Return</th><th class="bar-h"><span class="sr">Profit bar</span></th></tr></thead><tbody>
+    ${rows.map(r => `<tr><td>${esc(r.k)}</td><td class="n">${r.n}</td><td class="n">${Math.round(r.w / r.n * 100)}%</td><td class="n">${money(r.st, 0)}</td><td class="n ${r.pl >= 0 ? 'pos' : 'neg'}">${r.pl >= 0 ? '+' : ''}${money(r.pl, 2)}</td><td class="n">${r.st ? evTxt(r.pl / r.st) : '—'}</td><td class="bar-c"><span class="pb ${r.pl >= 0 ? 'up' : 'down'}"><i style="width:${(Math.abs(r.pl) / mx * 50).toFixed(1)}%"></i></span></td></tr>`).join('')}
+    </tbody></table></div>
+    ${rows.length > 1 && best.pl > 0 && worst.pl < 0 ? `<p class="muted" style="margin:6px 0 0;font-size:.86rem">Best: <b>${esc(best.k)}</b> (${best.pl >= 0 ? '+' : ''}${money(best.pl, 2)}). Worst: <b>${esc(worst.k)}</b> (${money(worst.pl, 2)}). Groups with only a few bets can swing a lot.</p>` : ''}
+  </div>`;
+}
+function bankStats(all) {
+  const set = all.filter(settledBet).sort((x, y) => x.ts - y.ts);
+  const start = +S.settings.bankroll || 100;
+  let bank = start, peak = start, peakAt = 0, dd = 0, ddAt = null, ddPeak = start, lr = 0, wr = 0, cur = 0, curW = null, lrEnd = null;
+  const pts = [{ v: start, b: null }], days = {};
+  set.forEach(b => { const pl = plOfBet(b); bank += pl; pts.push({ v: bank, b, pl });
+    if (bank > peak) { peak = bank; peakAt = pts.length - 1; }
+    if (peak - bank > dd) { dd = peak - bank; ddAt = pts.length - 1; ddPeak = peak; }
+    const w = pl > 0; if (curW === w) cur++; else { curW = w; cur = 1; } if (!w && cur > lr) { lr = cur; lrEnd = b; } if (w && cur > wr) wr = cur;
+    const d = perthDay(b.ts); days[d] = (days[d] || 0) + pl; });
+  const dl = Object.entries(days).sort((x, y) => y[1] - x[1]);
+  return { set, start, bank, peak, dd, ddPct: ddPeak ? dd / ddPeak : 0, ddAt, lr, wr, cur, curW, pts, bestDay: dl[0], worstDay: dl[dl.length - 1], lrEnd, nDays: dl.length };
+}
+function bankChart(st) {
+  const p = st.pts; if (p.length < 3) return '';
+  const W = 1000, H = 180, L = 56, R = 12, T = 12, B = 24, vs = p.map(x => x.v), lo = Math.min(...vs, st.start), hi = Math.max(...vs, st.start);
+  const sx = i => L + i * (W - L - R) / (p.length - 1), sy = v => hi === lo ? H / 2 : T + (hi - v) / (hi - lo) * (H - T - B);
+  const line = p.map((x, i) => `${sx(i).toFixed(1)},${sy(x.v).toFixed(1)}`).join(' ');
+  const area = `${sx(0).toFixed(1)},${sy(lo).toFixed(1)} ${line} ${sx(p.length - 1).toFixed(1)},${sy(lo).toFixed(1)}`;
+  const ticks = [lo, st.start, hi].filter((v, i, a) => a.indexOf(v) === i);
+  return `<svg class="bankc" viewBox="0 0 ${W} ${H}" role="img" aria-label="Bank over ${p.length - 1} bets, from ${money(st.start)} to ${money(st.bank, 2)}">
+    ${ticks.map(v => `<line x1="${L}" x2="${W - R}" y1="${sy(v).toFixed(1)}" y2="${sy(v).toFixed(1)}" class="${v === st.start ? 'base' : 'grid'}"/><text x="${L - 6}" y="${(sy(v) + 4).toFixed(1)}" text-anchor="end">${money(v)}</text>`).join('')}
+    <polygon points="${area}" class="ar"/><polyline points="${line}" class="ln"/>
+    ${st.ddAt ? `<circle cx="${sx(st.ddAt).toFixed(1)}" cy="${sy(p[st.ddAt].v).toFixed(1)}" r="4.5" class="dd"><title>Lowest point after the peak: ${money(p[st.ddAt].v, 2)}</title></circle>` : ''}
+    ${p.map((x, i) => i ? `<rect x="${(sx(i) - (W - L - R) / (p.length - 1) / 2).toFixed(1)}" y="${T}" width="${Math.max(2, (W - L - R) / (p.length - 1)).toFixed(1)}" height="${H - T - B}" class="hit"><title>Bet ${i}: ${esc(x.b.name || '')} ${x.pl >= 0 ? '+' : ''}${money(x.pl, 2)}, bank ${money(x.v, 2)}</title></rect>` : '').join('')}
+    <text x="${L}" y="${H - 6}">first bet</text><text x="${W - R}" y="${H - 6}" text-anchor="end">latest</text></svg>`;
+}
+function tkBank(all) {
+  const st = bankStats(all); if (st.set.length < 3) return '';
+  const f = (k, v, s = '', cls = '') => `<div><div class="k">${k}</div><div class="v ${cls}">${v}</div><div class="s">${s}</div></div>`;
+  return `<div class="card panel tkb"><div class="ph"><h3>Bank and losing runs</h3><span class="muted" style="font-size:.84rem">all time, starting from your ${money(st.start)} bankroll</span></div>
+    ${bankChart(st)}
+    <div class="stats tkb-s">
+      ${f('Bank now', money(st.bank, 2), `peak ${money(st.peak, 2)}`, st.bank >= st.start ? 'pos' : 'neg')}
+      ${f('Biggest drop', st.dd ? MINUS + money(st.dd, 2) : '$0', st.dd ? `${pct(st.ddPct, 0)} off the peak` : 'no drop yet', st.dd ? 'neg' : '')}
+      ${f('Longest losing run', st.lr, `longest winning run ${st.wr}`)}
+      ${f('Right now', st.curW === null ? '—' : `${st.cur} ${st.curW ? 'win' : 'loss'}${st.cur > 1 ? (st.curW ? 's' : 'es') : ''}`, 'in a row', st.curW ? 'pos' : st.curW === false ? 'neg' : '')}
+      ${f('Best day', st.bestDay ? (st.bestDay[1] >= 0 ? '+' : '') + money(st.bestDay[1], 2) : '—', st.bestDay ? esc(dateTxt(st.bestDay[0])) : '', st.bestDay && st.bestDay[1] >= 0 ? 'pos' : 'neg')}
+      ${f('Worst day', st.worstDay ? (st.worstDay[1] >= 0 ? '+' : '') + money(st.worstDay[1], 2) : '—', st.worstDay ? esc(dateTxt(st.worstDay[0])) : '', st.worstDay && st.worstDay[1] < 0 ? 'neg' : 'pos')}
+    </div>
+    ${st.lr >= 5 ? `<p class="muted" style="margin:8px 0 0;font-size:.86rem">A run of ${st.lr} losses is normal at these prices: even a 30% chance loses 5 in a row about 1 time in 6. Keep stakes to the plan rather than chasing.</p>` : ''}
+  </div>`;
+}
+// Monday-to-Sunday week (Perth) containing day d
+const weekStart = d => { const x = new Date(d + 'T12:00:00'), dow = (x.getDay() + 6) % 7; return isoDay(addDays(x, -dow)); };
+function tkWeekly(all) {
+  const set = all.filter(settledBet); if (!set.length) return '';
+  const cur = weekStart(perthToday()), wk = isoDay(addDays(new Date(cur + 'T12:00:00'), 7 * (TK.wk || 0))), end = isoDay(addDays(new Date(wk + 'T12:00:00'), 6));
+  const prevS = isoDay(addDays(new Date(wk + 'T12:00:00'), -7));
+  const inW = (b, s, e) => { const d = perthDay(b.ts); return d >= s && d <= e; };
+  const bs = set.filter(b => inW(b, wk, end)), pv = set.filter(b => inW(b, prevS, isoDay(addDays(new Date(wk + 'T12:00:00'), -1))));
+  const sum = xs => { const st = xs.reduce((s, b) => s + settle(b).staked, 0), pl = xs.reduce((s, b) => s + plOfBet(b), 0), w = xs.filter(b => settle(b).ret > 0).length; return { n: xs.length, st, pl, w }; };
+  const s = sum(bs), p = sum(pv), pend = all.filter(b => b.result === 'pending' && inW(b, wk, end)).length;
+  const byPL = bs.map(b => ({ b, pl: plOfBet(b) })).sort((x, y) => y.pl - x.pl), top = byPL[0], low = byPL[byPL.length - 1];
+  // Plain suggestions from this week and from all time
+  const tips = [], allSet = set.filter(b => b.type !== 'multi');
+  if (s.n) {
+    const g = tkGroup(bs, b => TIERS[tierOf(b.odds || 2)][0]).filter(x => x.n >= 3 && x.st > 0 && x.pl / x.st < -0.3).sort((x, y) => x.pl - y.pl)[0];
+    if (g) tips.push(`${g.k} bets lost ${money(-g.pl, 2)} from ${g.n} this week. Smaller stakes there, or only with a promo.`);
+    const lo = bs.filter(b => typeof b.ev === 'number' && b.ev < MIN_STRAIGHT && !/^(bb|boost|bonus)$/.test(b.type));
+    if (lo.length >= 2) { const pl = lo.reduce((x, b) => x + plOfBet(b), 0); tips.push(`${lo.length} bets went on with less than a 3% edge (${pl >= 0 ? '+' : ''}${money(pl, 2)}). The plan only bets above that bar for a reason.`); }
+  }
+  const promo = allSet.filter(b => /^(bb|boost|bonus)$/.test(b.type) || b.promo), straight = allSet.filter(b => !(/^(bb|boost|bonus)$/.test(b.type) || b.promo));
+  if (promo.length >= 5 && straight.length >= 5) { const rp = sum(promo), rs = sum(straight); if (rp.st && rs.st && rp.pl / rp.st > rs.pl / rs.st + 0.1) tips.push(`All time, promo bets return ${evTxt(rp.pl / rp.st)} against ${evTxt(rs.pl / rs.st)} for straight bets. Lean on promos when you have them.`); }
+  const bst = bankStats(all); if (bst.curW === false && bst.cur >= 4) tips.push(`You're on ${bst.cur} losses in a row. That happens; stick to the plan's stakes.`);
+  if (s.n && s.pl > 0 && !tips.length) tips.push('A winning week with nothing obvious to fix. Keep to the plan.');
+  const ch = p.n ? s.pl - p.pl : null;
+  return `<div class="card panel tkw"><div class="ph"><h3>Weekly recap</h3><span class="acts-r"><button class="btn sm" data-act="tkwk" data-d="-1" aria-label="Previous week">‹</button><b>${esc(dateTxt(wk))} to ${esc(dateTxt(end))}</b><button class="btn sm" data-act="tkwk" data-d="1" aria-label="Next week" ${TK.wk >= 0 ? 'disabled' : ''}>›</button></span></div>
+    ${s.n ? `<div class="stats">
+      <div><div class="k">Profit</div><div class="v ${s.pl >= 0 ? 'pos' : 'neg'}">${s.pl >= 0 ? '+' : ''}${money(s.pl, 2)}</div><div class="s">${ch === null ? 'no bets the week before' : (ch >= 0 ? 'up ' : 'down ') + money(Math.abs(ch), 2) + ' on the week before'}</div></div>
+      <div><div class="k">Bets</div><div class="v">${s.n}</div><div class="s">${s.w} won${pend ? ', ' + pend + ' pending' : ''}</div></div>
+      <div><div class="k">Return</div><div class="v">${s.st ? evTxt(s.pl / s.st) : '—'}</div><div class="s">${money(s.st, 2)} staked</div></div>
+      <div><div class="k">Best pick</div><div class="v sm">${top && top.pl > 0 ? esc(top.b.name) : '—'}</div><div class="s">${top && top.pl > 0 ? '+' + money(top.pl, 2) + ', ' + esc(top.b.race || '') : 'no winners'}</div></div>
+      <div><div class="k">Worst miss</div><div class="v sm">${low && low.pl < 0 ? esc(low.b.name) : '—'}</div><div class="s">${low && low.pl < 0 ? money(low.pl, 2) + ', ' + esc(low.b.race || '') : ''}</div></div>
+    </div>` : `<p class="muted">No settled bets this week${pend ? ` (${pend} pending)` : ''}.</p>`}
+    ${tips.length ? `<div class="tkw-tips"><b>What to change</b><ul>${tips.slice(0, 3).map(t => `<li>${esc(t)}</li>`).join('')}</ul></div>` : ''}
+  </div>`;
+}
 function tkInsights(bets) {
   const set = bets.filter(b => b.result !== 'pending' && b.result !== 'scratched' && b.type !== 'multi');
   if (set.length < 3) return '';
@@ -3126,7 +3615,7 @@ function tkCSV() {
   (async () => { try { const dl = window.claude && await claude.use('downloads'); if (!dl) { toast('Download not available here'); return; } await dl.save({ filename: 'lightz-bets-' + perthToday() + '.csv', data: new Blob([csv], { type: 'text/csv' }) }); } catch (e) { if (e && e.code !== 'declined') toast('Download cancelled'); } })();
 }
 function renderTracker() {
-  loadClosed();
+  loadClosed(); VSTATE = null;
   const all = S.bets;
   let h = `<div class="head-row"><h2>Bet tracker</h2><p>Every bet you log, from the app or added by hand. Results fill in by themselves on loaded race days.</p></div>`;
   h += `<div class="card panel"><div class="ph"><h3>Add a bet</h3><button class="btn sm ${TK.add ? '' : 'pri'}" data-act="tkadd">${TK.add ? 'Close' : '+ Add bet'}</button></div>${TK.add ? `<form id="tkform" class="grid2" style="margin-top:8px">
@@ -3167,6 +3656,7 @@ function renderTracker() {
     <div><div class="k">Running</div><div class="v">${money(open, 2)}</div><div class="s">${bonus ? money(bonus, 2) + ' bonus won' : best ? 'best ' + esc(best.b.name) + ' +' + money(best.pl) : 'pending'}</div></div>
   </div>`;
   h += plChart(series) + tierChart(bets);
+  h += tkWeekly(all) + tkMoney(bets) + tkBank(all);
   if (TK.book === 'all' && books.length > 1) {
     h += `<div class="card panel"><h3>By bookie</h3><table class="tbl" style="width:100%">${books.map(k => { const bs = bets.filter(b => bookName(b) === k && b.result !== 'pending'); const p = bs.reduce((x, b) => x + plOfBet(b), 0), st = bs.reduce((x, b) => x + settle(b).staked, 0), w = bs.filter(b => settle(b).ret > 0).length; return `<tr><td>${esc(k)}</td><td class="num">${bs.length} bets</td><td class="num">${bs.length ? Math.round(w / bs.length * 100) : 0}%</td><td class="num ${p >= 0 ? 'pos' : 'neg'}"><b>${p >= 0 ? '+' : ''}${money(p, 2)}</b></td><td class="num muted">${st ? evTxt(p / st) : ''}</td></tr>`; }).join('')}</table></div>`;
   }
@@ -3382,7 +3872,7 @@ function openLog(raceId, n, type, planStake) {
   });
   setTimeout(() => $('#lg-stake') && $('#lg-stake').focus(), 30);
 }
-const closeSheet = () => { $('#sheet-root').innerHTML = ''; };
+const closeSheet = () => { $('#sheet-root').innerHTML = ''; S.sheet = null; };
 const newBetId = () => 'bet-' + Date.now().toString(36) + Math.floor(Math.random() * 1296).toString(36);
 function saveBet(bet, msg) {
   const id = newBetId();
@@ -3408,10 +3898,11 @@ function setTab(t) {
 function renderAll() {
   const ae = document.activeElement, keepQ = ae && ae.classList && ae.classList.contains('srch-in') ? ae.selectionStart : null;
   renderAll2();
+  if (LASTC) extrasPaint(LASTC);
   if (keepQ !== null) { const el = document.querySelector('#v-' + S.tab + ' .srch-in'); if (el) { el.focus(); try { el.setSelectionRange(keepQ, keepQ); } catch (e) {} } }
 }
 function renderAll2() {
-  const C = compute();
+  const C = compute(); LASTC = C;
   renderHeader(C);
   if (S.emptyDay && (S.tab === 'snipes' || S.tab === 'tracks')) { if (Live.days.some(x => x.date === S.emptyDay)) S.emptyDay = null; else { $('#v-' + S.tab).innerHTML = emptyDayHtml(S.emptyDay); return; } }
   if (S.tab === 'snipes') renderSnipes(C);
@@ -3442,6 +3933,15 @@ document.addEventListener('click', e => {
     case 'race': if (S.tab !== 'tracks') { goRace(t.dataset.race); break; } S.raceId = t.dataset.race || null; renderAll(); break;
     case 'gorace': goRace(t.dataset.race); break;
     case 'tier': S.tier = t.dataset.v; renderAll(); break;
+    case 'horse': openHorse(t.dataset.race, +t.dataset.n); break;
+    case 'cmp': toggleCmp(t.dataset.race, +t.dataset.n); break;
+    case 'cmpshow': openCompare(); break;
+    case 'cmpclear': S.cmp = []; LS.set('ls_cmp', []); if (S.sheet && S.sheet.k === 'cmp') closeSheet(); renderAll(); break;
+    case 'slip': openSlip(); break;
+    case 'copyslip': copySlip(); break;
+    case 'alerts': toggleAlerts(); break;
+    case 'tksplit': TK.split = t.dataset.v; renderAll(); break;
+    case 'tkwk': TK.wk = Math.min(0, (TK.wk || 0) + +t.dataset.d); renderAll(); break;
     case 'rtier': S.rtier = t.dataset.v; try { localStorage.setItem('ls.rtier', S.rtier); } catch (e) {} renderAll(); break;
     case 'reloadres': loadClosed(true); toast('Checking for new results'); break;
     case 'exportall': exportAll(t); break;
