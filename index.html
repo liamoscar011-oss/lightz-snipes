@@ -339,6 +339,24 @@ textarea#imp-text{min-height:200px;font-family:var(--mono);font-size:.82rem}
 .prev th,.prev td{padding:5px 8px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
 .prev td.n{font-family:var(--mono);text-align:right}
 
+/* next-up bar across the top */
+.njb{background:var(--surface);border-bottom:1px solid var(--line)}
+.njb-in{display:flex;align-items:center;gap:10px;padding-block:7px}
+.njb-l{flex:none;font-family:var(--head);font-weight:700;font-size:.9rem;color:var(--muted);white-space:nowrap}
+.njb-row{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;min-width:0;flex:1;padding:1px}
+.njb-row::-webkit-scrollbar{display:none}
+.njb-c{flex:0 0 auto;display:grid;gap:2px;text-align:left;border:1px solid var(--line);background:var(--surface-2);border-radius:9px;padding:5px 10px 6px;cursor:pointer;max-width:200px;min-height:44px}
+.njb-c:hover{border-color:var(--blue)}
+.njb-c[aria-current="true"]{border-color:var(--ink)}
+.njb-c.bet{border-color:var(--yellow);background:color-mix(in srgb,var(--yellow) 14%,var(--surface))}
+.njb-t{display:flex;align-items:center;gap:6px;white-space:nowrap}
+.njb-v{font-weight:700;font-size:.86rem}
+.njb-k{font-size:.72rem;color:var(--muted)}
+.njb-p{display:flex;gap:5px;align-items:center;font-size:.78rem;min-width:0;white-space:nowrap}
+.njb-p b{font-weight:600;overflow:hidden;text-overflow:ellipsis}
+.njb-bet{font-weight:700;font-size:.7rem;background:var(--yellow);color:var(--on-yellow);border-radius:4px;padding:0 5px}
+@media (min-width:1100px){.njb{position:sticky;top:0;z-index:15}}
+@media (max-width:600px){.njb-l{display:none}.njb-in{padding-inline:10px}}
 /* next to jump */
 .nx{padding:12px 0 12px 16px;display:grid;gap:8px;overflow:hidden}
 .nx-h{display:flex;gap:10px;align-items:baseline;padding-right:16px}
@@ -1045,6 +1063,7 @@ body:has(#cmpbar:not([hidden])) #slipbtn{bottom:calc(74px + env(safe-area-inset-
     </nav>
   </div>
 </header>
+<nav id="njbar" class="njb" aria-label="Next races to jump" hidden></nav>
 
 <main class="wrap">
   <section class="view" id="v-snipes" role="tabpanel"></section>
@@ -3106,8 +3125,26 @@ window.lsLate = async (D, races, note) => {
   return Object.assign({ written: w.written }, C ? lateReport(C, ids) : { refreshed: ids.length, bets: [], watch: [] });
 };
 // Things that live outside the page sections: bet slip button, compare bar, alerts, an open pop-up
+// Next-up bar across the top of every page: the next dozen races by jump time, with our bet or top pick
+function njBar(C) {
+  const el = document.getElementById('njbar'); if (!el) return;
+  const now = Date.now();
+  const list = C.list.filter(a => !a.closed && !hiddenA(a) && isFinite(startMs(a.race)) && startMs(a.race) > now - 2 * 60000)
+    .sort((x, y) => startMs(x.race) - startMs(y.race)).slice(0, 12);
+  if (!list.length) { el.hidden = true; el.innerHTML = ''; return; }
+  const row = el.querySelector('.njb-row'), sx = row ? row.scrollLeft : 0;
+  el.innerHTML = `<div class="wrap njb-in"><span class="njb-l">Next up</span><div class="njb-row">${list.map(a => {
+    const ms = startMs(a.race), pl = a.act.filter(r => r.plan).sort((x, y) => y.plan.stake - x.plan.stake)[0], top = a.ranked[0];
+    const pick = pl ? `<span class="njb-bet">Bet ${money(pl.plan.stake)}</span><b>${esc(pl.name)}</b>` : top ? `<span class="muted">Top</span><b>${esc(top.name)}</b>` : '';
+    const on = S.tab === 'tracks' && S.raceId === a.race.id;
+    return `<button class="njb-c${pl ? ' bet' : ''}" data-act="gorace" data-race="${a.race.id}"${on ? ' aria-current="true"' : ''}><span class="njb-t">${cdSpan(ms)}<span class="njb-v">${esc(a.race.venue)} R${a.race.no}</span><span class="njb-k num">${clockTxt(ms)}</span></span><span class="njb-p">${pick}</span></button>`;
+  }).join('')}</div></div>`;
+  el.hidden = false;
+  const r2 = el.querySelector('.njb-row'); if (r2 && sx) r2.scrollLeft = sx;
+}
 function extrasPaint(C) {
   try { slipBtn(C); cmpBar(); alertList(C); nowBetCheck(C); } catch (e) {}
+  try { njBar(C); } catch (e) {}
   const el = $('#sheet-root .sheet'); if (!el || !S.sheet) return;
   const top = el.scrollTop;
   if (S.sheet.k === 'horse' && el.classList.contains('hp')) openHorse(S.sheet.raceId, S.sheet.n);
@@ -4490,7 +4527,7 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('#sheet-
 // When a race reaches its jump, redraw so it drops out of Snipes and Next to jump
 let jumpedSig = '';
 setInterval(() => { try { const s = allRaces().filter(jumped).map(r => r.id).join(','); if (jumpedSig && s !== jumpedSig && !document.activeElement.matches('input,textarea,select')) renderAll(); jumpedSig = s; } catch (e) {} }, 30000);
-(() => { let x0 = null, y0 = 0; document.addEventListener('touchstart', e => { if (S.tab !== 'tracks' || !S.meet || e.target.closest('input,select,textarea,.nx-row,.rstrip,.race-strip')) { x0 = null; return; } x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; }, { passive: true });
+(() => { let x0 = null, y0 = 0; document.addEventListener('touchstart', e => { if (S.tab !== 'tracks' || !S.meet || e.target.closest('input,select,textarea,.nx-row,.njb-row,.rstrip,.race-strip')) { x0 = null; return; } x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; }, { passive: true });
   document.addEventListener('touchend', e => { if (x0 === null) return; const dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0; x0 = null; if (Math.abs(dx) < 70 || Math.abs(dy) > 50) return;
     const cur = meetings(compute()).find(([k]) => k === S.meet); if (!cur) return; const arr = cur[1].slice().sort((p, q) => p.race.no - q.race.no);
     let i = arr.findIndex(a => a.race.id === S.raceId); if (i < 0) i = Math.max(0, arr.findIndex(a => !a.closed)); const j = i + (dx < 0 ? 1 : -1); if (j < 0 || j >= arr.length) return;
