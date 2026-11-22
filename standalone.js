@@ -144,8 +144,8 @@
   /* ---------- import the backup file from the Claude version ---------- */
   async function importBackup(file, note) {
     const txt = await file.text();
-    let j; try { j = JSON.parse(txt); } catch (e) { throw new Error('That file isn\'t a Lightz Snipes backup'); }
-    if (!j || j.app !== 'lightz-snipes' || !j.cols) throw new Error('That file isn\'t a Lightz Snipes backup');
+    let j; try { j = JSON.parse(txt); } catch (e) { throw new Error('That file isn\'t a Lightz Snipez backup'); }
+    if (!j || j.app !== 'lightz-snipes' || !j.cols) throw new Error('That file isn\'t a Lightz Snipez backup');
     await ready;
     const rows = [];
     Object.entries(j.cols).forEach(([col, m]) => Object.entries(m || {}).forEach(([id, data]) => { if (data && typeof data === 'object') rows.push({ col, id, data }); }));
@@ -190,6 +190,8 @@
   #lsgate .sw{font:inherit;background:none;border:0;color:inherit;text-decoration:underline;cursor:pointer;padding:4px 0;justify-self:start;opacity:.85}
   #lsgate .msg{min-height:1.3em;font-size:.9rem;color:var(--yellow,#f4b63f)}
   #lsgate .rail{height:7px;margin:4px 0 6px;background:linear-gradient(to bottom,transparent 0 1px,currentColor 1px 4px,transparent 4px),repeating-linear-gradient(90deg,transparent 0 46px,currentColor 46px 48px);opacity:.85}
+  #lsgate .lsg-h{display:flex;align-items:center;gap:12px}
+  #lsgate .lsg-h img{border-radius:10px;flex:none}
   .ls-file{position:relative}`;
   let gate = null, mode = 'in';
   function showGate() {
@@ -197,7 +199,7 @@
     const st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
     gate = document.createElement('div'); gate.id = 'lsgate';
     gate.innerHTML = `<form novalidate>
-      <h1>Lightz Snipes</h1><div class="rail" aria-hidden="true"></div>
+      <h1 class="lsg-h"><img src="icons/icon-192.png" alt="" width="44" height="44"><span>Lightz Snipez</span></h1><div class="rail" aria-hidden="true"></div>
       <p class="sub">Sign in to see your race cards, picks and bets.</p>
       <label>Email<input type="email" name="email" autocomplete="email" required></label>
       <label>Password<input type="password" name="pw" autocomplete="current-password" minlength="6" required></label>

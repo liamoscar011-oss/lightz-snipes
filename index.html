@@ -1,9 +1,9 @@
-<!doctype html><html><head><title>Lightz Snipes</title><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Snipes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="theme-color" content="#0d3426"><meta name="description" content="Race-day picks, prices and a bet tracker."><link rel="manifest" href="manifest.webmanifest"><link rel="icon" type="image/png" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/apple-touch-icon.png"><script src="vendor/supabase.js"></script><script src="config.js"></script><script src="standalone.js"></script><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html><html><head><title>Lightz Snipez</title><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Snipez"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="theme-color" content="#0d3426"><meta name="description" content="Race-day picks, prices and a bet tracker."><link rel="manifest" href="manifest.webmanifest"><link rel="icon" type="image/png" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/apple-touch-icon.png"><script src="vendor/supabase.js"></script><script src="config.js"></script><script src="standalone.js"></script><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 
-<title>Lightz Snipes</title>
+<title>Lightz Snipez</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Lightz Snipes">
+<meta name="apple-mobile-web-app-title" content="Lightz Snipez">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0d3426">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -643,7 +643,10 @@ footer .wrap{display:grid;gap:6px}
 :root[data-skin="lightz"] .top::after{content:"";position:absolute;left:0;right:0;bottom:0;height:7px;pointer-events:none;
   background:linear-gradient(to bottom,transparent 0 1px,var(--rail) 1px 4px,transparent 4px),repeating-linear-gradient(90deg,transparent 0 46px,var(--rail) 46px 48px)}
 :root[data-skin="lightz"] .brand h1{font-stretch:62%;font-weight:900;font-style:italic;font-size:1.9rem;letter-spacing:.01em;line-height:1}
-:root[data-skin="lightz"] .brand svg,:root[data-skin="lightz"] .brand svg path{fill:var(--yellow)}
+:root .top .brand .brand-mark{width:40px;height:40px;border-radius:9px;box-shadow:0 0 0 1px rgba(255,255,255,.14)}
+:root .top .brand h1.wordmark{font-family:'Archivo',system-ui,sans-serif;font-style:normal;font-weight:800;font-stretch:72%;font-size:1.9rem;letter-spacing:-.005em;line-height:1;color:var(--on-navy);white-space:nowrap}
+.wordmark .di{position:relative;display:inline-block}
+.wordmark .di::after{content:'';position:absolute;left:50%;top:.035em;width:.15em;height:.15em;border-radius:50%;transform:translateX(-50%);background:#f4b63f}
 :root[data-skin="lightz"] .tab{font-weight:600;opacity:.7;padding:11px 12px 10px;border-bottom-width:3px}
 :root[data-skin="lightz"] .tab[aria-selected="true"]{opacity:1;border-bottom-color:var(--yellow)}
 :root[data-skin="lightz"] .pill-top{background:color-mix(in srgb,var(--on-navy) 10%,transparent);font-weight:500}
@@ -827,6 +830,9 @@ svg.plc .hit{fill:transparent;cursor:crosshair}
   .top.top.top::after{display:none}
   .top .wrap.top-in{max-width:none;margin:0;min-height:100%;box-sizing:border-box;flex-direction:column;flex-wrap:nowrap;align-items:stretch;gap:18px;padding:24px 16px 20px}
   .top .top-in .brand{flex-wrap:wrap;row-gap:12px;padding:0 6px}
+  :root .top .top-in .brand{column-gap:8px;padding:0 2px}
+  :root .top .top-in .brand .brand-mark{width:36px;height:36px;border-radius:8px}
+  :root .top .top-in .brand h1.wordmark{font-size:1.75rem}
   .top .top-in .brand::after{content:"";flex:1 0 100%;height:7px;background:linear-gradient(to bottom,transparent 0 1px,var(--rail,#fff) 1px 4px,transparent 4px),repeating-linear-gradient(90deg,transparent 0 34px,var(--rail,#fff) 34px 36px)}
   .top .top-in .tabs{order:2;flex-direction:column;overflow:visible;width:auto;gap:2px}
   .top .top-in .tabs .tab{text-align:left;border-bottom:0;border-radius:10px;padding:10px 12px;opacity:.85;font-size:1rem}
@@ -1005,8 +1011,8 @@ body:has(#cmpbar:not([hidden])) #slipbtn{bottom:calc(74px + env(safe-area-inset-
 <header class="top">
   <div class="wrap top-in">
     <div class="brand">
-      <svg viewBox="0 0 24 24" aria-hidden="true" id="brand-horse"></svg>
-      <h1>Lightz Snipes</h1>
+      <svg class="brand-mark" viewBox="0 0 512 512" aria-hidden="true"><defs><clipPath id="bm-cut"><circle cx="256" cy="256" r="171"/></clipPath></defs><rect width="512" height="512" fill="#0d3426"/><g clip-path="url(#bm-cut)"><path fill="#c98e22" d="M232 146 C166 186 126 288 112 480 L72 480 C86 300 130 196 222 128 Z"/><path fill="#c98e22" d="M230 152 L232 84 L262 140 Z"/><path fill="#f4b63f" d="M236 150 L262 76 L280 146 C302 156 320 172 332 192 L388 296 C400 324 390 354 362 360 L334 364 C314 366 300 356 292 342 C280 320 262 304 242 310 L224 340 L214 480 L118 480 C128 330 160 214 236 150 Z"/><circle cx="314" cy="208" r="11" fill="#0d3426"/><path d="M372 326 q-12 8 -24 4" fill="none" stroke="#0d3426" stroke-width="8" stroke-linecap="round"/></g><circle cx="256" cy="256" r="178" fill="none" stroke="#f3f7f2" stroke-width="14"/><g stroke="#f3f7f2" stroke-width="14" stroke-linecap="round"><line x1="256" y1="46" x2="256" y2="112"/><line x1="256" y1="400" x2="256" y2="466"/><line x1="46" y1="256" x2="112" y2="256"/><line x1="400" y1="256" x2="466" y2="256"/></g></svg>
+      <h1 class="wordmark" aria-label="Lightz Snipez">L<span class="di" aria-hidden="true">ı</span>ghtz Sn<span class="di" aria-hidden="true">ı</span>pez</h1>
     </div>
     <div class="top-meta">
       <span class="pill-top" id="meta-live"></span>
@@ -1926,7 +1932,6 @@ function toast(msg, actLabel, fn) {
 
 /* ============================ header ============================ */
 function renderHeader(C) {
-  $('#brand-horse').innerHTML = horseWithSilk('Lightz Snipes', '#ffffff', '#142841');
   const meets = new Set(C.list.map(a => a.race.slug)).size, di = dayInfo(), el = $('#meta-live');
   el.className = 'pill-top' + (liveOn() ? ' live' : '');
   el.textContent = liveOn() ? `${dateTxt(currentDate())}${isScout() ? ' · scouting' : ''} · ${meets} meetings · updated ${timeTxt(di.updatedAt) || '—'}` : `${dateTxt(currentDate())} · ${meets} meetings · saved card`;
@@ -3292,7 +3297,7 @@ function renderSettings(C) {
   if (window.LS_STANDALONE && window.lsSettingsCard) h += window.lsSettingsCard();
   if (window.claude && !window.LS_STANDALONE) h += `<div class="card panel">
     <h3>Move to your own app</h3>
-    <p class="d">Download every race card, result, bet, blackbook entry and setting as one file, then import it in the standalone Lightz Snipes app (Settings, Import backup).</p>
+    <p class="d">Download every race card, result, bet, blackbook entry and setting as one file, then import it in the standalone Lightz Snipez app (Settings, Import backup).</p>
     <div class="acts"><button class="btn pri" data-act="exportall">Export everything</button></div>
   </div>`;
   h += `<div class="card panel">
@@ -3357,7 +3362,7 @@ function renderSettings(C) {
   h += `<div class="card panel"><div class="ph"><h3>Promos</h3></div><p class="d">Your Sportsbet promos (bonus back, odds boost, multi boost) and the offers other bookies are running are on the Promos tab.</p><div class="acts-r"><button class="btn sm pri" data-act="goto" data-tab="promos">Open Promos</button></div></div>`;
   h += `<div class="card panel">
     <h3>Use it like an app</h3>
-    <p class="d">Put Lightz Snipes on your home screen so it opens in one tap.</p>
+    <p class="d">Put Lightz Snipez on your home screen so it opens in one tap.</p>
     <p><b>iPhone:</b> open this page in Safari, tap Share, then <b>Add to Home Screen</b>.</p>
     <p><b>Android:</b> open it in Chrome, tap ⋮, then <b>Add to Home screen</b>.</p>
   </div>`;
