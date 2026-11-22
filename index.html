@@ -451,6 +451,11 @@ html.noanim .pxa{display:none}
 .njb-k{font-size:.72rem;color:var(--muted)}
 .njb-p{display:flex;gap:5px;align-items:center;font-size:.78rem;min-width:0;white-space:nowrap}
 .njb-p b{font-weight:600;overflow:hidden;text-overflow:ellipsis}
+.rc-top{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.rc-seg button{padding:4px 10px;font-size:.8rem}
+.rtab.rc td small{display:inline}
+.rtab.rc{table-layout:fixed;width:100%;min-width:560px}
+.rtab.rc th:nth-child(1){width:30%}.rtab.rc th:nth-child(2),.rtab.rc th:nth-child(3){width:10%}.rtab.rc th:nth-child(4){width:12%}.rtab.rc th:nth-child(5){width:18%}.rtab.rc th:nth-child(6){width:20%}
 .njb-none{align-self:center;font-size:.86rem;white-space:normal;padding:8px 4px;line-height:1.35}
 .njb-go{flex:none;align-self:center;min-height:36px;padding:6px 12px;font-size:.84rem}
 .njb-bet{font-weight:700;font-size:.7rem;background:var(--yellow);color:var(--on-yellow);border-radius:4px;padding:0 5px}
@@ -1635,7 +1640,11 @@ function formInfo(r, race, act, ctx) {
   const fu = recOf(r.fu);
   if (/x$/i.test(f)) { if (fu && fu.s >= 3 && (fu.w / fu.s >= .3 || (fu.w + fu.p) / fu.s >= .6)) add(`Good fresh: first-up record ${r.fu}`, .15, 'Good fresh'); else if (fu && fu.s >= 3 && fu.w + fu.p === 0) add(`Poor first-up record ${r.fu}`, -.15, 'Poor fresh'); else add('First-up from a spell', -.1, 'First-up'); }
   if (topJ(r.j)) add(`Top jockey booked: ${r.j}`, .08, 'Top jockey');
-  else if (/x\d$/i.test(f)) add('Second-up from a spell', 0, 'Second-up');
+  { const pr = prepOf(r);
+    if (pr === 1) add('Second run back from a spell: usually fitter', .05, 'Fitter 2nd up');
+    else if (pr === 2) add('Third run back from a spell: often the peak run', .04, 'Peak 3rd up');
+    else if (pr >= 6 && f.length >= 7 && !/x/i.test(f.slice(-7))) add('Seven or more runs this campaign', -.03, 'Long campaign'); }
+  { const cm = classMove(race, r); if (cm) add(cm.txt, cm.v, cm.chip); }
   const mv = move(r);
   if (mv && mv.firm) add(`Firmed from ${odds$(mv.open)} to ${odds$(r.win)}`, .2, 'Firming');
   else if (mv && mv.drift) add(`Drifted from ${odds$(mv.open)} to ${odds$(r.win)}`, -.2, 'Drifting');
@@ -1868,11 +1877,15 @@ function buildPlan(C) {
   const st = S.settings, G = bankGuard(), B = st.bankroll * G.f, items = [];
   C.list.forEach(a => { if (a.closed || hiddenA(a)) return; a.act.forEach(r => {
     const o = r.opts.filter(x => x.ev >= barOf(x)).sort((x, y) => y.ev - x.ev)[0];
-    if (o) items.push({ a, r, o, w: o.kf * (o.promo ? 1 : 0.5), cap: Math.min(o.cap || Infinity, st.stakeMode === 'spread' ? B * st.maxBetPct / 100 : Infinity) });
+    if (!o) return;
+    const rr = rfRule(a, r, o); r.rf = rr;
+    if (rr && rr.rule === 'skip') return;
+    const h = rr && rr.rule === 'half' ? 0.5 : 1;
+    items.push({ a, r, o, w: o.kf * (o.promo ? 1 : 0.5) * h, cap: Math.min(o.cap || Infinity, st.stakeMode === 'spread' ? B * st.maxBetPct / 100 : Infinity) * h, half: h < 1 });
   }); });
   if (st.stakeMode === 'spread') allocate(items, B);
   else {
-    items.forEach(i => { i.stake = i.o.kstake; });
+    items.forEach(i => { i.stake = i.half ? Math.floor(i.o.kstake / 2) : i.o.kstake; });
     if (items.reduce((s, i) => s + i.stake, 0) > B) { items.forEach(i => { i.w = i.stake; i.cap = i.stake; }); allocate(items, B); }
   }
   const live = items.filter(i => i.stake >= 1).sort((x, y) => y.stake - x.stake || y.o.ev - x.o.ev);
@@ -1907,8 +1920,9 @@ function pickList(C) {
     act.forEach(r => {
       if (HP.has(a.race.id + '_' + r.n)) return;
       const o = r.plan ? r.plan.o : r.best, other = act.reduce((m, x) => x !== r && x.p > m ? x.p : m, 0), mv = move(r);
-      const g = growthOf(o), ok = o.type === 'place' ? (r.pPl || 0) >= 0.55 : r.p >= MIN_PICK;
-      const lk = r.p + 0.35 * (r.p - other) + 0.8 * Math.min(o.ev, 0) + (mv && mv.firm ? 0.02 : mv && mv.drift ? -0.02 : 0) + (allAgree(a, r) ? 0.03 : 0);
+      const rr = rfRule(a, r, o); if (rr && rr.rule === 'skip') return;
+      const g = growthOf(o) * (rr ? 0.5 : 1), ok = o.type === 'place' ? (r.pPl || 0) >= 0.55 : r.p >= MIN_PICK;
+      const lk = (rr ? -0.04 : 0) + r.p + 0.35 * (r.p - other) + 0.8 * Math.min(o.ev, 0) + (mv && mv.firm ? 0.02 : mv && mv.drift ? -0.02 : 0) + (allAgree(a, r) ? 0.03 : 0);
       out.push({ a, r, o, tier: tierOf(o.odds), stake: r.plan ? r.plan.stake : 0, g, ok, lk });
     });
   });
@@ -2110,6 +2124,8 @@ function renderSnipes(C) {
     if (ms.length > 1) h += `<div class="seg" role="group" aria-label="Meetings on Snipes" style="flex-wrap:wrap">${ms.map(sl => { const a = C.list.find(x => x.race.slug === sl); return `<button data-act="snmeet" data-slug="${esc(sl)}" aria-pressed="${!on.length || on.includes(sl)}">${esc(a.race.venue)}</button>`; }).join('')}<button data-act="snmeet" data-slug="*" aria-pressed="${!on.length}">All</button></div>`; }
   if (P && P.guard && P.guard.msg) h += `<div class="card panel" style="border-left:4px solid #d33"><b>Bank protection:</b> ${esc(P.guard.msg)}</div>`;
   { const pins = C.list.filter(a => PINS.has(a.race.id) && !a.closed && !jumped(a.race)); if (pins.length) h += `<div class="card pinbox"><div class="nx-h"><h3>📌 Pinned races</h3></div><div class="nx-row">${pins.map(a => { const ms = startMs(a.race), top = a.ranked[0]; return `<button class="nx-c" data-act="gorace" data-race="${a.race.id}"><span class="nx-r">${esc(a.race.venue)} R${a.race.no}</span>${isFinite(ms) ? `<span class="nx-p"><span class="num">${clockTxt(ms)}</span>${cdSpan(ms)}</span>` : ''}${top ? `<span class="nx-p"><b>${esc(top.name)}</b><span class="num">${odds$(top.win)}</span></span>` : ''}${cdBar(ms)}</button>`; }).join('')}</div></div>`; }
+  { const rf = S.settings.rf || {}, ks = Object.keys(rf); if (ks.length) { const lb = k => { const R = RC.seg && RC.seg[k]; return R ? R.lbl : k.split(':')[1]; }; const sk = ks.filter(k => rf[k] === 'skip').map(lb), hf = ks.filter(k => rf[k] === 'half').map(lb);
+    h += `<p class="muted" style="font-size:.84rem;margin:4px 0">Race filter on: ${sk.length ? 'skipping ' + esc(sk.join(', ')) : ''}${sk.length && hf.length ? '; ' : ''}${hf.length ? 'half stakes on ' + esc(hf.join(', ')) : ''}. <button class="btn sm link" data-act="goto" data-tab="results">Change</button></p>`; } }
   if (HP.size) h += `<p class="muted" style="font-size:.84rem;margin:4px 0">${HP.size} hidden pick${HP.size > 1 ? 's' : ''} · <button class="btn sm link" data-act="unhidepk">Show all</button></p>`;
   h += bbTodayCard();
   {
@@ -2473,6 +2489,103 @@ function agreeChip(a, r) {
   if (g.of < 3 || !g.n) return '';
   const k = g.n >= 4 || (g.n === g.of) ? 'hi' : g.n >= 3 ? 'md' : '';
   return `<span class="agr ${k}" title="${esc('Backed by: ' + g.who.join(', ') + (g.miss.length ? '. Not: ' + g.miss.join(', ') : ''))}">${g.n}/${g.of} agree</span>`;
+}
+// Fitness: runs this campaign before today (0 = first-up), from the card's last starts, else from the form's x
+function prepOf(r) {
+  if (typeof r.prep === 'number') return r.prep;
+  const f = String(r.form || '');
+  return /x$/i.test(f) ? 0 : /x\d$/i.test(f) ? 1 : /x\d\d$/i.test(f) ? 2 : null;
+}
+// Class: a rough level for a race (BM and rating numbers, Class 1-6, maidens, Group races) plus the track's tier
+const METRO_T = /^(flemington|caulfield|moonee valley|the valley|sandown|royal randwick|randwick|rosehill|warwick farm|canterbury|eagle farm|doomben|morphettville|ascot|belmont)/i;
+const PROV_T = /^(gold coast|sunshine coast|ipswich|toowoomba|newcastle|kembla|illawarra|gosford|wyong|hawkesbury|geelong|ballarat|bendigo|cranbourne|pakenham|mornington|kilmore|murray bridge|gawler|pinjarra|bunbury|launceston|hobart|elwick|scone|muswellbrook)/i;
+const trackTier = v => METRO_T.test(String(v || '').trim()) ? 2 : PROV_T.test(String(v || '').trim()) ? 1 : 0;
+function classLvl(s) {
+  s = String(s || ''); let m;
+  if (/\bG(?:roup)? ?1\b/i.test(s)) return 110; if (/\bG(?:roup)? ?2\b/i.test(s)) return 104; if (/\bG(?:roup)? ?3\b/i.test(s)) return 98; if (/listed|\bLR\b/i.test(s)) return 92;
+  if ((m = /\b(?:BM|RST?|Rating)\s?(\d{2,3})\b/i.exec(s))) return +m[1];
+  if ((m = /\b(?:Cls|CL|Class|C)\s?([1-6])\b/i.exec(s))) return 40 + 6 * +m[1];
+  if (/maiden|\bmdn\b/i.test(s)) return 40;
+  if (/open|quality|stakes|\bhcp\b|handicap|\bcup\b/i.test(s)) return 80;
+  return null;
+}
+function classMove(race, r) {
+  if (!r.ls || !r.ls.cl) return null;
+  const a = classLvl(race.name), b = classLvl(r.ls.cl); if (a === null || b === null) return null;
+  const ta = trackTier(race.venue), tb = trackTier(r.ls.tk), d = (b + 6 * tb) - (a + 6 * ta);
+  const where = tb > ta ? `, from ${['country', 'provincial', 'city'][tb]} to ${['country', 'provincial', 'city'][ta]}` : '';
+  if (d >= 8) return { txt: `Down in class: last start ${r.ls.cl} at ${r.ls.tk}${where}`, v: r.ls.pl && r.ls.pl <= 5 ? .12 : .08, chip: tb === 2 && ta === 0 ? 'City to country' : 'Down in class' };
+  if (d <= -12) return { txt: `Up in class: last start ${r.ls.cl} at ${r.ls.tk}`, v: -.06, chip: 'Up in class' };
+  return null;
+}
+// ===== Report card by race type, and the race filter it drives =====
+// Each finished race is scored by the pick the app would make (the same rule as the Top 10), as a $1 bet.
+const RF_GROUPS = [
+  ['size', 'Field size', a => { const n = a.act.length; return n <= 8 ? ['s8', '8 or fewer runners'] : n <= 12 ? ['s12', '9 to 12 runners'] : ['s13', '13 or more runners']; }],
+  ['kind', 'Race type', a => { const x = String(a.race.name || ''); return /maiden|\bmdn\b/i.test(x) ? ['mdn', 'Maidens'] : /\b(2yo|2-y-o|two[- ]year)/i.test(x) ? ['2yo', '2-year-olds'] : /\bG(?:roup)? ?[123]\b|listed|\bLR\b/i.test(x) ? ['grp', 'Group and Listed'] : /\b(?:Cls|CL|Class|C)\s?[1-3]\b/i.test(x) ? ['c13', 'Class 1 to 3'] : /\b(?:BM|RST?|Rating)\s?\d+|benchmark|\b(?:Cls|CL|Class|C)\s?[4-6]\b|\bhcp\b|handicap/i.test(x) ? ['bm', 'Benchmarks and handicaps'] : ['oth', 'Other races']; }],
+  ['region', 'Track', a => [['cty', 'Country tracks'], ['prv', 'Provincial tracks'], ['met', 'City tracks']][trackTier(a.race.venue)]],
+  ['going', 'Track rating', a => /heavy/i.test(a.race.track || '') ? ['hvy', 'Heavy'] : /soft/i.test(a.race.track || '') ? ['sft', 'Soft'] : a.race.track ? ['gd', 'Good or firm'] : null],
+  ['dist', 'Distance', a => { const d = +a.race.dist || 0; return !d ? null : d <= 1200 ? ['d1', 'Up to 1200m'] : d <= 1600 ? ['d2', '1201 to 1600m'] : d <= 2000 ? ['d3', '1601 to 2000m'] : ['d4', 'Over 2000m']; }],
+  ['state', 'State', a => a.race.state ? [String(a.race.state).toLowerCase(), String(a.race.state).toUpperCase()] : null],
+  ['fit', 'Pick\'s fitness', (a, r) => { const p = prepOf(r); return p === 0 ? ['fu', 'First-up picks'] : p === 1 || p === 2 ? ['su', 'Second or third up'] : p === null ? null : ['fit', 'Fit and racing']; }],
+  ['price', 'Pick\'s price', (a, r, o) => o.odds < 3 ? ['p1', 'Under $3'] : o.odds <= 6 ? ['p2', '$3 to $6'] : ['p3', 'Over $6']]
+];
+function rfKeys(a, r, o) {
+  const out = [];
+  RF_GROUPS.forEach(([g, , fn]) => { const k = fn(a, r, o || (r && (r.plan ? r.plan.o : r.best)) || { odds: r ? r.win : 0 }); if (k) out.push([g + ':' + k[0], k[1]]); });
+  return out;
+}
+function rfRule(a, r, o) {
+  const rf = S.settings.rf || {}; if (!Object.keys(rf).length) return null;
+  let rule = null, why = [];
+  rfKeys(a, r, o).forEach(([k, lbl]) => { const v = rf[k]; if (v === 'skip') { rule = 'skip'; why.push(lbl); } else if (v === 'half' && rule !== 'skip') { rule = 'half'; why.push(lbl); } });
+  return rule ? { rule, why } : null;
+}
+function racePickOf(a) {
+  const act = a.act.filter(r => r.opts && r.opts.length && r.p > 0); if (!act.length) return null;
+  const c = act.map(r => { const o = r.best, other = act.reduce((m, x) => x !== r && x.p > m ? x.p : m, 0); return { r, o, g: growthOf(o), ok: o.type === 'place' ? (r.pPl || 0) >= 0.55 : r.p >= MIN_PICK, lk: r.p + 0.35 * (r.p - other) + 0.8 * Math.min(o.ev, 0) }; });
+  const good = c.filter(x => x.g > 0 && x.ok).sort((x, y) => y.g - x.g || y.lk - x.lk)[0]; if (good) return good;
+  return c.filter(x => x.g > 0).sort((x, y) => y.r.p - x.r.p)[0] || null;
+}
+let RC = { key: '', rows: null };
+function reportCard(C) {
+  const races = closedRaces(), key = races.length + '|' + S.settings.market + '|' + (S.settings.formW === 'auto' ? AUTO.beta : S.settings.formW) + '|' + C.conv.toFixed(2);
+  if (RC.key === key) return RC;
+  const seg = {}, all = { n: 0, w: 0, ret: 0 };
+  races.forEach(race => {
+    const a = analyse(race);
+    a.act.forEach(r => { r.opts = buildOpts(a, r, C.conv); r.best = r.opts.reduce((m, o) => o.ev > m.ev ? o : m, r.opts[0]); });
+    const pk = racePickOf(a); if (!pk) return;
+    const pos = race.result.indexOf(pk.r.n), ret = payout(pk.o, a, pos), hit = pk.o.type === 'place' ? pos >= 0 && pos < (a.places || 3) : pos === 0;
+    const add = x => { x.n++; x.w += hit ? 1 : 0; x.ret += ret; };
+    add(all);
+    rfKeys(a, pk.r, pk.o).forEach(([k, lbl]) => { const x = seg[k] || (seg[k] = { k, lbl, n: 0, w: 0, ret: 0 }); add(x); });
+  });
+  const sr = all.n ? all.w / all.n : 0;
+  Object.values(seg).forEach(x => {
+    x.sr = x.n ? x.w / x.n : 0; x.roi = x.n ? (x.ret - x.n) / x.n : 0;
+    x.verdict = x.n < 15 ? 'few' : x.roi <= -0.25 && x.sr <= sr * 0.8 ? 'weak' : x.roi <= -0.1 ? 'soft' : x.roi >= 0.1 ? 'strong' : 'ok';
+    x.suggest = x.verdict === 'weak' ? 'skip' : x.verdict === 'soft' ? 'half' : null;
+  });
+  RC = { key, all, sr, seg }; return RC;
+}
+function reportCardHtml(C) {
+  const R = reportCard(C); if (!R.all.n) return '';
+  const rf = S.settings.rf || {}, sugg = Object.values(R.seg).filter(x => x.suggest);
+  const vtag = x => x.verdict === 'few' ? `<span class="tag">Too few yet</span>` : x.verdict === 'strong' ? `<span class="tag str">Strong</span>` : x.verdict === 'weak' ? `<span class="tag bad">Weak</span>` : x.verdict === 'soft' ? `<span class="tag">Below par</span>` : `<span class="tag">OK</span>`;
+  let h = `<div class="head-row"><h2>Report card by race type</h2><p>How the pick the app would make did in each kind of race, as a $1 bet. Set weak race types to Half stakes or Skip, and the picks and staking plan follow.</p></div>`;
+  h += `<div class="card panel rc-top"><div><b>${R.all.n} races scored</b><span class="muted"> · our pick won or placed as bet ${pct(R.sr, 0)} of the time · ${evTxt((R.all.ret - R.all.n) / R.all.n)} return</span></div>
+    <div class="acts-r">${sugg.length ? `<button class="btn sm pri" data-act="rfsuggest">Use suggestions (${sugg.length})</button>` : '<span class="muted" style="font-size:.84rem">No weak race types with enough races yet</span>'}${Object.keys(rf).length ? '<button class="btn sm" data-act="rfreset">Bet on everything</button>' : ''}</div></div>`;
+  RF_GROUPS.forEach(([g, gl]) => {
+    const rows = Object.values(R.seg).filter(x => x.k.startsWith(g + ':')).sort((x, y) => y.n - x.n);
+    if (!rows.length) return;
+    h += `<div class="card tblwrap"><table class="rtab rc"><thead><tr><th>${esc(gl)}</th><th>Races</th><th>Strike</th><th>Return</th><th>Verdict</th><th class="r">Betting</th></tr></thead><tbody>${rows.map(x => {
+      const v = rf[x.k] || 'bet';
+      return `<tr><td>${esc(x.lbl)}</td><td class="num">${x.n}</td><td class="num">${pct(x.sr, 0)}</td><td class="num ${x.roi > 0 ? 'pos' : x.roi < 0 ? 'neg' : ''}">${evTxt(x.roi)}</td><td>${vtag(x)}${x.suggest && v !== x.suggest ? `<small class="muted"> try ${x.suggest === 'skip' ? 'Skip' : 'Half'}</small>` : ''}</td>
+        <td class="r"><span class="seg rc-seg" role="group" aria-label="Betting on ${esc(x.lbl)}">${[['bet', 'Bet'], ['half', 'Half'], ['skip', 'Skip']].map(([k, l]) => `<button data-act="rfset" data-k="${esc(x.k)}" data-v="${k}" aria-pressed="${v === k}">${l}</button>`).join('')}</span></td></tr>`;
+    }).join('')}</tbody></table></div>`;
+  });
+  return h;
 }
 // Second opinion, shown quietly: our top pick is also the market favourite and the outside ratings/tips agree
 // (TAB's rating when the card has it, otherwise Sportsbet's tipster).
@@ -3810,6 +3923,7 @@ function renderResults(C) {
     const g = groupStats(bets.filter(x => x.date === d));
     return `<tr><td>${dateTxt(d)}</td><td>${new Set(picks.filter(x => x.date === d).map(x => x.raceId)).size}</td><td>${g.n}</td><td class="${g.profit > 0 ? 'pos' : g.profit < 0 ? 'neg' : ''}">${g.n ? money(g.profit, 2) : '—'}</td><td>${g.n ? evTxt(g.roi) : '—'}</td></tr>`;
   }).join('')}</tbody></table></div>`;
+  h += reportCardHtml(C);
   h += pickRecordHtml();
   if (AUTO.n) h += `<div class="notice"><p><b>Form check:</b> on ${AUTO.n} finished races the best form weight is <b>${AUTO.raw.toFixed(2)}</b>${S.settings.formW === 'auto' ? `; Auto is using <b>${AUTO.beta.toFixed(2)}</b>, held near Light until there are more results` : ''}. ${AUTO.gain > 0.002 ? 'Form is adding to the market.' : AUTO.gain < -0.002 ? 'Form is not beating the market yet.' : 'Too close to call yet.'}</p></div>`;
   h += `<p class="muted" style="font-size:.85rem;max-width:80ch">Each pick is scored as a $1 bet at the last price the refresh saw, using your current settings (promos, form weight). Bonus-back refunds count at ${Math.round(C.conv * 100)}¢ per $1. Results are noisy: a few hundred bets are needed before a group's return says much about its edge.</p>`;
@@ -4575,6 +4689,9 @@ document.addEventListener('click', e => {
     case 'ext': return;
     case 'skin': applySkin(t.dataset.v, true); renderAll(); break;
     case 'zoomset': applyZoom(+t.dataset.v, true); break;
+    case 'rfset': { const rf = Object.assign({}, S.settings.rf || {}); if (t.dataset.v === 'bet') delete rf[t.dataset.k]; else rf[t.dataset.k] = t.dataset.v; S.settings.rf = rf; saveSettings(); renderAll(); break; }
+    case 'rfsuggest': { const rf = Object.assign({}, S.settings.rf || {}); Object.values(RC.seg || {}).forEach(x => { if (x.suggest) rf[x.k] = x.suggest; }); S.settings.rf = rf; saveSettings(); renderAll(); toast('Weak race types set to Half or Skip'); break; }
+    case 'rfreset': S.settings.rf = {}; saveSettings(); renderAll(); toast('Betting on every race type again'); break;
     case 'anim': ANIM.off = t.dataset.v === 'off'; try { localStorage.setItem('ls.anim', ANIM.off ? 'off' : 'on'); } catch (e) {} document.documentElement.classList.toggle('noanim', ANIM.off); renderAll(); break;
     case 'zoomstep': applyZoom(ZOOM.v + (+t.dataset.v), true); break;
     case 'noteopen': { const k = t.dataset.key; S.noteOpen.add(k); renderAll(); const el = [...document.querySelectorAll('.note-in')].find(x => x.dataset.note === k); if (el) el.focus(); break; }
