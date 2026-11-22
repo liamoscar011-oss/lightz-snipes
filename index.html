@@ -967,6 +967,22 @@ body:has(#cmpbar:not([hidden])) #slipbtn{bottom:calc(74px + env(safe-area-inset-
 .tkw .v.sm{font-size:1.05rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tkw-tips{margin-top:10px;padding:10px 12px;border-radius:8px;background:var(--surface-2);font-size:.9rem}
 .tkw-tips ul{margin:4px 0 0;padding-left:18px}
+
+/* ===== Promos tab ===== */
+.pr-mine{display:grid;gap:12px;align-content:start}
+.pr-bar{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;justify-content:space-between}
+.pr-b{padding:14px 16px;display:grid;gap:10px}
+.pr-bh{display:flex;gap:10px;align-items:center}
+.pr-chip{color:#fff;font-weight:800;border-radius:6px;padding:4px 10px;font-size:.92rem}
+.pr-g{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}
+.pr-o{border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:grid;gap:6px;align-content:start;background:var(--surface)}
+.pr-o.on{border-color:var(--blue);box-shadow:inset 3px 0 0 var(--blue)}
+.pr-t{font-size:.98rem;line-height:1.3}
+.pr-tags{display:flex;flex-wrap:wrap;gap:4px}
+.pr-tags .tag.go{background:var(--pos-bg);color:var(--pos)}
+.pr-o p{margin:0;font-size:.86rem;line-height:1.4;color:var(--muted)}
+.pr-o p.pr-x{color:var(--neg);font-weight:600;font-size:.8rem}
+.pr-l{font-size:.84rem;font-weight:600;justify-self:start}
 </style>
 
 <header class="top">
@@ -983,6 +999,7 @@ body:has(#cmpbar:not([hidden])) #slipbtn{bottom:calc(74px + env(safe-area-inset-
       <button class="tab" role="tab" data-tab="snipes" id="tab-snipes">Snipes</button>
       <button class="tab" role="tab" data-tab="picks" id="tab-picks">My picks</button>
       <button class="tab" role="tab" data-tab="tracks" id="tab-tracks">Tracks</button>
+      <button class="tab" role="tab" data-tab="promos" id="tab-promos">Promos</button>
       <button class="tab" role="tab" data-tab="calendar" id="tab-calendar">Calendar</button>
       <button class="tab" role="tab" data-tab="places" id="tab-places">Place bets</button>
       <button class="tab" role="tab" data-tab="multis" id="tab-multis">Multis</button>
@@ -999,6 +1016,7 @@ body:has(#cmpbar:not([hidden])) #slipbtn{bottom:calc(74px + env(safe-area-inset-
   <section class="view" id="v-snipes" role="tabpanel"></section>
   <section class="view" id="v-picks" role="tabpanel" hidden></section>
   <section class="view" id="v-tracks" role="tabpanel" hidden></section>
+  <section class="view" id="v-promos" role="tabpanel" hidden></section>
   <section class="view" id="v-calendar" role="tabpanel" hidden></section>
   <section class="view" id="v-places" role="tabpanel" hidden></section>
   <section class="view" id="v-multis" role="tabpanel" hidden></section>
@@ -1028,7 +1046,7 @@ const HORSE = 'M22 6V9.5L20.5 10L18.96 7.54C18.83 7.33 18.5 7.42 18.5 7.67V11.25
 const $ = (s, el = document) => el.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const MINUS = '\u2212';
-const TABS = ['snipes', 'picks', 'tracks', 'calendar', 'places', 'multis', 'blackbook', 'results', 'tracker', 'settings', 'paste'];
+const TABS = ['snipes', 'picks', 'tracks', 'promos', 'calendar', 'places', 'multis', 'blackbook', 'results', 'tracker', 'settings', 'paste'];
 const MIN_EDGE = 0.02;     // promo bets need a 2% edge to make the plan
 const MIN_STRAIGHT = 0.03; // straight bets need 3%: the form edge is less certain
 const MIN_PLACE = 0.05;    // place bets need 5%: place prices carry a bigger margin
@@ -1146,7 +1164,7 @@ const DEFAULTS = {
 const clone = o => JSON.parse(JSON.stringify(o));
 const S = { tab: 'snipes', meet: null, raceId: null, tier: 'all', rtier: (() => { try { const v = localStorage.getItem('ls.rtier'); return ['low', 'mid', 'high'].includes(v) ? v : 'low'; } catch (e) { return 'low'; } })(), settings: clone(DEFAULTS), odds: {}, imported: [], bets: [], blackbook: [], open: new Set(), impPreview: null, pickDate: null,
   legs: [], q: { meet: null, set: 'main', budget: 20, picks: {} }, calWeek: null, why: new Set(), noteOpen: new Set(), shortlist: [], notes: {}, search: '' };
-const Live = { db: null, days: [], date: null, cards: {}, raw: {}, res: {}, resAt: {}, odds: {}, oddsAt: {}, unsub: null, closed: null, closedAt: 0, closedBusy: false, cal: {} };
+const Live = { db: null, promos: [], days: [], date: null, cards: {}, raw: {}, res: {}, resAt: {}, odds: {}, oddsAt: {}, unsub: null, closed: null, closedAt: 0, closedBusy: false, cal: {} };
 function mergeSettings(s) {
   const d = clone(DEFAULTS);
   if (!s || typeof s !== 'object') return d;
@@ -1275,6 +1293,13 @@ function watchLive(db) {
   };
   const calAll = () => { try { db.collection('calendar').onSnapshot(onCal, () => {}); } catch (e) {} };
   try { db.collection('calendar').where('date', '>=', isoDay(addDays(new Date(), -21))).onSnapshot(onCal, calAll); } catch (e) { calAll(); }
+  // Bookie offers, read from a public daily list on race days: { date, updatedAt, source, items: [{ title, url, book, text }] }
+  const onPromos = snap => {
+    Live.promos = snap.docs.filter(d => d.exists).map(d => d.data()).filter(x => x && x.date && Array.isArray(x.items)).sort((a, b) => a.date < b.date ? 1 : -1);
+    if (S.tab === 'promos') renderAll(); else promoBadge();
+  };
+  const promosAll = () => { try { db.collection('promos').onSnapshot(onPromos, () => {}); } catch (e) {} };
+  try { db.collection('promos').where('date', '>=', isoDay(addDays(new Date(), -10))).onSnapshot(onPromos, promosAll); } catch (e) { promosAll(); }
   loadClosed(true); // finished races feed the auto-tuned form weight and the scorecard
 }
 function subscribeDay(date) {
@@ -1886,6 +1911,7 @@ function renderHeader(C) {
   const up = S.shortlist.filter(x => x.date >= perthToday()).length;
   $('#tab-picks').innerHTML = 'My picks' + (up ? `<span class="cnt">${up}</span>` : '');
   $('#tab-blackbook').innerHTML = 'Blackbook' + (bbn ? `<span class="cnt">${bbn}</span>` : '');
+  promoBadge();
   const open = S.bets.filter(b => b.result === 'pending').length;
   $('#tab-tracker').innerHTML = 'Tracker' + (open ? `<span class="cnt">${open}</span>` : '');
   renderSaveNote(); setTimeout(cdBarPaint, 0);
@@ -1920,8 +1946,8 @@ function renderSnipes(C) {
   h += bbTodayCard();
   {
   let notes = lateMoney(C);
-  if (!promosOn) notes += `<div class="notice warn"><p><b>No promo is switched on.</b> Promos give the most reliable edge. Straight picks show a “Watch” price: once Sportsbet's price reaches it, the pick turns into a bet.</p><div class="acts"><button class="btn pri" data-act="goto" data-tab="settings">Add my promos</button><button class="btn" data-act="sample">Try an example promo</button></div></div>`;
-  else if (st.example) notes += `<div class="notice warn"><p><b>Example promo:</b> bonus back up to ${money(st.bb.max)} if your horse runs 2nd or 3rd, every race. Swap in your real offers before betting.</p><div class="acts"><button class="btn" data-act="goto" data-tab="settings">Edit promos</button><button class="btn" data-act="unsample">Turn off</button></div></div>`;
+  if (!promosOn) notes += `<div class="notice warn"><p><b>No promo is switched on.</b> Promos give the most reliable edge. Straight picks show a “Watch” price: once Sportsbet's price reaches it, the pick turns into a bet.</p><div class="acts"><button class="btn pri" data-act="goto" data-tab="promos">Add my promos</button><button class="btn" data-act="sample">Try an example promo</button></div></div>`;
+  else if (st.example) notes += `<div class="notice warn"><p><b>Example promo:</b> bonus back up to ${money(st.bb.max)} if your horse runs 2nd or 3rd, every race. Swap in your real offers before betting.</p><div class="acts"><button class="btn" data-act="goto" data-tab="promos">Edit promos</button><button class="btn" data-act="unsample">Turn off</button></div></div>`;
   h += `<div class="snx"><div class="snx-main">` + heroBest(list) + nextUp(C) + notes + `</div>` + riskPanel(picks) + `</div>`; }
   h += t11(list);
   if (st.trackPicks) h += trackPicksHtml(C);
@@ -2124,6 +2150,79 @@ function t11(list) {
     <thead><tr><th>#</th><th><span class="sr">Silks</span></th><th>Horse and jockey</th><th>Why we like it</th><th>Chance</th><th>Form</th><th>Records</th><th class="r">Price</th><th class="r">Bet</th></tr></thead>
     <tbody>${list.map((s, i) => t11Row(s, i + 1)).join('')}</tbody>
   </table></div>`;
+}
+
+/* ============================ PROMOS ============================ */
+// Bookie offers come from a public daily list (most bookies only show promos inside your account); Sportsbet ones you add yourself
+const PROMO_BOOKS = { betr: 'Betr', picklebet: 'Picklebet', swiftbet: 'SwiftBet', tab: 'TAB', ladbrokes: 'Ladbrokes', neds: 'Neds', palmerbet: 'Palmerbet', sportsbet: 'Sportsbet', pointsbet: 'PointsBet', bet365: 'bet365', unibet: 'Unibet', betdeluxe: 'BetDeluxe', boombet: 'BoomBet', bluebet: 'BlueBet', topsport: 'TopSport', playup: 'PlayUp', betright: 'BetRight', dabble: 'Dabble', midasbet: 'MidasBet', ladbroke: 'Ladbrokes' };
+const PROMO_COL = { Betr: '#ff4f1f', Picklebet: '#1f9d55', SwiftBet: '#0b5cff', TAB: '#00754a', Ladbrokes: '#e2001a', Neds: '#ff7a00', Palmerbet: '#0a2e5c', Sportsbet: '#0a2240', PointsBet: '#ed1c24', bet365: '#126e51', Unibet: '#147b45' };
+const DAYS7 = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+const reEsc = v => v.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+function parseOffer(it, venues) {
+  const title = String(it.title || '').replace(/!+$/, ''), text = String(it.text || ''), t = title + '. ' + text;
+  const key = String(it.book || '').toLowerCase().replace(/[^a-z]/g, '').replace(/logo$/, '');
+  let book = PROMO_BOOKS[key] || '';
+  if (!book) { const m = /(?:bookmaker|with)\s+(?:the\s+)?([A-Z][A-Za-z0-9]+)/.exec(text) || /at (?:the )?([A-Z][A-Za-z0-9]+)$/.exec(title); book = m ? (PROMO_BOOKS[m[1].toLowerCase()] || m[1]) : 'Other'; }
+  const venue = venues.find(v => new RegExp('\\b' + reEsc(v) + '\\b', 'i').test(title)) || venues.find(v => new RegExp('\\bat ' + reEsc(v) + '\\b', 'i').test(text)) || '';
+  const allMeets = /any australian|australian (?:horse )?racing|all australian/i.test(t);
+  const named = venue || (allMeets ? '' : ((/day at ([A-Z][A-Za-z' ]+?)\s+(?:Races?\b|\d+%|Bet|Bonus|Double|Odds|Money|Winning|Exotic)/.exec(title) || /^([A-Z][A-Za-z' ]+?) Races\b/.exec(title) || [])[1] || ''));
+  let races = null, m;
+  if ((m = /races?\s+(\d{1,2})\s*(?:-|–|to)\s*(\d{1,2})/i.exec(t))) races = 'R' + m[1] + '–' + m[2];
+  else if ((m = /races?\s+(\d{1,2})\s*(?:&|and)\s*(\d{1,2})/i.exec(t))) races = 'R' + m[1] + ' and R' + m[2];
+  else if ((m = /first (two|three|four|five|six|\d) races/i.exec(t))) races = 'R1–' + ({ two: 2, three: 3, four: 4, five: 5, six: 6 }[m[1].toLowerCase()] || m[1]);
+  else if ((m = /\brace (\d{1,2})\b/i.exec(t))) races = 'R' + m[1];
+  else if (/all races|any australian|every race/i.test(t)) races = 'all races';
+  else if (/selected races/i.test(t)) races = 'selected races';
+  let type = 'Offer', places = '';
+  const pm = /2nd(?:,\s*3rd)?(?:,?\s*(?:or|&|and)\s*(3rd|4th))?/i.exec(t); if (pm) places = pm[0].replace(/\s+/g, ' ');
+  if (/exotic|quinella|trifecta|first 4/i.test(t)) type = 'Exotics bonus';
+  else if (pm && /(back|reload|refund|rescue)/i.test(t)) type = (/money back|cash back|stake back as cash/i.test(t) && !/bonus/i.test(t) ? 'Money back' : 'Bonus back') + ' if ' + places;
+  else if ((m = /(\d{1,3})%\s*(?:boosted\s*)?winnings?\s*boost|boosted winnings|(\d{1,3})% winning/i.exec(t))) type = 'Winnings boost' + ((m[1] || m[2]) ? ' ' + (m[1] || m[2]) + '%' : '');
+  else if (/double your (?:fixed odds )?winnings/i.test(t)) type = 'Double winnings';
+  else if (/odds surge|price push|boosted odds|odds boost|price boost/i.test(t)) type = 'Odds boost';
+  else if (/bet back|stake back/i.test(t)) type = 'Bet back';
+  else if (/bonus bet/i.test(t)) type = 'Bonus bet';
+  const max = (m = /up to \$(\d[\d,]*)/i.exec(t)) ? '$' + m[1] : '';
+  const dm = /\b(?:this|on)\s+(sunday|monday|tuesday|wednesday|thursday|friday|saturday)\b/i.exec(t) || /\b(sunday|monday|tuesday|wednesday|thursday|friday|saturday)\b/i.exec(t);
+  const day = dm ? dm[1].toLowerCase() : '';
+  const ex = (m = /excl\.?\s*[^.!]*?\bWA\b[^.!]*/i.exec(t)) ? m[0].trim() : '';
+  return { book, title, text, url: it.url || '', venue: named, known: !!venue, allMeets, races: allMeets && !races ? 'all races' : races, type, max, day, excl: ex };
+}
+function promoOffers(C) {
+  const doc = Live.promos && Live.promos[0];
+  if (!doc) return { doc: null, list: [] };
+  const venues = [...new Set([...(Live.days || []).flatMap(x => (x.meetings || []).map(mm => mm.venue)), ...C.list.map(a => a.race.venue), ...Object.values(Live.cal || {}).flatMap(c => (c.meetings || []).map(mm => mm.venue || mm))].filter(v => typeof v === 'string' && v.length > 2))].sort((a, b) => b.length - a.length);
+  const cur = currentDate(), wd = cur ? DAYS7[new Date(cur + 'T12:00:00').getDay()] : '', meets = new Set(C.list.map(a => a.race.venue.toLowerCase()));
+  const list = doc.items.map(it => { const o = parseOffer(it, venues); o.onCard = o.known && meets.has(o.venue.toLowerCase()) && (!o.day || o.day === wd); o.anyRace = o.allMeets && (!o.day || o.day === wd); return o; });
+  return { doc, list };
+}
+function promoBadge() {
+  const el = $('#tab-promos'); if (!el) return;
+  let n = 0; try { n = LASTC ? promoOffers(LASTC).list.filter(o => o.onCard).length : 0; } catch (e) {}
+  el.innerHTML = 'Promos' + (n ? `<span class="cnt">${n}</span>` : '');
+}
+function renderPromos(C) {
+  const { doc, list } = promoOffers(C), f = S.pfilter || 'card';
+  const shown = f === 'card' ? list.filter(o => o.onCard || o.anyRace) : list;
+  const by = {}; shown.forEach(o => (by[o.book] = by[o.book] || []).push(o));
+  const books = Object.keys(by).sort((a, b) => by[b].length - by[a].length || a.localeCompare(b));
+  const tag = (txt, cls = '') => txt ? `<span class="tag ${cls}">${esc(txt)}</span>` : '';
+  const card = o => `<article class="pr-o${o.onCard ? ' on' : ''}">
+      <b class="pr-t">${esc(o.title)}</b>
+      <div class="pr-tags">${tag(o.type, 'promo')}${o.venue ? tag(o.venue + (o.races && o.races !== 'all races' ? ' ' + o.races : ''), 'str') : o.races ? tag(o.races) : ''}${o.day ? tag(o.day[0].toUpperCase() + o.day.slice(1)) : ''}${o.max ? tag('up to ' + o.max) : ''}${o.onCard ? tag('On your card', 'go') : ''}</div>
+      <p>${esc(o.text)}</p>
+      ${o.excl ? `<p class="pr-x">${esc(o.excl)}</p>` : ''}
+      ${o.url ? `<a href="${esc(o.url)}" target="_blank" rel="noopener" class="pr-l">Full terms ↗</a>` : ''}
+    </article>`;
+  let h = `<div class="head-row"><h2>Promos</h2><p>Racing offers the bookies are running today, and the Sportsbet promos the picks use.</p></div>`;
+  h += `<div class="snx pr-w"><div class="snx-main">`;
+  h += `<div class="pr-bar"><div class="seg" role="group" aria-label="Which offers"><button data-act="pfilter" data-v="card" aria-pressed="${f === 'card'}">For your race day</button><button data-act="pfilter" data-v="all" aria-pressed="${f === 'all'}">All offers</button></div><span class="muted" style="font-size:.84rem">${doc ? `${list.length} offers, read ${esc(timeTxt(doc.updatedAt) || '')} ${esc(dateTxt(doc.date))}` : ''}</span></div>`;
+  if (!doc) h += `<div class="card empty"><h3>No bookie offers loaded yet</h3><p class="muted">They load with the race-day runs, the night before and on race morning.</p></div>`;
+  else if (!shown.length) h += `<div class="card empty"><h3>No offers for the meetings on your card</h3><p class="muted">Switch to All offers to see everything the bookies are running.</p></div>`;
+  else h += books.map(b => `<section class="card pr-b"><div class="pr-bh"><span class="pr-chip" style="background:${PROMO_COL[b] || '#5d6e84'}">${esc(b)}</span><span class="muted">${by[b].length} offer${by[b].length > 1 ? 's' : ''}</span></div><div class="pr-g">${by[b].map(card).join('')}</div></section>`).join('');
+  h += `<p class="muted" style="font-size:.82rem">Most bookies only show promos inside your account, so these come from a public daily list at justhorseracing.com.au. Many exclude WA customers or WA races: check the full terms first.</p>`;
+  h += `</div><aside class="pr-mine"><div class="card panel"><h3 style="margin:0 0 4px">Your Sportsbet promos</h3><p class="d" style="margin:0">Sportsbet only shows promos inside your account. Turn on the ones in your Sportsbet app here and the picks and stakes use them.</p></div>${promoCards(C)}</aside></div>`;
+  $('#v-promos').innerHTML = h;
 }
 
 /* ============================ BEST PICKS BY TRACK ============================ */
@@ -2996,9 +3095,39 @@ async function exportAll(btn) {
   } catch (e) { toast('Export didn\'t finish: ' + (e && e.message || e)); }
   finally { if (btn && btn.isConnected) { btn.disabled = false; btn.textContent = 'Export everything'; } }
 }
+function promoCards(C) {
+  const st = S.settings, b = st.bb, races = C.list.map(a => a.race);
+  let h = '';
+  h += `<div class="card panel">
+    <div class="ph"><h3>Bonus back / money back</h3><label class="check"><input type="checkbox" id="bb-on" ${b.on ? 'checked' : ''}> On</label></div>
+    <p class="d">Your win bet runs 2nd (or 3rd, or 4th) and you get the stake back, up to a limit, as a bonus bet or as cash.</p>
+    <div class="field"><span class="lbl">Pays on</span><div class="seg" role="group"><button data-act="bbpos" data-v="2" aria-pressed="${b.positions === '2'}">2nd</button><button data-act="bbpos" data-v="23" aria-pressed="${b.positions === '23'}">2nd or 3rd</button><button data-act="bbpos" data-v="234" aria-pressed="${b.positions === '234'}">2nd to 4th</button></div></div>
+    <div class="grid2">
+      <div class="field"><span class="lbl">Refund as</span><div class="seg" role="group"><button data-act="bbref" data-v="bonus" aria-pressed="${b.refund !== 'cash'}">Bonus bet</button><button data-act="bbref" data-v="cash" aria-pressed="${b.refund === 'cash'}">Cash</button></div></div>
+      <div class="field"><label for="bb-max">Limit ($)</label><input id="bb-max" type="number" min="1" step="1" value="${b.max}"></div>
+    </div>
+    <div class="field"><span class="lbl">Races</span><div class="seg" role="group"><button data-act="bbscope" data-v="all" aria-pressed="${b.scope === 'all'}">All</button><button data-act="bbscope" data-v="list" aria-pressed="${b.scope === 'list'}">Choose</button></div></div>
+    ${b.scope === 'list' ? `<div class="racepick">${races.map(r => `<label><input type="checkbox" data-bbrace="${r.id}" ${b.races.includes(r.id) ? 'checked' : ''}>${esc(r.venue.slice(0, 5))} R${r.no}</label>`).join('')}</div>` : ''}
+  </div>`;
+  h += `<div class="card panel">
+    <div class="ph"><h3>Odds boost</h3><label class="check"><input type="checkbox" id="boost-on" ${st.boost.on ? 'checked' : ''}> On</label></div>
+    <p class="d">A token that lifts a win price by a percentage.</p>
+    <div class="grid2">
+      <div class="field"><label for="boost-pct">Boost (%)</label><input id="boost-pct" type="number" min="1" max="200" step="1" value="${st.boost.pct}"></div>
+      <div class="field"><label for="boost-tok">Tokens</label><input id="boost-tok" type="number" min="0" max="20" step="1" value="${st.boost.tokens}"></div>
+    </div>
+    ${st.boost.on ? boostBest(C) : ''}
+  </div>`;
+  h += `<div class="card panel">
+    <div class="ph"><h3>Multi boost</h3><label class="check"><input type="checkbox" id="mb-on" ${st.mboost.on ? 'checked' : ''}> On</label></div>
+    <p class="d">Lifts the price of a multi by a percentage. Used on the Multis tab.</p>
+    <div class="field"><label for="mb-pct">Boost (%)</label><input id="mb-pct" type="number" min="1" max="200" step="1" value="${st.mboost.pct}"></div>
+  </div>`;
+  return h;
+}
 function renderSettings(C) {
   const st = S.settings, b = st.bb, races = C.list.map(a => a.race), di = dayInfo();
-  let h = `<div class="head-row"><h2>Settings</h2><p>Bankroll, today's promos from your Sportsbet app, and how much the form rating counts.</p></div><div class="cards2">`;
+  let h = `<div class="head-row"><h2>Settings</h2><p>Bankroll, how prices and form are weighed, and how the app looks.</p></div><div class="cards2">`;
   if (window.LS_STANDALONE && window.lsSettingsCard) h += window.lsSettingsCard();
   if (window.claude && !window.LS_STANDALONE) h += `<div class="card panel">
     <h3>Move to your own app</h3>
@@ -3064,31 +3193,7 @@ function renderSettings(C) {
     <div class="field"><span class="lbl">Weight given to form</span><div class="seg" role="group">${['off', 'light', 'strong', 'auto'].map(k => `<button data-act="formw" data-v="${k}" aria-pressed="${st.formW === k}">${k[0].toUpperCase() + k.slice(1)}</button>`).join('')}</div></div>
     <p class="hint">${st.formW === 'auto' ? (au.n ? `Auto is tuned on <b>${au.n}</b> finished race${au.n > 1 ? 's' : ''}: weight <b>${au.beta.toFixed(2)}</b> (Light is 0.15, Strong 0.25)${au.n < 150 ? '. It stays close to Light until about 150 races are in' : ''}. ${au.gain > 0.002 ? 'Form is predicting winners better than the market alone.' : au.gain < -0.002 ? 'Form is not beating the market yet.' : ''}` : 'Auto starts at Light and tunes itself as results come in.') : 'Auto tunes the weight to how well form actually predicted winners.'}</p>
   </div>`;
-  h += `<div class="card panel">
-    <div class="ph"><h3>Bonus back / money back</h3><label class="check"><input type="checkbox" id="bb-on" ${b.on ? 'checked' : ''}> On</label></div>
-    <p class="d">Your win bet runs 2nd (or 3rd, or 4th) and you get the stake back, up to a limit, as a bonus bet or as cash.</p>
-    <div class="field"><span class="lbl">Pays on</span><div class="seg" role="group"><button data-act="bbpos" data-v="2" aria-pressed="${b.positions === '2'}">2nd</button><button data-act="bbpos" data-v="23" aria-pressed="${b.positions === '23'}">2nd or 3rd</button><button data-act="bbpos" data-v="234" aria-pressed="${b.positions === '234'}">2nd to 4th</button></div></div>
-    <div class="grid2">
-      <div class="field"><span class="lbl">Refund as</span><div class="seg" role="group"><button data-act="bbref" data-v="bonus" aria-pressed="${b.refund !== 'cash'}">Bonus bet</button><button data-act="bbref" data-v="cash" aria-pressed="${b.refund === 'cash'}">Cash</button></div></div>
-      <div class="field"><label for="bb-max">Limit ($)</label><input id="bb-max" type="number" min="1" step="1" value="${b.max}"></div>
-    </div>
-    <div class="field"><span class="lbl">Races</span><div class="seg" role="group"><button data-act="bbscope" data-v="all" aria-pressed="${b.scope === 'all'}">All</button><button data-act="bbscope" data-v="list" aria-pressed="${b.scope === 'list'}">Choose</button></div></div>
-    ${b.scope === 'list' ? `<div class="racepick">${races.map(r => `<label><input type="checkbox" data-bbrace="${r.id}" ${b.races.includes(r.id) ? 'checked' : ''}>${esc(r.venue.slice(0, 5))} R${r.no}</label>`).join('')}</div>` : ''}
-  </div>`;
-  h += `<div class="card panel">
-    <div class="ph"><h3>Odds boost</h3><label class="check"><input type="checkbox" id="boost-on" ${st.boost.on ? 'checked' : ''}> On</label></div>
-    <p class="d">A token that lifts a win price by a percentage.</p>
-    <div class="grid2">
-      <div class="field"><label for="boost-pct">Boost (%)</label><input id="boost-pct" type="number" min="1" max="200" step="1" value="${st.boost.pct}"></div>
-      <div class="field"><label for="boost-tok">Tokens</label><input id="boost-tok" type="number" min="0" max="20" step="1" value="${st.boost.tokens}"></div>
-    </div>
-    ${st.boost.on ? boostBest(C) : ''}
-  </div>`;
-  h += `<div class="card panel">
-    <div class="ph"><h3>Multi boost</h3><label class="check"><input type="checkbox" id="mb-on" ${st.mboost.on ? 'checked' : ''}> On</label></div>
-    <p class="d">Lifts the price of a multi by a percentage. Used on the Multis tab.</p>
-    <div class="field"><label for="mb-pct">Boost (%)</label><input id="mb-pct" type="number" min="1" max="200" step="1" value="${st.mboost.pct}"></div>
-  </div>`;
+  h += `<div class="card panel"><div class="ph"><h3>Promos</h3></div><p class="d">Your Sportsbet promos (bonus back, odds boost, multi boost) and the offers other bookies are running are on the Promos tab.</p><div class="acts-r"><button class="btn sm pri" data-act="goto" data-tab="promos">Open Promos</button></div></div>`;
   h += `<div class="card panel">
     <h3>Use it like an app</h3>
     <p class="d">Put Lightz Snipes on your home screen so it opens in one tap.</p>
@@ -3965,6 +4070,7 @@ function renderAll2() {
   if (S.tab === 'snipes') renderSnipes(C);
   if (S.tab === 'picks') renderPicks(C);
   if (S.tab === 'tracks') renderTracks(C);
+  if (S.tab === 'promos') renderPromos(C);
   if (S.tab === 'calendar') renderCalendar(C);
   if (S.tab === 'places') renderPlaces(C);
   if (S.tab === 'multis') renderMultis(C);
@@ -3999,6 +4105,7 @@ document.addEventListener('click', e => {
     case 'alerts': toggleAlerts(); break;
     case 'tksplit': TK.split = t.dataset.v; renderAll(); break;
     case 'tkwk': TK.wk = Math.min(0, (TK.wk || 0) + +t.dataset.d); renderAll(); break;
+    case 'pfilter': S.pfilter = t.dataset.v; renderAll(); break;
     case 'rtier': S.rtier = t.dataset.v; try { localStorage.setItem('ls.rtier', S.rtier); } catch (e) {} renderAll(); break;
     case 'reloadres': loadClosed(true); toast('Checking for new results'); break;
     case 'exportall': exportAll(t); break;

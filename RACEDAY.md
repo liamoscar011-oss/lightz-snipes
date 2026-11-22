@@ -54,6 +54,7 @@ Read many races per round trip with `browser_batch`: pairs of `navigate` (full U
 4. Read every race with `'card'` (batches as above).
 5. Write the cards with `lsWrite` op `set` on `cards/<id>`, data = the card exactly as returned.
 6. Write `days/D` with `set`: `{date: D, meetings: [{venue, slug, state, track, races}], note: "Loaded <Tue|Fri> night from Sportsbet", updatedAt: <ISO now>}`. `races` = number of cards for that meeting, `track` from its first card; sort meetings by races, most first. Keep meetings already in the old `days/D`.
+7. Do the Promos step for D.
 
 ## 3. Morning job (prices and scratchings for D, usually today)
 
@@ -62,6 +63,15 @@ Read many races per round trip with `browser_batch`: pairs of `navigate` (full U
 3. Read `'odds'` for every race that hasn't started yet.
 4. `lsGet('odds/D')` (may be null). Write `odds/D` with `set`, keeping any races from the old doc you didn't refresh:
    `{date: D, updatedAt: <ISO now>, note: "Sportsbet prices, <day> <time> Perth", races: {<raceId>: {track, scr, px}}}`
+5. Do the Promos step for D.
+
+## Promos step (end of the night and morning jobs)
+
+Bookies only show promos inside an account, so the app's Promos tab uses a public daily list of racing offers. Only read the page: no sign-ups, logins or clicks on any offer.
+1. `preview_start` with `https://www.justhorseracing.com.au/promotions`.
+2. Run this with `javascript_tool` in that tab:
+   `JSON.stringify([...document.querySelectorAll('article.postcontent')].slice(0, 40).map(a => { const l = a.querySelector('h2 a'), img = a.querySelector('.bologo img'), src = img ? img.getAttribute('src') || '' : ''; return { title: l ? l.textContent.trim() : '', url: l ? l.href : '', book: (src.match(/bmlogos\/([a-z]+)/i) || [])[1] || '', text: ((a.querySelector('p') || {}).textContent || '').trim() }; }).filter(x => x.title))`
+3. Write `promos/D` with `set`: `{date: D, updatedAt: <ISO now>, source: "justhorseracing.com.au", items: <the array>}`. If the page fails or returns nothing, skip this step and say so in the summary.
 
 ## 4. Results job (date D, usually today)
 
@@ -88,4 +98,5 @@ Reply with 2-4 lines: what was loaded (meetings, races, results count), anything
 - `odds/<date>`: `{date, updatedAt, note, races: {id: {track, scr: [n], px: {"n": [win, place]}}}}`
 - `results/<date>`: `{date, updatedAt, note, r: {id: [n, n, n]}}`
 - `tools/raceday`: `{setter, lsxv}` - the one-line script that installs the Sportsbet reader into the browser (`localStorage.lsx`, version `lsxv = "3"`). The app hands out the newest setter when the saved one is older.
+- `promos/<date>`: `{date, updatedAt, source, items: [{title, url, book, text}]}` - bookie offers from the public list, shown on the Promos tab.
 - `calendar/<date>` is an old week-view index; optional.
