@@ -354,6 +354,8 @@ textarea#imp-text{min-height:200px;font-family:var(--mono);font-size:.82rem}
 .njb-k{font-size:.72rem;color:var(--muted)}
 .njb-p{display:flex;gap:5px;align-items:center;font-size:.78rem;min-width:0;white-space:nowrap}
 .njb-p b{font-weight:600;overflow:hidden;text-overflow:ellipsis}
+.njb-none{align-self:center;font-size:.86rem;white-space:normal;padding:8px 4px;line-height:1.35}
+.njb-go{flex:none;align-self:center;min-height:36px;padding:6px 12px;font-size:.84rem}
 .njb-bet{font-weight:700;font-size:.7rem;background:var(--yellow);color:var(--on-yellow);border-radius:4px;padding:0 5px}
 @media (min-width:1100px){.njb{position:sticky;top:0;z-index:15}}
 @media (max-width:600px){.njb-l{display:none}.njb-in{padding-inline:10px}}
@@ -3131,7 +3133,16 @@ function njBar(C) {
   const now = Date.now();
   const list = C.list.filter(a => !a.closed && !hiddenA(a) && isFinite(startMs(a.race)) && startMs(a.race) > now - 2 * 60000)
     .sort((x, y) => startMs(x.race) - startMs(y.race)).slice(0, 12);
-  if (!list.length) { el.hidden = true; el.innerHTML = ''; return; }
+  if (!list.length) {
+    // Nothing left to run on this day: say when the next racing is (a loaded day first, else the next Wednesday or Saturday)
+    const t = perthToday(), cur = currentDate() || t, after = cur > t ? cur : t;
+    const nd = Live.days.find(x => x.date > after && (x.meetings || []).length) || Live.days.filter(x => x.date > after).sort((x, y) => x.date < y.date ? -1 : 1)[0];
+    let d = nd && nd.date;
+    if (!d) { const x = new Date(after + 'T12:00:00'); do { x.setDate(x.getDate() + 1); } while (x.getDay() !== 3 && x.getDay() !== 6); d = isoDay(x); }
+    const prevD = isoDay(addDays(new Date(d + 'T12:00:00'), -1)), nm = nd && nd.meetings ? nd.meetings.length : 0;
+    el.innerHTML = `<div class="wrap njb-in"><span class="njb-l">Next up</span><div class="njb-row"><span class="njb-none">No races left ${cur > t ? 'on this day' : 'today'}. Next racing <b>${esc(dateTxt(d))}</b>${nm ? ` · ${nm} meeting${nm === 1 ? '' : 's'}` : ` · cards load ${esc(dateTxt(prevD).split(',')[0])} night`}</span>${nd ? `<button class="btn njb-go" data-act="pickday" data-v="${d}">See the cards</button>` : ''}</div></div>`;
+    el.hidden = false; return;
+  }
   const row = el.querySelector('.njb-row'), sx = row ? row.scrollLeft : 0;
   el.innerHTML = `<div class="wrap njb-in"><span class="njb-l">Next up</span><div class="njb-row">${list.map(a => {
     const ms = startMs(a.race), pl = a.act.filter(r => r.plan).sort((x, y) => y.plan.stake - x.plan.stake)[0], top = a.ranked[0];
