@@ -3030,7 +3030,7 @@ function lateReport(C, ids) {
   bets.forEach(b => seen.add(b.k)); LS.set('ls_late_seen', [...seen].slice(-400));
   return { refreshed: ids.length, bets: bets.map(b => { const { k, ...x } = b; return x; }), watch };
 }
-window.lsUpcoming = async (fromMin = 12, toMin = 45, D) => {
+window.lsUpcoming = async (fromMin = 8, toMin = 70, D) => {
   const day = D || perthToday();
   if (Live.db && Live.date !== day) { S.pickDate = day; subscribeDay(day); }
   for (let i = 0; i < 20 && !Object.keys(Live.cards[day] || {}).length; i++) await new Promise(r => setTimeout(r, 400));
@@ -3097,7 +3097,7 @@ function raceCard(a) {
     ${a.rs.map(r => runnerRow(a, r)).join('')}
     ${a.closed ? '' : `<div class="cleg"><span><i style="background:var(--chi)"></i>High chance (25%+)</span><span><i style="background:var(--cmd)"></i>Mid (10–25%)</span><span><i style="background:var(--clo)"></i>Low (under 10%)</span>${bestPickOf(a) ? '<span><i style="background:var(--best)"></i>Best pick</span>' : '<span>No best pick: nothing clears the betting bar at these prices</span>'}</div>`}
   </article>`;
-  h += `<p class="muted" style="font-size:.85rem">${liveOn() ? 'Prices refresh about 8am Perth on race mornings, then again about 30 minutes before each race.' : 'Prices are from the saved card.'} Type a live price into any box (edited boxes turn yellow) or paste the full card in Paste card.${(r0.tips || []).length ? ' Sportsbet tipster: ' + r0.tips.join('-') + '.' : ''}</p>`;
+  h += `<p class="muted" style="font-size:.85rem">${liveOn() ? 'Prices refresh about 8am Perth on race mornings, then again in the hour before each race.' : 'Prices are from the saved card.'} Type a live price into any box (edited boxes turn yellow) or paste the full card in Paste card.${(r0.tips || []).length ? ' Sportsbet tipster: ' + r0.tips.join('-') + '.' : ''}</p>`;
   return h;
 }
 /* ---- form guide (TAB form feed, stored per runner as r.fm by the evening load) ---- */

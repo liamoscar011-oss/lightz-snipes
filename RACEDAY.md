@@ -15,7 +15,7 @@ There are four jobs. Work out which one from the request or schedule prompt; if 
 |---|---|---|
 | night | ~6:30pm Perth the evening before | `cards/<id>` for every race (once) + `days/<date>` |
 | morning | ~8am Perth on race day | `odds/<date>` (prices, scratchings, track) |
-| late | every 30 minutes, ~9am-7pm Perth on race day | `odds/<date>` for the races jumping in the next 12-45 minutes |
+| late | hourly, ~9am-7pm Perth on race day | `odds/<date>` for the races jumping in the next 8-70 minutes |
 | results | ~8:30pm Perth on race day | `results/<date>` |
 
 Dates are Perth dates (YYYY-MM-DD). Race ids are `<date>_<venue-slug>_r<no>`, e.g. `2026-11-21_kembla-grange_r4`.
@@ -46,7 +46,7 @@ Read many races per round trip with `browser_batch`: pairs of `navigate` (full U
 - `await lsGet('days/2026-11-25')` -> the doc's data, or `null`
 - `await lsList('cards', 'date', '2026-11-25')` -> ids of that day's cards
 - `await lsWrite([{op: 'set', path: 'cards/<id>', data: {...}}, ...])` -> `{written, deleted}`. Ops: `set` (whole doc), `merge` (fields into the existing doc), `delete`. Put about 20 cards per call; the data travels inside the script text.
-- `await lsUpcoming(12, 45)` -> today's races jumping in 12-45 minutes that weren't refreshed in the last 10 minutes: `[{id, path, jumps, mins, label}]`
+- `await lsUpcoming(8, 70)` -> today's races jumping in 8-70 minutes that weren't refreshed in the last 10 minutes: `[{id, path, jumps, mins, label}]`
 - `await lsLate(D, {<raceId>: {track, scr, px}, ...}, note)` -> saves fresh prices into `odds/D` (keeps the other races and a short price history per runner) and returns `{written, refreshed, bets: [{race, jumps, n, horse, bet, odds, stake, edge, isNew}], watch: [{race, jumps, horse, now, needs}]}`. `isNew` = a bet not reported by an earlier morning or late run.
 
 ## 2. Night job (load cards for date D)
@@ -68,11 +68,11 @@ Read many races per round trip with `browser_batch`: pairs of `navigate` (full U
 5. Do the Promos step for D.
 6. Summary: also list the day's bets from the `lsLate` result (horse, race, time, bet, stake), most edge first, up to 6.
 
-## Late job (price check about 30 minutes before each race)
+## Late job (price check in the hour before each race)
 
-Morning prices miss late money and late scratchings. This job refreshes only the races about to jump, so Watch horses that drift out to the price they need become bets in time. It runs about every 30 minutes on race days and must stay quick and quiet.
+Morning prices miss late money and late scratchings. This job refreshes only the races about to jump, so Watch horses that drift out to the price they need become bets in time. It runs hourly on race days, so each race gets one check 8-70 minutes before it jumps. It must stay quick and quiet.
 1. Set up as in section 1, but the app tab **must** be signed in (no Fallback for this job): if `lsWhoami()` isn't `{signedIn: true}`, reply in one line that the app isn't signed in on his computer's Claude browser and stop.
-2. In the app tab: `JSON.stringify(await lsUpcoming(12, 45))`. Empty list: reply "No races in the next 45 minutes" and stop. Don't open Sportsbet and don't notify.
+2. In the app tab: `JSON.stringify(await lsUpcoming(8, 70))`. Empty list: reply "No races in the next hour" and stop. Don't open Sportsbet and don't notify.
 3. In the Sportsbet tab (reader check as in section 1), read `'odds'` for each race: navigate to `https://www.sportsbet.com.au` + `path`, then run the reader (use `browser_batch` for several races). If a `path` is empty, get the race URLs from `'day'` on `/racing-schedule/horse/today`.
 4. Save with `JSON.stringify(await lsLate(D, {<raceId>: {track, scr, px}, ...}, "Late Sportsbet prices, <time> Perth"))` in the app tab, D = today's Perth date.
 5. Bets with `isNew: true` are the point of this job. If there are any, send one push notification (the `PushNotification` tool, if this session has it) under 200 characters, e.g. `New bet: Starward #4, Rosehill R8 12:50pm, Win $9.80, bet $3` (up to 2 bets, then "+N more in the app"), and start the reply with the same lines. Otherwise reply in one line, e.g. "Refreshed 3 races, no new bets", and don't notify.
