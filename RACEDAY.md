@@ -32,7 +32,7 @@ Dates are Perth dates (YYYY-MM-DD). Race ids are `<date>_<venue-slug>_r<no>`, e.
 1. Load the built-in browser tools in one ToolSearch call (`mcp__remote-devices__Claude_Browser__`, max_results 64) and read the `built-in-browser` skill if listed. If the browser can't be reached, stop: report that Oscar's computer looks asleep/offline or the Claude app is closed, and that the next run will catch up.
 2. **App tab:** `preview_start` with `https://liamoscar011-oss.github.io/lightz-snipes/`, wait about 3 seconds, then run `window.lsWhoami && window.lsWhoami()` with `javascript_tool`. You need `{signedIn: true}`. Anything else: use the Fallback below for the writes (the Sportsbet reading is the same).
 3. **Sportsbet tab:** `preview_start` with `https://www.sportsbet.com.au/racing-schedule/horse/today`.
-4. Check the reader is installed in the Sportsbet tab: `localStorage.lsxv` must be `"2"`. If not, get the setter text from the app tab with `(await window.lsGet('tools/raceday')).setter` (Fallback: `db_get tools/raceday` on the artifact) and run that text exactly, with `javascript_tool`, in the Sportsbet tab.
+4. Check the reader is installed in the Sportsbet tab: `localStorage.lsxv` must be `"3"`. If not, get the setter text from the app tab with `(await window.lsGet('tools/raceday')).setter` (Fallback: `db_get tools/raceday` on the artifact) and run that text exactly, with `javascript_tool`, in the Sportsbet tab.
 
 The reader runs in the Sportsbet tab as `new Function('mode', localStorage.lsx)(MODE)` and returns a JSON string:
 - `'day'` on a schedule/results page -> `{meetings: [{date, venue, slug, races, nz, urls: [path per race]}], results: {raceId: [1st, 2nd, 3rd, ...]}}`
@@ -84,8 +84,8 @@ Reply with 2-4 lines: what was loaded (meetings, races, results count), anything
 ## Data shapes the app reads
 
 - `days/<date>`: `{date, meetings: [{venue, slug, state, track, races}], note, updatedAt}`
-- `cards/<id>`: `{id, date, venue, state, track, no, dist, name, start (ISO UTC), status: 'open', jump: null, result: null, url, tips: [n], onpace: [n], scr: ["n Name"], runners: [{n, name, bar, wt, form, j, t, flucs, win, place, tags, fu?}], updatedAt}`
+- `cards/<id>`: `{id, date, venue, state, track, no, dist, name, start (ISO UTC), status: 'open', jump: null, result: null, url, tips: [n], onpace: [n], scr: ["n Name"], runners: [{n, name, bar, wt, form, j, t, flucs, win, place, tags, fu?, ks?, silk?}], updatedAt}` (`ks`: the form guide's key stats, e.g. `{"Track": "2:1-0-1", "Distance": "5:2-1-0"}`; `silk`: Sportsbet's silks image URL; both optional)
 - `odds/<date>`: `{date, updatedAt, note, races: {id: {track, scr: [n], px: {"n": [win, place]}}}}`
 - `results/<date>`: `{date, updatedAt, note, r: {id: [n, n, n]}}`
-- `tools/raceday`: `{setter}` - the one-line script that installs the Sportsbet reader into the browser (`localStorage.lsx`, version `lsxv = "2"`).
+- `tools/raceday`: `{setter, lsxv}` - the one-line script that installs the Sportsbet reader into the browser (`localStorage.lsx`, version `lsxv = "3"`). The app hands out the newest setter when the saved one is older.
 - `calendar/<date>` is an old week-view index; optional.

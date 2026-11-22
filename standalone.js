@@ -125,6 +125,20 @@
     return { written: sets.length, deleted: dels.length };
   };
   window.lsWhoami = () => ({ signedIn: !!session, email: session && session.user && session.user.email });
+  // The Sportsbet reader the race-day runs install. The current one ships with the app (tools/lsx.set.js);
+  // when the saved copy is older, hand out the new one and save it, so the next run upgrades by itself.
+  const READER_V = 3, rawGet = window.lsGet;
+  window.lsGet = async path => {
+    const d = await rawGet(path);
+    if (path !== 'tools/raceday' || (d && +d.lsxv >= READER_V)) return d;
+    try {
+      const setter = (await (await fetch('tools/lsx.set.js', { cache: 'no-cache' })).text()).trim();
+      if (!setter.includes('localStorage.lsxv = "' + READER_V + '"')) return d;
+      const doc = Object.assign({}, d || {}, { setter, lsxv: String(READER_V) });
+      try { await window.lsWrite([{ op: 'set', path, data: doc }]); } catch (e) {}
+      return doc;
+    } catch (e) { return d; }
+  };
 
   /* ---------- import the backup file from the Claude version ---------- */
   async function importBackup(file, note) {

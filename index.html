@@ -716,6 +716,125 @@ svg.plc .hit{fill:transparent;cursor:crosshair}
 .tc-r:hover .tc-tip,.tc-r:focus .tc-tip{opacity:1;transform:none}
 @media (max-width:560px){.tc-r{grid-template-columns:84px minmax(0,1fr) 104px;gap:8px}}
 @media (prefers-reduced-motion: reduce){.tc-tip{transition:none}}
+/* ===== Front page: best bet + next to jump beside the risk top 10, then the full top 10 ===== */
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.snx{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:18px;align-items:start}
+.snx-main{display:grid;gap:16px;min-width:0}
+@media (max-width:980px){.snx{grid-template-columns:minmax(0,1fr)}}
+.silkpic{position:relative;display:inline-grid;place-items:center;flex:none}
+.silkpic img{width:100%;height:100%;object-fit:contain;grid-area:1/1}
+.silkpic > svg{display:none}
+.silkpic.noimg img{display:none}
+.silkpic.noimg > svg{display:block}
+.silkpic{width:36px;height:40px}.silkpic.lg{width:48px;height:53px}.silkpic.xl{width:72px;height:79px}
+.silk.xl{width:72px;height:79px}
+.hero{background:var(--navy);color:var(--on-navy);border:1px solid color-mix(in srgb,var(--on-navy) 14%,transparent);padding:22px 24px;display:flex;flex-wrap:wrap;gap:18px 22px;align-items:center}
+.hero-l{flex:999 1 320px;min-width:0;display:grid;gap:12px}
+.hero-k{font-size:.92rem;font-weight:600;opacity:.9;display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center}
+.hero-who{display:flex;gap:16px;align-items:center;min-width:0}
+.hero-who > div{display:grid;gap:2px}
+.hero-name{display:block;font-family:var(--head);font-stretch:68%;font-weight:900;font-size:clamp(2rem,3.2vw,3.1rem);line-height:.95;overflow-wrap:anywhere}
+.hero-who span{font-size:.9rem;opacity:.85}
+.hero-acts{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.hero-figs{flex:1 1 220px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.hero-figs div{background:color-mix(in srgb,var(--on-navy) 9%,transparent);border-radius:10px;padding:10px 12px;display:grid}
+.hero-figs small{font-size:.8rem;opacity:.8}
+.hero-figs b{font-family:var(--head);font-stretch:80%;font-weight:800;font-size:1.85rem;line-height:1.1;font-variant-numeric:tabular-nums}
+.hero-figs b.edge{color:var(--yellow)}
+.hero .why{flex:1 1 100%;color:var(--ink)}
+.hero .btn{color:var(--ink)}
+.hero .status.wait{background:color-mix(in srgb,var(--on-navy) 12%,transparent);color:var(--on-navy)}
+.rk10{padding:16px 18px;display:grid;gap:12px}
+.rk10 h3{margin:0}
+.rk-seg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;background:var(--surface-2);border-radius:10px;padding:4px}
+.rk-seg button{border:0;background:transparent;border-radius:8px;min-height:46px;padding:4px 6px;cursor:pointer;color:var(--ink);font:inherit;display:grid;align-content:center;line-height:1.15}
+.rk-seg button small{font-size:.74rem;opacity:.85}
+.rk-seg button[aria-pressed="true"].low{background:var(--low);color:var(--on-pri)}
+.rk-seg button[aria-pressed="true"].mid{background:var(--mid);color:var(--on-pri)}
+.rk-seg button[aria-pressed="true"].high{background:var(--high);color:var(--on-pri)}
+.rk-list{list-style:none;margin:0;padding:0;display:grid}
+.rk-list li + li{border-top:1px solid var(--line)}
+.rk-r{appearance:none;border:0;background:none;color:inherit;font:inherit;text-align:left;width:100%;display:grid;grid-template-columns:18px 30px minmax(0,1fr) auto;gap:10px;align-items:center;padding:7px 2px;cursor:pointer;border-radius:6px}
+.rk-r:hover{background:var(--surface-2)}
+.rk-r .n{color:var(--muted);font-weight:700;font-variant-numeric:tabular-nums}
+.rk-r :is(.silk,.silkpic){width:28px;height:31px}
+.rk-r .w{min-width:0;display:grid}
+.rk-r .w b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rk-r small{font-size:.78rem;color:var(--muted)}
+.rk-r .p{display:grid;justify-items:end;font-variant-numeric:tabular-nums}
+.rk-r .p small{font-weight:700}
+.rk-r .p small.pos{color:var(--pos)} .rk-r .p small.neg{color:var(--neg)}
+.t11-h{margin-top:6px}
+.t11{overflow-x:auto}
+.t11 table{width:100%;min-width:900px;table-layout:fixed;border-collapse:collapse;font-variant-numeric:tabular-nums}
+.t11 .w-rk{width:40px}.t11 .w-sk{width:50px}.t11 .w-ch{width:66px}.t11 .w-fm{width:100px}.t11 .w-rc{width:94px}.t11 .w-pr{width:116px}.t11 .w-bt{width:140px}
+.t11 th{font-size:.78rem;font-weight:600;color:var(--muted);text-align:left;padding:10px 6px 8px;background:var(--surface-2);border-bottom:1px solid var(--line)}
+.t11 th.r{text-align:right}
+.t11 td{padding:9px 6px;vertical-align:middle;border-top:1px solid var(--line)}
+.t11 tbody tr:first-child td{border-top:0}
+.t11 :is(th,td):first-child{padding-left:14px}
+.t11 :is(th,td):last-child{padding-right:14px}
+.t11 .rk{display:block;font-family:var(--head);font-stretch:62%;font-weight:900;font-size:1.5rem;color:var(--muted);text-align:center}
+.t11 .top3 .rk{color:var(--blue)}
+.t11 .sbox{width:40px;height:40px;border-radius:10px;background:var(--surface-2);display:grid;place-items:center}
+.t11 .sbox :is(.silk,.silkpic){width:30px;height:33px}
+.t11 .c-hn,.t11 .c-wy{min-width:0}
+.t11 .hn{display:flex;gap:8px;align-items:center;min-width:0}
+.t11 .hn b{font-size:1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.t11 .hn .tier{flex:none}
+.t11 .sub{display:flex;flex-wrap:wrap;gap:2px 8px;align-items:center;font-size:.8rem;margin-top:2px}
+.t11 .sub.m{color:var(--muted)}
+.t11 .ln{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:.8rem;margin-top:2px}
+.t11 .ln.m{color:var(--muted)}
+.t11 .wy{margin:0;font-size:.84rem;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.t11 .c-wy .sub{gap:4px;margin-top:4px}
+.t11 .c-ch{white-space:nowrap}
+.t11 .c-ch .v,.t11 .rc .v{font-weight:700}
+.t11 .c-ch small{display:block;font-size:.74rem;color:var(--muted)}
+.t11 .rc{display:flex;gap:6px;align-items:baseline;white-space:nowrap;font-size:.86rem}
+.t11 .rc small{width:30px;font-size:.72rem;color:var(--muted)}
+.t11 .okrec{font-size:.8rem;font-weight:700;color:var(--pos)}
+.fch{display:inline-flex;gap:2px}
+.fch i{font-style:normal;width:17px;height:19px;border-radius:4px;display:inline-grid;place-items:center;font-size:.72rem;font-weight:700;background:var(--surface-2);color:var(--muted)}
+.fch i.w{background:var(--blue);color:var(--on-pri)}
+.fch i.p{background:var(--blue-bg);color:var(--blue)}
+.fch i.x{background:transparent;width:9px}
+.t11 .pr{display:grid;justify-items:end;gap:2px;line-height:1.2}
+.t11 .pr b{font-family:var(--head);font-stretch:80%;font-weight:800;font-size:1.3rem}
+.t11 .mv{font-size:.72rem;font-weight:600;color:var(--muted);text-align:right}
+.t11 .mv.up{color:var(--pos)} .t11 .mv.down{color:var(--neg)}
+.t11 .bt{display:grid;justify-items:end;gap:4px}
+.t11 tr.wyx td{padding:0 14px 12px;border-top:0}
+@media (max-width:760px){
+  .t11 table{min-width:0;display:block}
+  .t11 colgroup,.t11 thead{display:none}
+  .t11 tbody{display:block}
+  .t11 tr.row{display:grid;grid-template-columns:30px 42px minmax(0,1fr) auto;grid-template-areas:"rk sk hn pr" "wy wy wy bt" "ch ch fm rc";gap:8px 10px;align-items:center;padding:12px 14px;border-top:1px solid var(--line)}
+  .t11 tbody tr.row:first-child{border-top:0}
+  .t11 tr.row td{display:block;padding:0;border:0}
+  .t11 .c-rk{grid-area:rk}.t11 .c-sk{grid-area:sk}.t11 .c-hn{grid-area:hn}.t11 .c-pr{grid-area:pr}.t11 .c-wy{grid-area:wy}.t11 .c-ch{grid-area:ch}.t11 .c-fm{grid-area:fm}.t11 .c-rc{grid-area:rc}.t11 .c-bt{grid-area:bt}
+  .t11 tr.wyx{display:block}.t11 tr.wyx td{display:block;padding:0 14px 12px}
+  .t11 .hn .tier{display:none}
+  .t11 .c-bt{align-self:start}
+  .t11 .c-rc .rc{justify-content:flex-end}
+}
+/* Computer screens: the sections become a side menu down the left */
+@media (min-width:1100px){
+  body{padding-left:232px}
+  .top.top.top{position:fixed;top:0;left:0;bottom:0;width:232px;overflow-y:auto;padding-bottom:0;scrollbar-width:thin}
+  .top.top.top::after{display:none}
+  .top .wrap.top-in{max-width:none;margin:0;min-height:100%;box-sizing:border-box;flex-direction:column;flex-wrap:nowrap;align-items:stretch;gap:18px;padding:24px 16px 20px}
+  .top .top-in .brand{flex-wrap:wrap;row-gap:12px;padding:0 6px}
+  .top .top-in .brand::after{content:"";flex:1 0 100%;height:7px;background:linear-gradient(to bottom,transparent 0 1px,var(--rail,#fff) 1px 4px,transparent 4px),repeating-linear-gradient(90deg,transparent 0 34px,var(--rail,#fff) 34px 36px)}
+  .top .top-in .tabs{order:2;flex-direction:column;overflow:visible;width:auto;gap:2px}
+  .top .top-in .tabs .tab{text-align:left;border-bottom:0;border-radius:10px;padding:10px 12px;opacity:.85;font-size:1rem}
+  .top .top-in .tabs .tab:hover{opacity:1;background:color-mix(in srgb,var(--on-navy) 8%,transparent)}
+  .top .top-in .tabs .tab[aria-selected="true"]{opacity:1;background:var(--yellow);color:var(--on-yellow)}
+  .top .top-in .top-meta{order:3;margin:auto 0 0;flex-direction:column;align-items:stretch;gap:8px}
+  .top .top-in .top-meta .pill-top{white-space:normal;border-radius:10px;padding:8px 12px;line-height:1.3}
+  .top .top-in .top-meta .pill-top.bank{font-family:var(--head);font-stretch:80%;font-weight:800;font-size:1.35rem;padding:10px 12px}
+  main.wrap,footer .wrap{max-width:1500px;margin:0;padding-inline:32px}
+}
 </style>
 
 <header class="top">
@@ -893,7 +1012,7 @@ const DEFAULTS = {
   trackPicks: true, trackPickBy: 'likely', trackShow: 'left', alertMoney: true, alertJump: true, favTracks: [], hideTracks: []
 };
 const clone = o => JSON.parse(JSON.stringify(o));
-const S = { tab: 'snipes', meet: null, raceId: null, tier: 'all', settings: clone(DEFAULTS), odds: {}, imported: [], bets: [], blackbook: [], open: new Set(), impPreview: null, pickDate: null,
+const S = { tab: 'snipes', meet: null, raceId: null, tier: 'all', rtier: (() => { try { const v = localStorage.getItem('ls.rtier'); return ['low', 'mid', 'high'].includes(v) ? v : 'low'; } catch (e) { return 'low'; } })(), settings: clone(DEFAULTS), odds: {}, imported: [], bets: [], blackbook: [], open: new Set(), impPreview: null, pickDate: null,
   legs: [], q: { meet: null, set: 'main', budget: 20, picks: {} }, calWeek: null, why: new Set(), noteOpen: new Set(), shortlist: [], notes: {}, search: '' };
 const Live = { db: null, days: [], date: null, cards: {}, raw: {}, res: {}, resAt: {}, odds: {}, oddsAt: {}, unsub: null, closed: null, closedAt: 0, closedBusy: false, cal: {} };
 function mergeSettings(s) {
@@ -1601,7 +1720,7 @@ function renderSaveNote() {
 
 /* ============================ SNIPES ============================ */
 function renderSnipes(C) {
-  const st = S.settings, P = C.plan, B = st.bankroll, all = snipes(C), list = top10(all, S.tier);
+  const st = S.settings, P = C.plan, B = st.bankroll, all = snipes(C), list = top10(all, 'all');
   const promosOn = st.bb.on || st.boost.on;
   let h = dayBar() + searchBox() + `<div class="head-row"><h2>${isScout() ? 'Snipes for ' + esc(dateTxt(Live.date)) : "Today's snipes"}</h2><p>Every open race, ranked by edge: how much a $1 bet returns on average. Best pick in each risk tier first.</p></div>` + scoutNote();
   { const ms = [...new Set(C.list.map(a => a.race.slug))], on = S.settings.snipeMeets || [];
@@ -1610,18 +1729,12 @@ function renderSnipes(C) {
   { const pins = C.list.filter(a => PINS.has(a.race.id) && !a.closed && !jumped(a.race)); if (pins.length) h += `<div class="card pinbox"><div class="nx-h"><h3>📌 Pinned races</h3></div><div class="nx-row">${pins.map(a => { const ms = startMs(a.race), top = a.ranked[0]; return `<button class="nx-c" data-act="gorace" data-race="${a.race.id}"><span class="nx-r">${esc(a.race.venue)} R${a.race.no}</span>${isFinite(ms) ? `<span class="nx-p"><span class="num">${clockTxt(ms)}</span>${cdSpan(ms)}</span>` : ''}${top ? `<span class="nx-p"><b>${esc(top.name)}</b><span class="num">${odds$(top.win)}</span></span>` : ''}${cdBar(ms)}</button>`; }).join('')}</div></div>`; }
   if (HP.size) h += `<p class="muted" style="font-size:.84rem;margin:4px 0">${HP.size} hidden pick${HP.size > 1 ? 's' : ''} · <button class="btn sm link" data-act="unhidepk">Show all</button></p>`;
   h += bbTodayCard();
-  h += nextUp(C);
-  h += lateMoney(C);
-  h += `<div class="tiers">` + ['low', 'mid', 'high'].map(t => tierCard(t, all.find(s => s.tier === t))).join('') + `</div>`;
-  if (!promosOn) h += `<div class="notice warn"><p><b>No promo is switched on.</b> Promos give the most reliable edge. Straight picks show a “Watch” price: once Sportsbet's price reaches it, the pick turns into a bet.</p><div class="acts"><button class="btn pri" data-act="goto" data-tab="settings">Add my promos</button><button class="btn" data-act="sample">Try an example promo</button></div></div>`;
-  else if (st.example) h += `<div class="notice warn"><p><b>Example promo:</b> bonus back up to ${money(st.bb.max)} if your horse runs 2nd or 3rd, every race. Swap in your real offers before betting.</p><div class="acts"><button class="btn" data-act="goto" data-tab="settings">Edit promos</button><button class="btn" data-act="unsample">Turn off</button></div></div>`;
-  const t10Open = TP.t10 !== false;
-  h += `<div class="head-row"><button class="t10-tog" data-act="t10tog" aria-expanded="${t10Open}"><span class="chev" aria-hidden="true">›</span><h2>Top 10</h2></button>${!t10Open ? '' : ''}<div class="seg" role="group" aria-label="Risk filter" ${t10Open ? '' : 'hidden'}>${[['all', 'All'], ['low', 'Low risk'], ['mid', 'Mid'], ['high', 'High risk']].map(([k, l]) => `<button data-act="tier" data-v="${k}" aria-pressed="${S.tier === k}">${l}</button>`).join('')}</div></div>`;
-  if (!t10Open) h += `<p class="muted" style="font-size:.86rem;margin-top:-8px">${list.length ? 'Top pick: ' + esc(list[0].r.name) + ' (' + esc(raceLabel(list[0].a.race)) + ', ' + odds$(list[0].o.odds) + '). Tap Top 10 to show all.' : 'No open races.'}</p>`;
-  else if (list.length) {
-    h += `<div class="card t10"><div class="t10-h"><span></span><span></span><span>Horse</span><span class="r">Price</span><span class="r">Chance</span><span class="r">Edge</span><span class="r">Action</span><span></span></div>`;
-    h += list.map((s, i) => t10Row(s, i + 1)).join('') + `</div>`;
-  } else h += `<div class="card empty"><h3>No open races in this tier</h3><p class="muted">Try another tier, or wait for the next refresh.</p></div>`;
+  {
+  let notes = lateMoney(C);
+  if (!promosOn) notes += `<div class="notice warn"><p><b>No promo is switched on.</b> Promos give the most reliable edge. Straight picks show a “Watch” price: once Sportsbet's price reaches it, the pick turns into a bet.</p><div class="acts"><button class="btn pri" data-act="goto" data-tab="settings">Add my promos</button><button class="btn" data-act="sample">Try an example promo</button></div></div>`;
+  else if (st.example) notes += `<div class="notice warn"><p><b>Example promo:</b> bonus back up to ${money(st.bb.max)} if your horse runs 2nd or 3rd, every race. Swap in your real offers before betting.</p><div class="acts"><button class="btn" data-act="goto" data-tab="settings">Edit promos</button><button class="btn" data-act="unsample">Turn off</button></div></div>`;
+  h += `<div class="snx"><div class="snx-main">` + heroBest(all) + nextUp(C) + notes + `</div>` + riskPanel(all) + `</div>`; }
+  h += t11(top10(all, 'all'));
   if (st.trackPicks) h += trackPicksHtml(C);
   h += `<div class="card plan">
     <div><div class="k">Your plan</div><div class="v">${money(P.total)} <span class="muted" style="font-size:1.05rem">of ${money(B)}</span></div><div class="meter"><i style="width:${Math.min(100, P.total / B * 100).toFixed(1)}%"></i></div></div>
@@ -1731,6 +1844,97 @@ function t10Row(s, rank) {
     <div class="c-lg">${betBtns(a, r, o, s.stake)}${loggedBet(a.race.id, r.n, o.type) ? '' : `<span class="qstk">${[5, 10, 20].map(v => `<button class="btn sm" data-act="placed" data-race="${a.race.id}" data-n="${r.n}" data-type="${o.type}" data-stake="${v}" title="Log a $${v} bet at ${odds$(o.odds)}">$${v}</button>`).join('')}<button class="btn sm link" data-act="hidepk" data-k="${a.race.id}_${r.n}" title="Hide this pick">✕</button></span>`}</div>
     ${whyPanel(s)}
   </div>`;
+}
+
+/* ============================ FRONT PAGE: best bet, risk top 10, full top 10 ============================ */
+// Sportsbet's own silks image when the card has one; the generated silks otherwise (and if the image fails to load)
+const silkPic = (r, cls = '') => r.silk && /^https:\/\//.test(r.silk)
+  ? `<span class="silkpic ${cls}"><img src="${esc(r.silk)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('noimg')">${silk(r.name, cls)}</span>`
+  : silk(r.name, cls);
+// Key stats from the Sportsbet form guide (saved by the race-day reader as r.ks); older cards only have the award tags
+const ksOf = (r, re) => { const ks = r.ks || {}; const k = Object.keys(ks).find(l => re.test(l.trim())); return k ? String(ks[k]).replace(/\s+/g, '') : ''; };
+const recFmt = v => { const m = /^(\d+):(\d+)-(\d+)-(\d+)$/.exec(v || ''); return m ? `${m[1]}: ${m[2]}-${m[3]}-${m[4]}` : v; };
+function recCell(r, kind) {
+  const v = kind === 'track' ? ksOf(r, /^track$/i) : ksOf(r, /^dist(ance)?\.?$/i);
+  if (v) return `<span class="v">${esc(recFmt(v))}</span>`;
+  const tag = kind === 'track' ? 'Track Talent' : 'Striking Dist.';
+  return (r.tags || []).includes(tag) ? `<span class="okrec" title="Sportsbet rates its ${kind} record as strong">Strong</span>` : '<span class="muted">—</span>';
+}
+// Last five starts as boxes, oldest on the left (the way the form line reads). x = a spell, 0 = 10th or worse.
+function formChips(f) {
+  const s = String(f || '').replace(/[^0-9x]/gi, '').slice(-5);
+  if (!s) return '<span class="muted">Debut</span>';
+  return `<span class="fch" role="img" aria-label="Form, oldest to latest: ${esc(s)}">${[...s].map(c => { const x = c.toLowerCase(); return `<i class="${x === '1' ? 'w' : x === '2' || x === '3' ? 'p' : x === 'x' ? 'x' : ''}">${x}</i>`; }).join('')}</span>`;
+}
+// A short reason for the pick: the strongest form points, then our chance against what the price needs
+function shortWhy(s) {
+  const { r, o } = s, ch = chanceOf(r, o), need = 1 / o.odds;
+  const good = ((r.fi && r.fi.chips) || []).filter(c => c[1] === 'good').map(c => c[0]).filter((v, i, a) => a.indexOf(v) === i).slice(0, 3);
+  const low = v => /^[A-Z]{2}/.test(v) ? v : v[0].toLowerCase() + v.slice(1);
+  const lead = good.length ? good.map((v, i) => i ? low(v) : v).join(', ') + '. ' : '';
+  let nums;
+  if (o.type === 'place') nums = `Places ${pct(ch, 0)} of the time by our numbers; ${odds$(o.odds)} needs ${pct(need, 0)}.`;
+  else if (o.type === 'bb') nums = `Wins ${pct(r.p, 0)} by our numbers, and the promo refunds if it runs ${POS_TXT[o.positions] || '2nd/3rd'}.`;
+  else nums = `We rate it ${pct(ch, 0)} to win; ${odds$(o.odds)} needs ${pct(need, 0)}.`;
+  return lead + nums;
+}
+const jockeyTxt = r => { if (!r.j) return ''; const jt = jtEffect(r); return `Jockey ${esc(r.j)}${jt.j ? `, wins ${pct(jt.j.rate, 0)} (12 mths)` : ''}`; };
+const raceWhen = a => { const ms = startMs(a.race); return isFinite(ms) ? `<span class="num">${clockTxt(ms)}</span> ${cdSpan(ms)}` : ''; };
+function heroBest(all) {
+  const s = all.find(x => x.stake) || all[0];
+  if (!s) return '';
+  const { a, r, o } = s, ch = chanceOf(r, o), ms = startMs(a.race);
+  const meta = [`#${r.n}`, a.race.dist ? a.race.dist + 'm' : '', r.bar ? 'barrier ' + r.bar : '', r.j ? 'jockey ' + esc(r.j) : ''].filter(Boolean).join(', ');
+  return `<section class="card hero" aria-label="Best bet right now">
+    <div class="hero-l">
+      <span class="hero-k">Best bet right now: ${esc(raceLabel(a.race))}${isFinite(ms) ? ` <span class="num">${clockTxt(ms)}</span> ${cdSpan(ms)}` : ''}</span>
+      <div class="hero-who">${silkPic(r, 'xl')}<div style="min-width:0"><b class="hero-name">${inBlackbook(r.name) ? '★ ' : ''}${esc(r.name)}</b><span>${meta}</span><span>${esc(shortLabel(o))}${o.promo ? ' <span class="tag promo">Promo</span>' : ''}</span></div></div>
+      <div class="hero-acts">${statusOf(s)}${betBtns(a, r, o, s.stake)}${whyBtn(s)}${pickBtn(a.race.id, r)}${sbLink(a.race, true)}</div>
+    </div>
+    <div class="hero-figs">
+      <div><small>Price</small><b>${odds$(o.odds)}</b></div>
+      <div><small>Fair price</small><b>${ch > 0 ? odds$(1 / ch) : '—'}</b></div>
+      <div><small>Edge</small><b class="edge">${evTxt(o.ev)}</b></div>
+      <div><small>${o.type === 'place' ? 'Place chance' : 'Win chance'}</small><b>${pct(ch, 0)}</b></div>
+    </div>
+    ${whyPanel(s)}
+  </section>`;
+}
+function riskPanel(all) {
+  const t = S.rtier || 'low', list = top10(all, t), nm = { low: 'Low', mid: 'Mid', high: 'High' };
+  return `<section class="card rk10" aria-label="Top 10 by risk">
+    <h3>Top 10 by risk</h3>
+    <div class="rk-seg" role="group" aria-label="Risk level">${['low', 'mid', 'high'].map(k => `<button class="${k}" data-act="rtier" data-v="${k}" aria-pressed="${t === k}"><b>${nm[k]}</b><small>${TIERS[k][1]}</small></button>`).join('')}</div>
+    ${list.length ? `<ol class="rk-list">${list.map((s, i) => `<li><button class="rk-r" data-act="gorace" data-race="${s.a.race.id}" title="Open ${esc(raceLabel(s.a.race))}"><span class="n">${i + 1}</span>${silkPic(s.r)}<span class="w"><b>${esc(s.r.name)}</b><small>${esc(raceLabel(s.a.race))}${isFinite(startMs(s.a.race)) ? ', ' + clockTxt(startMs(s.a.race)) : ''}</small></span><span class="p"><b>${odds$(s.o.odds)}</b><small class="${evCls(s.o.ev)}">${evTxt(s.o.ev)}</small></span></button></li>`).join('')}</ol>` : `<p class="muted">No open runners in this price range.</p>`}
+  </section>`;
+}
+function t11Row(s, rank) {
+  const { a, r, o } = s, ch = chanceOf(r, o), mv = move(r), bk = inBlackbook(r.name);
+  const mvTxt = mv ? (mv.firm ? `<span class="mv up">Firming from ${odds$(mv.open)}</span>` : mv.drift ? `<span class="mv down">Drifting from ${odds$(mv.open)}</span>` : '<span class="mv">Steady</span>') : '';
+  const row = `<tr class="row${rank <= 3 ? ' top3' : ''}">
+    <td class="c-rk"><span class="rk">${rank}</span></td>
+    <td class="c-sk"><span class="sbox">${silkPic(r)}</span></td>
+    <td class="c-hn"><span class="hn"><b>${bk ? '★ ' : ''}${esc(r.name)}</b><span class="tier ${s.tier}" title="${esc(TIERS[s.tier][0])}, ${esc(TIERS[s.tier][1])}">${{ low: 'Low', mid: 'Mid', high: 'High' }[s.tier]}</span></span>
+      <span class="ln">${esc(raceLabel(a.race))}, ${raceWhen(a)}${a.race.dist ? ', ' + a.race.dist + 'm' : ''}</span>
+      <span class="ln m">${[jockeyTxt(r), r.bar ? 'barrier ' + r.bar : ''].filter(Boolean).join(', ') || '&nbsp;'}</span></td>
+    <td class="c-wy"><p class="wy" title="${esc(shortWhy(s))}">${esc(shortWhy(s))}</p><span class="sub">${whyBtn(s)}${pickBtn(a.race.id, r)}${o.promo ? '<span class="tag promo">Promo</span>' : ''}</span></td>
+    <td class="c-ch"><span class="v">${pct(ch, 0)}</span><small>fair ${ch > 0 ? odds$(1 / ch) : '—'}</small></td>
+    <td class="c-fm">${formChips(r.form)}</td>
+    <td class="c-rc"><span class="rc"><small>Track</small>${recCell(r, 'track')}</span><span class="rc"><small>Dist</small>${recCell(r, 'dist')}</span></td>
+    <td class="c-pr"><span class="pr"><b>${odds$(o.odds)}</b><span class="ev ${evCls(o.ev)}">${evTxt(o.ev)}</span>${mvTxt}</span></td>
+    <td class="c-bt"><span class="bt">${statusOf(s)}<span class="acts-r">${betBtns(a, r, o, s.stake)}${sbLink(a.race, true)}</span></span></td>
+  </tr>`;
+  const wp = whyPanel(s);
+  return row + (wp ? `<tr class="wyx"><td colspan="9">${wp}</td></tr>` : '');
+}
+function t11(list) {
+  if (!list.length) return `<div class="card empty"><h3>No open races</h3><p class="muted">Check another day, or wait for the next refresh.</p></div>`;
+  return `<div class="head-row t11-h"><h2>Top 10 picks</h2><p>All meetings, ranked by edge. Form reads oldest to latest; records read starts: wins-seconds-thirds.</p></div>
+  <div class="card t11"><table>
+    <colgroup><col class="w-rk"><col class="w-sk"><col><col><col class="w-ch"><col class="w-fm"><col class="w-rc"><col class="w-pr"><col class="w-bt"></colgroup>
+    <thead><tr><th>#</th><th><span class="sr">Silks</span></th><th>Horse and jockey</th><th>Why we like it</th><th>Chance</th><th>Form</th><th>Records</th><th class="r">Price</th><th class="r">Bet</th></tr></thead>
+    <tbody>${list.map((s, i) => t11Row(s, i + 1)).join('')}</tbody>
+  </table></div>`;
 }
 
 /* ============================ BEST PICKS BY TRACK ============================ */
@@ -3238,6 +3442,7 @@ document.addEventListener('click', e => {
     case 'race': if (S.tab !== 'tracks') { goRace(t.dataset.race); break; } S.raceId = t.dataset.race || null; renderAll(); break;
     case 'gorace': goRace(t.dataset.race); break;
     case 'tier': S.tier = t.dataset.v; renderAll(); break;
+    case 'rtier': S.rtier = t.dataset.v; try { localStorage.setItem('ls.rtier', S.rtier); } catch (e) {} renderAll(); break;
     case 'reloadres': loadClosed(true); toast('Checking for new results'); break;
     case 'exportall': exportAll(t); break;
     case 'log': openLog(t.dataset.race, +t.dataset.n, t.dataset.type, +t.dataset.stake || 0); break;
