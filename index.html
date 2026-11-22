@@ -1701,8 +1701,17 @@ function snipes(C) {
   }); });
   return out.sort((x, y) => y.o.ev - x.o.ev);
 }
-// Best picks: the runners most likely to win, with value checked. Our chance (market + form, including the form-guide
-// records, going, pace and market moves) comes first; a clear margin over the next-best runner adds; a price below fair takes away.
+// Best bets: horses priced above what they're worth, with a decent chance, ranked by long-run profit.
+// Profit is the Kelly growth rate of the bet (what it adds to the bank over time), with very large edges
+// capped because they are usually a stale price or the model being too sure. Our chance uses the market
+// plus form (records, going, pace, market moves). Runners without value only fill gaps, most likely first.
+const MIN_PICK = 0.30;
+function growthOf(o) {
+  if (!o || !(o.ev > 0) || !o.outs) return 0;
+  const f = kelly(o.outs); if (!(f > 0)) return 0;
+  const g = o.outs.reduce((t, [q, x]) => t + q * Math.log(1 + f * x), 0);
+  return g * Math.min(1, Math.pow(0.3 / o.ev, 2));
+}
 function pickList(C) {
   const out = [];
   C.list.forEach(a => { if (a.closed || hiddenA(a) || snipeOff(a)) return;
@@ -1710,16 +1719,23 @@ function pickList(C) {
     act.forEach(r => {
       if (HP.has(a.race.id + '_' + r.n)) return;
       const o = r.plan ? r.plan.o : r.best, other = act.reduce((m, x) => x !== r && x.p > m ? x.p : m, 0), mv = move(r);
-      const ev = o.ev, score = r.p + 0.35 * (r.p - other) + 0.8 * Math.min(ev, 0) + 0.1 * Math.min(Math.max(ev, 0), 0.25) + (mv && mv.firm ? 0.02 : mv && mv.drift ? -0.02 : 0);
-      out.push({ a, r, o, tier: tierOf(o.odds), stake: r.plan ? r.plan.stake : 0, score });
+      const g = growthOf(o), ok = o.type === 'place' ? (r.pPl || 0) >= 0.55 : r.p >= MIN_PICK;
+      const lk = r.p + 0.35 * (r.p - other) + 0.8 * Math.min(o.ev, 0) + (mv && mv.firm ? 0.02 : mv && mv.drift ? -0.02 : 0);
+      out.push({ a, r, o, tier: tierOf(o.odds), stake: r.plan ? r.plan.stake : 0, g, ok, lk });
     });
   });
-  return out.sort((x, y) => y.score - x.score);
+  return out;
 }
-// One pick per race (two runners in one race can't both win), optionally within a price range
+// One pick per race (two runners in one race can't both win). The main list needs a decent chance;
+// the price-range lists rank value first within the range.
 function bestPicks(list, tier, n = 10) {
+  const main = tier === 'all', pool = list.filter(s => main || s.tier === tier);
+  const good = pool.filter(s => s.g > 0 && (!main || s.ok)).sort((x, y) => y.g - x.g || y.lk - x.lk);
+  // gaps: other value bets, most likely first, then the most likely winners without value (shown as Watch)
+  const value = pool.filter(s => s.g > 0 && !good.includes(s)).sort((x, y) => y.r.p - x.r.p);
+  const rest = pool.filter(s => !(s.g > 0)).sort((x, y) => y.lk - x.lk);
   const seen = new Set(), out = [];
-  for (const s of list) { if (tier !== 'all' && s.tier !== tier) continue; if (seen.has(s.a.race.id)) continue; seen.add(s.a.race.id); out.push(s); if (out.length === n) break; }
+  for (const s of good.concat(value, rest)) { if (seen.has(s.a.race.id)) continue; seen.add(s.a.race.id); out.push(s); if (out.length === n) break; }
   return out;
 }
 function top10(list, tier) {
@@ -1895,7 +1911,7 @@ function renderSaveNote() {
 function renderSnipes(C) {
   const st = S.settings, P = C.plan, B = st.bankroll, all = snipes(C), picks = pickList(C), list = bestPicks(picks, 'all');
   const promosOn = st.bb.on || st.boost.on;
-  let h = dayBar() + searchBox() + `<div class="head-row"><h2>${isScout() ? 'Snipes for ' + esc(dateTxt(Live.date)) : "Today's snipes"}</h2><p>The best picks from every open race: most likely winners first, with the price checked for value.</p></div>` + scoutNote();
+  let h = dayBar() + searchBox() + `<div class="head-row"><h2>${isScout() ? 'Snipes for ' + esc(dateTxt(Live.date)) : "Today's snipes"}</h2><p>The best bets from every open race: horses priced above what they're worth, with a real chance of winning.</p></div>` + scoutNote();
   { const ms = [...new Set(C.list.map(a => a.race.slug))], on = S.settings.snipeMeets || [];
     if (ms.length > 1) h += `<div class="seg" role="group" aria-label="Meetings on Snipes" style="flex-wrap:wrap">${ms.map(sl => { const a = C.list.find(x => x.race.slug === sl); return `<button data-act="snmeet" data-slug="${esc(sl)}" aria-pressed="${!on.length || on.includes(sl)}">${esc(a.race.venue)}</button>`; }).join('')}<button data-act="snmeet" data-slug="*" aria-pressed="${!on.length}">All</button></div>`; }
   if (P && P.guard && P.guard.msg) h += `<div class="card panel" style="border-left:4px solid #d33"><b>Bank protection:</b> ${esc(P.guard.msg)}</div>`;
@@ -1906,7 +1922,7 @@ function renderSnipes(C) {
   let notes = lateMoney(C);
   if (!promosOn) notes += `<div class="notice warn"><p><b>No promo is switched on.</b> Promos give the most reliable edge. Straight picks show a “Watch” price: once Sportsbet's price reaches it, the pick turns into a bet.</p><div class="acts"><button class="btn pri" data-act="goto" data-tab="settings">Add my promos</button><button class="btn" data-act="sample">Try an example promo</button></div></div>`;
   else if (st.example) notes += `<div class="notice warn"><p><b>Example promo:</b> bonus back up to ${money(st.bb.max)} if your horse runs 2nd or 3rd, every race. Swap in your real offers before betting.</p><div class="acts"><button class="btn" data-act="goto" data-tab="settings">Edit promos</button><button class="btn" data-act="unsample">Turn off</button></div></div>`;
-  h += `<div class="snx"><div class="snx-main">` + heroBest(picks) + nextUp(C) + notes + `</div>` + riskPanel(picks) + `</div>`; }
+  h += `<div class="snx"><div class="snx-main">` + heroBest(list) + nextUp(C) + notes + `</div>` + riskPanel(picks) + `</div>`; }
   h += t11(list);
   if (st.trackPicks) h += trackPicksHtml(C);
   h += `<div class="card plan">
@@ -2102,7 +2118,7 @@ function t11Row(s, rank) {
 }
 function t11(list) {
   if (!list.length) return `<div class="card empty"><h3>No open races</h3><p class="muted">Check another day, or wait for the next refresh.</p></div>`;
-  return `<div class="head-row t11-h"><h2>Top 10 picks</h2><p>The most likely winners across all meetings, checked for value. Form reads oldest to latest; records read starts: wins-seconds-thirds.</p></div>
+  return `<div class="head-row t11-h"><h2>Top 10 picks</h2><p>The best bets across all meetings: priced above what they're worth, with a real chance. Form reads oldest to latest; records read starts: wins-seconds-thirds.</p></div>
   <div class="card t11"><table>
     <colgroup><col class="w-rk"><col class="w-sk"><col><col><col class="w-ch"><col class="w-fm"><col class="w-rc"><col class="w-pr"><col class="w-bt"></colgroup>
     <thead><tr><th>#</th><th><span class="sr">Silks</span></th><th>Horse and jockey</th><th>Why we like it</th><th>Chance</th><th>Form</th><th>Records</th><th class="r">Price</th><th class="r">Bet</th></tr></thead>
