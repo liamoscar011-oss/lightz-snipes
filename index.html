@@ -339,6 +339,53 @@ textarea#imp-text{min-height:200px;font-family:var(--mono);font-size:.82rem}
 .prev th,.prev td{padding:5px 8px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
 .prev td.n{font-family:var(--mono);text-align:right}
 
+/* ===== Motion: only when the phone allows it and Settings has animations on ===== */
+@media (prefers-reduced-motion: no-preference){
+  html:not(.noanim).intro .brand-mark .lg-ret{transform-box:view-box;transform-origin:256px 256px;animation:lgLock .95s cubic-bezier(.2,.8,.2,1) both}
+  html:not(.noanim).intro .brand-mark .lg-hz{animation:lgHorse .6s ease-out .3s both}
+  html:not(.noanim).intro .top::after,html:not(.noanim).intro .top .top-in .brand::after{animation:railDraw .9s cubic-bezier(.4,0,.2,1) .15s both}
+  html:not(.noanim) .view:not([hidden]){animation:viewIn .24s ease-out}
+  html:not(.noanim) .sheet-bg.in{animation:fadeIn .2s ease-out}
+  html:not(.noanim) .sheet-bg.in .sheet{animation:sheetUp .34s cubic-bezier(.2,.9,.25,1)}
+  html:not(.noanim) .pxup{animation:pxUp 1.8s ease-out}
+  html:not(.noanim) .pxdn{animation:pxDn 1.8s ease-out}
+  html:not(.noanim) .pxa{animation:pxArrow 3.2s ease-out forwards}
+  html:not(.noanim) tr.nbsweep > td,html:not(.noanim) .nbsweep:not(tr){animation:nbSweep 1.6s ease-out}
+  html:not(.noanim) #slipbtn.bump{animation:bump .6s cubic-bezier(.3,1.6,.5,1)}
+  html:not(.noanim) .njb-c:has(.cd.now){animation:njPulse 1.6s ease-in-out infinite}
+  html:not(.noanim) .cd.jmp{animation:jmpFlash .7s ease 3}
+  html:not(.noanim) .skel i{background:linear-gradient(90deg,var(--line) 25%,var(--surface-2) 50%,var(--line) 75%);background-size:300% 100%;animation:shimmer 1.3s linear infinite}
+  html:not(.noanim) #winban.on .wb-beam{animation:beam 1.1s cubic-bezier(.2,.8,.2,1) both}
+  html:not(.noanim) #winban.on .wb-card{animation:wbp .45s cubic-bezier(.2,1.4,.4,1) both}
+}
+@keyframes lgLock{0%{transform:scale(1.8) rotate(-45deg);opacity:0}65%{transform:scale(.93) rotate(5deg);opacity:1}100%{transform:none;opacity:1}}
+@keyframes lgHorse{from{opacity:0}to{opacity:1}}
+@keyframes railDraw{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+@keyframes viewIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes sheetUp{from{opacity:.3;transform:translateY(48px)}to{opacity:1;transform:none}}
+@keyframes pxUp{0%,30%{background-color:color-mix(in srgb,var(--pos) 32%,transparent)}100%{background-color:transparent}}
+@keyframes pxDn{0%,30%{background-color:color-mix(in srgb,var(--neg) 30%,transparent)}100%{background-color:transparent}}
+@keyframes pxArrow{0%{opacity:0;transform:translateY(4px)}10%,75%{opacity:1;transform:none}100%{opacity:0}}
+@keyframes nbSweep{0%{background-color:color-mix(in srgb,var(--yellow) 55%,transparent)}100%{background-color:transparent}}
+@keyframes bump{0%{transform:scale(1)}40%{transform:scale(1.16)}100%{transform:scale(1)}}
+@keyframes njPulse{0%,100%{box-shadow:0 0 0 0 color-mix(in srgb,var(--yellow) 60%,transparent)}50%{box-shadow:0 0 0 5px color-mix(in srgb,var(--yellow) 0%,transparent)}}
+@keyframes jmpFlash{0%,100%{opacity:1}50%{opacity:.25}}
+@keyframes shimmer{from{background-position:100% 0}to{background-position:-200% 0}}
+@keyframes beam{0%{transform:rotate(var(--a)) scaleY(0);opacity:0}40%{opacity:1}100%{transform:rotate(var(--a)) scaleY(1);opacity:0}}
+.pxa{display:inline-block;font-size:.72em;margin-left:3px;font-weight:800}
+.pxa.up{color:var(--pos)} .pxa.dn{color:var(--neg)}
+html.noanim .pxa{display:none}
+@media (prefers-reduced-motion: reduce){.pxa{display:none}}
+.skel{display:grid;gap:10px}
+.skel i{display:block;border-radius:8px;background:var(--line)}
+.skel .sk-h{height:34px;width:46%}
+.skel .sk-p{height:16px;width:72%}
+.skel .sk-hero{height:150px}
+.skel .sk-r{height:58px}
+#winban .wb-wrap{position:relative;display:grid;place-items:center}
+#winban .wb-beam{position:absolute;left:50%;top:50%;width:6px;height:46vmin;margin-left:-3px;transform-origin:50% 0;background:linear-gradient(to bottom,rgba(255,214,110,.95),rgba(255,214,110,0));border-radius:3px;opacity:0;pointer-events:none}
+#winban .wb-card{position:relative;background:linear-gradient(135deg,#0b7a3e,#1f9d55);padding:28px 34px;border-radius:18px;box-shadow:0 10px 40px rgba(0,0,0,.35)}
 /* next-up bar across the top */
 .njb{background:var(--surface);border-bottom:1px solid var(--line)}
 .njb-in{display:flex;align-items:center;gap:10px;padding-block:7px}
@@ -625,8 +672,7 @@ footer .wrap{display:grid;gap:6px}
 .cal-d i{font-style:normal;font-size:.68rem;font-weight:700}
 .cal-d.now{outline:2px solid #ffd200}
 #winban{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(10,34,64,.75);z-index:9999;text-align:center;color:#fff}
-#winban.on{display:flex;animation:wbp .35s ease}
-#winban>div{background:linear-gradient(135deg,#0b7a3e,#1f9d55);padding:28px 34px;border-radius:18px;box-shadow:0 10px 40px rgba(0,0,0,.35)}
+#winban.on{display:flex}
 @keyframes wbp{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:none}}
 .panel > .acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
 /* ===== Lightz theme: turf green racebook by day, a floodlit night meeting after dark ===== */
@@ -1342,6 +1388,7 @@ function watchLive(db) {
   try {
     db.collection('days').onSnapshot(snap => {
       Live.days = snap.docs.filter(d => d.exists).map(d => d.data()).filter(x => x && x.date).sort((a, b) => a.date < b.date ? 1 : -1);
+      Live.daysIn = true;
       const want = (S.pickDate && Live.days.some(d => d.date === S.pickDate)) ? S.pickDate : defaultDay();
       if (want !== Live.date) subscribeDay(want); else renderAll();
     }, () => {});
@@ -1931,7 +1978,7 @@ function cdTxt(ms) {
   const m = Math.round(d / 60000);
   return m < 60 ? m + 'm' : m < 24 * 60 ? Math.floor(m / 60) + 'h ' + String(m % 60).padStart(2, '0') + 'm' : Math.round(m / 1440) + 'd';
 }
-const cdCls = ms => { const d = ms - Date.now(); return d <= -90000 ? 'gone' : d < 10 * 60000 ? 'soon' : ''; };
+const cdCls = ms => { const d = ms - Date.now(); return d <= -90000 ? 'gone' : d < 60000 ? 'soon now jmp' : d < 2 * 60000 ? 'soon now' : d < 10 * 60000 ? 'soon' : ''; };
 const cdSpan = ms => isFinite(ms) ? `<span class="cd ${cdCls(ms)}" data-start="${ms}">${cdTxt(ms)}</span>` : '';
 // Bookie prices as coloured chips; the best price gets a green ring
 function bookChips(r, place) {
@@ -1966,7 +2013,7 @@ function toast(msg, actLabel, fn) {
 function renderHeader(C) {
   const meets = new Set(C.list.map(a => a.race.slug)).size, di = dayInfo(), el = $('#meta-live');
   el.className = 'pill-top' + (liveOn() ? ' live' : '');
-  el.textContent = liveOn() ? `${dateTxt(currentDate())}${isScout() ? ' · scouting' : ''} · ${meets} meetings · updated ${timeTxt(di.updatedAt) || '—'}` : `${dateTxt(currentDate())} · ${meets} meetings · saved card`;
+  el.textContent = booting() ? 'Loading race cards…' : liveOn() ? `${dateTxt(currentDate())}${isScout() ? ' · scouting' : ''} · ${meets} meetings · updated ${timeTxt(di.updatedAt) || '—'}` : `${dateTxt(currentDate())} · ${meets} meetings · saved card`;
   $('#meta-bank').textContent = money(S.settings.bankroll) + ' bank';
   { const td = perthToday(), tb = S.bets.filter(b => perthDay(b.ts) === td); let ch = $('#meta-today'); if (!ch) { ch = document.createElement('span'); ch.id = 'meta-today'; ch.className = 'pill-top'; $('#meta-bank').parentNode.insertBefore(ch, $('#meta-bank')); }
     const pl = tb.reduce((x, b) => x + plOfBet(b), 0); ch.hidden = !tb.length; ch.innerHTML = `${tb.length} bet${tb.length === 1 ? '' : 's'} · <b style="color:${pl >= 0 ? '#5be38f' : '#ff8080'}">${pl >= 0 ? '+' : ''}${money(pl)}</b> today`; }
@@ -1990,8 +2037,10 @@ function winBanner() {
   fresh.forEach(b => seen.add(b.id)); LS.set('ls_wonseen', [...seen]);
   const pl = fresh.reduce((x, b) => x + plOfBet(b), 0);
   let el = $('#winban'); if (!el) { el = document.createElement('div'); el.id = 'winban'; document.body.appendChild(el); el.addEventListener('click', () => el.classList.remove('on')); }
-  el.innerHTML = `<div><div style="font-size:2.4rem">🏆</div><div style="font-size:1.6rem;font-weight:900">Winner! +${money(pl, 2)}</div><div style="opacity:.9">${fresh.map(b => esc(b.name)).join(', ')}</div><div style="font-size:.8rem;opacity:.7;margin-top:8px">tap to close</div></div>`;
+  const beams = Array.from({ length: 14 }, (_, i) => `<span class="wb-beam" style="--a:${Math.round(i * 360 / 14)}deg;animation-delay:${(i % 3) * 60}ms"></span>`).join('');
+  el.innerHTML = `<div class="wb-wrap">${beams}<div class="wb-card"><div style="font-size:2.4rem">🏆</div><div style="font-size:1.6rem;font-weight:900">Winner! +<span class="wb-amt">${money(animOn() ? 0 : pl, 2)}</span></div><div style="opacity:.9">${fresh.map(b => esc(b.name)).join(', ')}</div><div style="font-size:.8rem;opacity:.7;margin-top:8px">tap to close</div></div></div>`;
   el.classList.add('on'); clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove('on'), 6000);
+  countTo(el.querySelector('.wb-amt'), 0, pl, v => money(v, 2), 1100);
 }
 function renderSaveNote() {
   const el = $('#save-note'); if (!el) return;
@@ -2000,6 +2049,10 @@ function renderSaveNote() {
 
 /* ============================ SNIPES ============================ */
 function renderSnipes(C) {
+  if (booting()) {
+    $('#v-snipes').innerHTML = `<div class="skel" aria-busy="true" aria-label="Loading race cards"><i class="sk-h"></i><i class="sk-p"></i><i class="sk-hero"></i>${'<i class="sk-r"></i>'.repeat(6)}</div>`;
+    return;
+  }
   const st = S.settings, P = C.plan, B = st.bankroll, all = snipes(C), picks = pickList(C), list = bestPicks(picks, 'all');
   const promosOn = st.bb.on || st.boost.on;
   let h = dayBar() + searchBox() + `<div class="head-row"><h2>${isScout() ? 'Snipes for ' + esc(dateTxt(Live.date)) : "Today's snipes"}</h2><p>The best bets from every open race: horses priced above what they're worth, with a real chance of winning.</p></div>` + scoutNote();
@@ -2201,7 +2254,7 @@ function t11Row(s, rank) {
     <td class="c-ch"><span class="v">${pct(ch, 0)}</span><small>fair ${ch > 0 ? odds$(1 / ch) : '—'}</small></td>
     <td class="c-fm">${formChips(r.form)}</td>
     <td class="c-rc"><span class="rc"><small>Track</small>${recCell(r, 'track')}</span><span class="rc"><small>Dist</small>${recCell(r, 'dist')}</span></td>
-    <td class="c-pr"><span class="pr"><b>${odds$(o.odds)}</b><span class="ev ${evCls(o.ev)}">${evTxt(o.ev)}</span>${mvTxt}</span></td>
+    <td class="c-pr"><span class="pr"><b data-px="${a.race.id}_${r.n}">${odds$(o.odds)}</b><span class="ev ${evCls(o.ev)}">${evTxt(o.ev)}</span>${mvTxt}</span></td>
     <td class="c-bt"><span class="bt">${statusOf(s)}<span class="acts-r">${betBtns(a, r, o, s.stake)}${sbLink(a.race, true)}</span></span></td>
   </tr>`;
   const wp = whyPanel(s);
@@ -2441,7 +2494,7 @@ function lateMoney(C) {
 function logoSvg(id, col) {
   const f = (cls, attr, v) => col ? `${attr}="${v}"` : `class="${cls}"`;
   const c = col || {}, sh = col ? mixHex(c.ac, '#000000', .24) : '';
-  return `<rect width="512" height="512" ${col ? `rx="${c.r || 0}" ` : ''}${f('lg-bg', 'fill', c.bg)}/><defs><clipPath id="${id}"><circle cx="256" cy="256" r="171"/></clipPath></defs><g clip-path="url(#${id})"><path ${f('lg-sh', 'fill', sh)} d="M232 146 C166 186 126 288 112 480 L72 480 C86 300 130 196 222 128 Z"/><path ${f('lg-sh', 'fill', sh)} d="M230 152 L232 84 L262 140 Z"/><path ${f('lg-ac', 'fill', c.ac)} d="M236 150 L262 76 L280 146 C302 156 320 172 332 192 L388 296 C400 324 390 354 362 360 L334 364 C314 366 300 356 292 342 C280 320 262 304 242 310 L224 340 L214 480 L118 480 C128 330 160 214 236 150 Z"/><circle cx="314" cy="208" r="11" ${f('lg-cut', 'fill', c.bg)}/><path d="M372 326 q-12 8 -24 4" fill="none" ${f('lg-cs', 'stroke', c.bg)} stroke-width="8" stroke-linecap="round"/></g><circle cx="256" cy="256" r="178" fill="none" ${f('lg-ln', 'stroke', c.ln)} stroke-width="14"/><g ${f('lg-ln', 'stroke', c.ln)} stroke-width="14" stroke-linecap="round"><line x1="256" y1="46" x2="256" y2="112"/><line x1="256" y1="400" x2="256" y2="466"/><line x1="46" y1="256" x2="112" y2="256"/><line x1="400" y1="256" x2="466" y2="256"/></g>`;
+  return `<rect width="512" height="512" ${col ? `rx="${c.r || 0}" ` : ''}${f('lg-bg', 'fill', c.bg)}/><defs><clipPath id="${id}"><circle cx="256" cy="256" r="171"/></clipPath></defs><g class="lg-hz" clip-path="url(#${id})"><path ${f('lg-sh', 'fill', sh)} d="M232 146 C166 186 126 288 112 480 L72 480 C86 300 130 196 222 128 Z"/><path ${f('lg-sh', 'fill', sh)} d="M230 152 L232 84 L262 140 Z"/><path ${f('lg-ac', 'fill', c.ac)} d="M236 150 L262 76 L280 146 C302 156 320 172 332 192 L388 296 C400 324 390 354 362 360 L334 364 C314 366 300 356 292 342 C280 320 262 304 242 310 L224 340 L214 480 L118 480 C128 330 160 214 236 150 Z"/><circle cx="314" cy="208" r="11" ${f('lg-cut', 'fill', c.bg)}/><path d="M372 326 q-12 8 -24 4" fill="none" ${f('lg-cs', 'stroke', c.bg)} stroke-width="8" stroke-linecap="round"/></g><g class="lg-ret"><circle cx="256" cy="256" r="178" fill="none" ${f('lg-ln', 'stroke', c.ln)} stroke-width="14"/><g ${f('lg-ln', 'stroke', c.ln)} stroke-width="14" stroke-linecap="round"><line x1="256" y1="46" x2="256" y2="112"/><line x1="256" y1="400" x2="256" y2="466"/><line x1="46" y1="256" x2="112" y2="256"/><line x1="400" y1="256" x2="466" y2="256"/></g></g>`;
 }
 function mixHex(a, b, t) {
   const p = h => [1, 3, 5].map(i => parseInt(String(h).slice(i, i + 2), 16) || 0), x = p(a), y = p(b);
@@ -3071,6 +3124,7 @@ function nowBetCheck(C) {
   const fresh = [...cur].filter(([k]) => !prev.has(k) && !NOWBET.said.has(k)).map(([k, i]) => (NOWBET.said.add(k), i));
   if (!fresh.length) return;
   LS.set('ls_nowbet', [...NOWBET.said].slice(-300));
+  setTimeout(() => nowBetGlow(fresh), 30);
   const line = i => { const ms = startMs(i.a.race); return `${i.r.name}, ${raceLabel(i.a.race)}${isFinite(ms) ? ' ' + clockTxt(ms) : ''}: ${shortLabel(i.o)} at ${odds$(i.o.odds)}, bet ${money(i.stake)}`; };
   fresh.slice(0, 3).forEach(i => {
     try { if (ALERT.on && 'Notification' in window && Notification.permission === 'granted') new Notification('Now a bet: ' + i.r.name, { body: line(i), tag: 'nb-' + i.a.race.id + '-' + i.r.n, icon: 'icons/icon-192.png' }); } catch (e) {}
@@ -3127,9 +3181,60 @@ window.lsLate = async (D, races, note) => {
   return Object.assign({ written: w.written }, C ? lateReport(C, ids) : { refreshed: ids.length, bets: [], watch: [] });
 };
 // Things that live outside the page sections: bet slip button, compare bar, alerts, an open pop-up
+const BOOT_AT = Date.now(); setTimeout(() => { try { renderAll(); } catch (e) {} }, 12100);
+// True while the first live race cards are still on their way (up to 12 seconds)
+const booting = () => !!Live.db && Date.now() - BOOT_AT < 12000 && (!Live.daysIn || (!!Live.date && Live.raw[Live.date] === undefined));
+// ===== Motion helpers =====
+const ANIM = { off: false, prev: null, counts: {} };
+try { ANIM.off = localStorage.getItem('ls.anim') === 'off'; } catch (e) {}
+document.documentElement.classList.toggle('noanim', ANIM.off);
+const animOn = () => !ANIM.off && !(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+function countTo(el, from, to, fmt, ms) {
+  if (!el) return;
+  if (!animOn() || !isFinite(from) || !isFinite(to) || from === to) { el.textContent = fmt(to); return; }
+  const t0 = performance.now(), dur = ms || 700;
+  const step = t => { const k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 3); el.textContent = fmt(from + (to - from) * e); if (k < 1 && el.isConnected) requestAnimationFrame(step); };
+  requestAnimationFrame(step);
+}
+const CFMT = { money2: v => money(v, 2), pct: v => Math.round(v) + '%', ev: v => evTxt(v) };
+function countUps() {
+  document.querySelectorAll('[data-count]').forEach(el => {
+    if (!el.offsetParent) return;
+    const k = el.dataset.ck || '', v = +el.dataset.count, f = CFMT[el.dataset.fmt] || (x => String(Math.round(x)));
+    const was = ANIM.counts[k];
+    ANIM.counts[k] = v;
+    if (was === v) return;
+    countTo(el, was === undefined ? 0 : was, v, f, 800);
+  });
+}
+// After a price update: flash prices that moved (green ▲ shortened, red ▼ drifted)
+function pxFlash(C, tick) {
+  const cur = {};
+  C.list.forEach(a => a.act.forEach(r => { if (r.win > 1) cur[a.race.id + '_' + r.n] = r.win; }));
+  const prev = ANIM.prev; ANIM.prev = cur;
+  if (!tick || !prev || !animOn()) return;
+  document.querySelectorAll('[data-px]').forEach(el => {
+    const k = el.dataset.px, a = prev[k], b = cur[k];
+    if (!a || !b || Math.abs(a - b) < 0.005) return;
+    const up = b < a;
+    el.classList.remove('pxup', 'pxdn'); void el.offsetWidth; el.classList.add(up ? 'pxup' : 'pxdn');
+    el.insertAdjacentHTML('beforeend', `<span class="pxa ${up ? 'up' : 'dn'}" title="${up ? 'Shortened' : 'Drifted'} from ${odds$(a)}">${up ? '▲' : '▼'}</span>`);
+  });
+}
+function nowBetGlow(items) {
+  if (!animOn() || !items.length) return;
+  items.forEach(i => document.querySelectorAll(`[data-px="${i.a.race.id}_${i.r.n}"]`).forEach(el => { const row = el.closest('tr.row, .rr'); if (row) { row.classList.remove('nbsweep'); void row.offsetWidth; row.classList.add('nbsweep'); } }));
+  const sb = document.getElementById('slipbtn'); if (sb) { sb.classList.remove('bump'); void sb.offsetWidth; sb.classList.add('bump'); }
+}
+// Pop-ups slide up only when they first open, not when they redraw
+(() => { const root = document.getElementById('sheet-root'); if (!root || !window.MutationObserver) return; let open = false;
+  new MutationObserver(() => { const bg = root.firstElementChild; if (bg && !open) bg.classList.add('in'); open = !!bg; }).observe(root, { childList: true }); })();
+// Opening animation: the sight locks on and the rail draws, once per open
+if (animOn()) { document.documentElement.classList.add('intro'); setTimeout(() => document.documentElement.classList.remove('intro'), 1600); }
 // Next-up bar across the top of every page: the next dozen races by jump time, with our bet or top pick
 function njBar(C) {
   const el = document.getElementById('njbar'); if (!el) return;
+  if (booting()) { el.hidden = true; return; }
   const now = Date.now();
   const list = C.list.filter(a => !a.closed && !hiddenA(a) && isFinite(startMs(a.race)) && startMs(a.race) > now - 2 * 60000)
     .sort((x, y) => startMs(x.race) - startMs(y.race)).slice(0, 12);
@@ -3154,8 +3259,10 @@ function njBar(C) {
   const r2 = el.querySelector('.njb-row'); if (r2 && sx) r2.scrollLeft = sx;
 }
 function extrasPaint(C) {
+  const tick = NOWBET.tick;
   try { slipBtn(C); cmpBar(); alertList(C); nowBetCheck(C); } catch (e) {}
   try { njBar(C); } catch (e) {}
+  try { pxFlash(C, tick); countUps(); } catch (e) {}
   const el = $('#sheet-root .sheet'); if (!el || !S.sheet) return;
   const top = el.scrollTop;
   if (S.sheet.k === 'horse' && el.classList.contains('hp')) openHorse(S.sheet.raceId, S.sheet.n);
@@ -3253,7 +3360,7 @@ function runnerRow(a, r0) {
       <div class="l2">${r.wt ? 'W: ' + r.wt + 'kg · ' : ''}${r.form ? 'F: <span class="num">' + esc(r.form) + '</span>' : ''}</div>${!r.scr && r.win > 1 ? (() => { const op = (r.flucs && r.flucs[0]) || r.win, ch = (r.win - op) / op; return `<div class="opn"><span>Open <b>${odds$(op)}</b></span><span class="ar">→</span><span>Now <b>${odds$(r.win)}</b></span>${Math.abs(ch) >= 0.005 ? `<span class="mvp ${ch < 0 ? 'in' : 'out'}">${ch < 0 ? '▼ firmed' : '▲ drifted'} ${Math.abs(ch * 100).toFixed(0)}%</span>` : '<span class="mvp">no move</span>'}${(() => { const fl = r.flucs || []; const lst = fl.length ? fl[fl.length - 1] : 0; if (!(lst > 1) || Math.abs(r.win - lst) / lst < 0.005) return ''; const c = (r.win - lst) / lst; return `<span class="mvp ${c < 0 ? 'in' : 'out'}" title="Since the last price change">${c < 0 ? '▼' : '▲'} ${Math.abs(c * 100).toFixed(0)}% latest</span>`; })()}</div>`; })() : ''}<div class="l2">${sub}</div>${clsLine(a.race, r)}${noteLine(key)}
       ${live && r.fi && r.fi.chips.length ? `<div class="chips">${r.fi.chips.slice(0, 5).map(c => `<span class="chip ${c[1]}">${esc(c[0])}</span>`).join('')}</div>` : ''}</div>
     <div class="c-o odds2">
-      <label for="w-${key}">Win<input id="w-${key}" type="number" inputmode="decimal" step="0.01" min="1.01" value="${r.win}" data-edit="win" data-key="${key}" class="${r.editedWin ? 'edited' : ''}"></label>
+      <label for="w-${key}" data-px="${a.race.id}_${r.n}">Win<input id="w-${key}" type="number" inputmode="decimal" step="0.01" min="1.01" value="${r.win}" data-edit="win" data-key="${key}" class="${r.editedWin ? 'edited' : ''}"></label>
       <label for="p-${key}">Place<input id="p-${key}" type="number" inputmode="decimal" step="0.01" min="1.01" value="${r.place || ''}" data-edit="place" data-key="${key}" class="${r.editedPlace ? 'edited' : ''}"></label>
       ${flucs ? `<span class="mv ${mv && mv.firm ? 'firm' : mv && mv.drift ? 'drift' : ''}" title="Open › flucs">${flucs}${mv && mv.firm ? ' · firming' : mv && mv.drift ? ' · drifting' : ''}</span>` : ''}
       ${r.scr ? '' : bookChips(r)}
@@ -3388,6 +3495,11 @@ function renderSettings(C) {
     <h3>Colour theme</h3>
     <p class="d">Pick the colours for the whole page. Saved on this device.</p>
     <div class="skins" role="group" aria-label="Colour theme">${SKINS.map(([k, name, sub, c]) => `<button class="skin" data-act="skin" data-v="${k}" aria-pressed="${SKIN.v === k}"><span class="swr" aria-hidden="true"><svg class="lg-mini" viewBox="0 0 512 512" style="--lg-bg:${c[0]};--lg-ac:${c[2]};--lg-ln:${logoLine(SKINS.find(x => x[0] === k))}">${logoSvg('lg-' + k)}</svg><span class="sw">${c.map(x => `<i style="background:${x}"></i>`).join('')}</span></span><span>${esc(name)}</span><small>${esc(sub)}</small></button>`).join('')}</div>
+  </div>`;
+  h += `<div class="card panel">
+    <h3>Animations</h3>
+    <p class="d">The logo lock-on when the app opens, price flashes, sliding pop-ups and counting numbers. They also stay off if your phone is set to reduce motion.</p>
+    <div class="seg" role="group" aria-label="Animations"><button data-act="anim" data-v="on" aria-pressed="${!ANIM.off}">On</button><button data-act="anim" data-v="off" aria-pressed="${ANIM.off}">Off</button></div>
   </div>`;
   h += `<div class="card panel">
     <div class="ph"><h3>Display size</h3><b class="num" data-zoomlbl>${ZOOM.v}%</b></div>
@@ -4062,10 +4174,10 @@ function renderTracker() {
   });
   const profit = ret - staked;
   h += `<div class="card stats">
-    <div><div class="k">Profit</div><div class="v ${profit >= 0 ? 'pos' : 'neg'}">${money(profit, 2)}</div><div class="s">${settled} settled · ${won} won</div></div>
-    <div><div class="k">Strike rate</div><div class="v">${settled ? Math.round(won / settled * 100) + '%' : '—'}</div><div class="s">${sk === null ? '' : sk ? (streak > 1 ? '🔥'.repeat(Math.min(streak, 5)) + ' ' + streak + ' win streak' : '1 win last') : streak + ' loss' + (streak > 1 ? ' streak' : ' last')}</div></div>
-    <div><div class="k">Return on stakes</div><div class="v">${staked ? evTxt(profit / staked) : '—'}</div><div class="s">${money(staked, 2)} staked</div></div>
-    <div><div class="k">Running</div><div class="v">${money(open, 2)}</div><div class="s">${bonus ? money(bonus, 2) + ' bonus won' : best ? 'best ' + esc(best.b.name) + ' +' + money(best.pl) : 'pending'}</div></div>
+    <div><div class="k">Profit</div><div class="v ${profit >= 0 ? 'pos' : 'neg'}" data-count="${profit}" data-fmt="money2" data-ck="tk-profit">${money(profit, 2)}</div><div class="s">${settled} settled · ${won} won</div></div>
+    <div><div class="k">Strike rate</div><div class="v"${settled ? ` data-count="${won / settled * 100}" data-fmt="pct" data-ck="tk-sr"` : ''}>${settled ? Math.round(won / settled * 100) + '%' : '—'}</div><div class="s">${sk === null ? '' : sk ? (streak > 1 ? '🔥'.repeat(Math.min(streak, 5)) + ' ' + streak + ' win streak' : '1 win last') : streak + ' loss' + (streak > 1 ? ' streak' : ' last')}</div></div>
+    <div><div class="k">Return on stakes</div><div class="v"${staked ? ` data-count="${profit / staked}" data-fmt="ev" data-ck="tk-roi"` : ''}>${staked ? evTxt(profit / staked) : '—'}</div><div class="s">${money(staked, 2)} staked</div></div>
+    <div><div class="k">Running</div><div class="v" data-count="${open}" data-fmt="money2" data-ck="tk-open">${money(open, 2)}</div><div class="s">${bonus ? money(bonus, 2) + ' bonus won' : best ? 'best ' + esc(best.b.name) + ' +' + money(best.pl) : 'pending'}</div></div>
   </div>`;
   h += plChart(series) + tierChart(bets);
   h += tkWeekly(all) + tkMoney(bets) + tkBank(all);
@@ -4381,6 +4493,7 @@ document.addEventListener('click', e => {
     case 'ext': return;
     case 'skin': applySkin(t.dataset.v, true); renderAll(); break;
     case 'zoomset': applyZoom(+t.dataset.v, true); break;
+    case 'anim': ANIM.off = t.dataset.v === 'off'; try { localStorage.setItem('ls.anim', ANIM.off ? 'off' : 'on'); } catch (e) {} document.documentElement.classList.toggle('noanim', ANIM.off); renderAll(); break;
     case 'zoomstep': applyZoom(ZOOM.v + (+t.dataset.v), true); break;
     case 'noteopen': { const k = t.dataset.key; S.noteOpen.add(k); renderAll(); const el = [...document.querySelectorAll('.note-in')].find(x => x.dataset.note === k); if (el) el.focus(); break; }
     case 'copybet': { const txt = t.dataset.text; copyText(txt).then(ok => toast(ok ? 'Copied: ' + txt : 'Copy didn\'t work here: ' + txt)); break; }
