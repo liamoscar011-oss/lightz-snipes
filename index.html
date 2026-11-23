@@ -2520,15 +2520,21 @@ function raceConf(a) {
   if (t.p >= 0.25) return { k: 'md', txt: 'Fair pick', tip: 'In front on our numbers, but not by much' };
   return { k: 'lo', txt: 'Open race', tip: 'No clear top chance: keep stakes small or skip' };
 }
+// Best value in a race: its value bet where one clears the bar, otherwise the runner priced closest to fair
+// (highest edge on its own price) with at least a 10% chance. Never just the favourite again.
+function valuePickOf(a) {
+  const bp = bestPickOf(a); if (bp || a.closed) return bp;
+  return a.act.filter(r => r.own && r.p >= 0.1).sort((x, y) => y.own.ev - x.own.ev)[0] || null;
+}
 function racePick(a) {
-  const st = S.settings, bp = bestPickOf(a), likely = a.ranked[0];
-  const pick = st.trackPickBy === 'value' ? (bp || likely) : likely;
+  const st = S.settings, bp = bestPickOf(a), likely = a.ranked[0], vp = st.trackPickBy === 'value' ? valuePickOf(a) : null;
+  const pick = st.trackPickBy === 'value' ? (vp || likely) : likely, near = !!(vp && !bp && pick === vp);
   if (!pick) return null;
   const o = pick.plan ? pick.plan.o : pick.best;
   const danger = a.ranked.find(r => r !== pick);
   const reasons = ((pick.fi && pick.fi.parts) || []).filter(x => x[1] >= 0.02).sort((x, y) => y[1] - x[1]).slice(0, 2).map(x => x[0]);
   const safePl = a.places && pick.pPl >= 0.6 && pick.place >= 1.2;
-  return { a, r: pick, o, conf: raceConf(a), danger, reasons, value: bp, safePl, stake: pick.plan ? pick.plan.stake : 0, tier: tierOf(o.odds) };
+  return { a, r: pick, o, conf: raceConf(a), danger, reasons, value: bp, near, safePl, stake: pick.plan ? pick.plan.stake : 0, tier: tierOf(o.odds) };
 }
 
 // How many independent sources pick this horse as the winner: our model, the market favourite, TAB's overall rating,
@@ -2828,11 +2834,13 @@ function trackPicksHtml(C) {
     const picks = shown.map(racePick).filter(Boolean);
     const isOpen = TP.open.has(slug), banker = picks.slice().sort((x, y) => y.r.p - x.r.p)[0], nx = open[0], nms = nx ? startMs(nx.race) : NaN;
     const strong = picks.filter(p => p.conf && p.conf.k === 'hi').length;
+    // the track's best value: a value bet where there is one, otherwise the runner closest to value
+    const vbest = open.map(a => { const r = valuePickOf(a); return r ? { a, r, bet: r === bestPickOf(a) } : null; }).filter(Boolean).sort((x, y) => (y.bet - x.bet) || (y.r.own.ev - x.r.own.ev))[0];
     h += `<div class="card tpk ${isOpen ? 'open' : ''}"><button class="tpk-h" data-act="tptoggle" data-slug="${esc(slug)}" aria-expanded="${isOpen}">
       <span class="chev" aria-hidden="true">›</span>
       <span class="tt"><span class="nm"><b>${isFavT(slug) ? '<span class="favs">★</span> ' : ''}${esc(r0.venue)}</b>${r0.state ? `<span class="tag">${esc(r0.state)}</span>` : ''}${strong ? `<span class="conf hi">${strong} strong</span>` : ''}</span>
         <span class="sub">${esc(r0.track || 'Track not listed')} · ${open.length ? open.length + ' of ' + arr.length + ' races to go' : 'all ' + arr.length + ' races run'}${nx ? ` · next R${nx.race.no}${isFinite(nms) ? ' ' + clockTxt(nms) : ''}` : ''}</span>
-        ${!isOpen && banker ? `<span class="pv">Banker: R${banker.a.race.no} #${banker.r.n} ${esc(banker.r.name)} <span class="num">${odds$(banker.r.win)}</span></span>` : ''}</span>
+        ${!isOpen && st.trackPickBy === 'value' && vbest ? `<span class="pv">${vbest.bet ? 'Best value' : 'Closest to value'}: R${vbest.a.race.no} #${vbest.r.n} ${esc(vbest.r.name)} <span class="num">${odds$(vbest.r.win)}</span> <span class="num ${evCls(vbest.r.own.ev)}">${evTxt(vbest.r.own.ev)}</span></span>` : !isOpen && banker ? `<span class="pv">Banker: R${banker.a.race.no} #${banker.r.n} ${esc(banker.r.name)} <span class="num">${odds$(banker.r.win)}</span></span>` : ''}</span>
       ${isFinite(nms) ? cdSpan(nms) : ''}</button>`;
     if (!isOpen) { h += `</div>`; return; }
     const goBtn = `<span class="acts-r" style="margin-left:auto;align-self:center;flex-wrap:wrap">${trackBtns(slug)}<button class="btn sm" data-act="gomeet" data-slug="${esc(slug)}">Open racecards</button></span>`;
@@ -2841,7 +2849,8 @@ function trackPicksHtml(C) {
       const safe = picks.filter(p => p.safePl).sort((x, y) => y.r.pPl - x.r.pPl)[0];
       h += `<div class="tpk-sum">`;
       h += `<button class="f" data-act="gorace" data-race="${banker.a.race.id}"><small>Track banker</small><b>R${banker.a.race.no} #${banker.r.n} ${esc(banker.r.name)}</b><span class="num muted" style="font-size:.8rem">${odds$(banker.r.win)} · ${pct(banker.r.p, 0)} to win</span></button>`;
-      if (vals[0]) h += `<button class="f" data-act="gorace" data-race="${vals[0].a.race.id}"><small>Best value</small><b>R${vals[0].a.race.no} #${vals[0].r.n} ${esc(vals[0].r.name)}</b><span class="num muted" style="font-size:.8rem">${odds$(vals[0].r.best.odds)} · edge ${evTxt(vals[0].r.best.ev)}</span></button>`;
+      if (vals[0]) h += `<button class="f" data-act="gorace" data-race="${vals[0].a.race.id}"><small>Best value</small><b>R${vals[0].a.race.no} #${vals[0].r.n} ${esc(vals[0].r.name)}</b><span class="num muted" style="font-size:.8rem">${odds$(vals[0].r.best.odds)} · edge ${evTxt(ownOf(vals[0].r.best).ev)}</span></button>`;
+      else if (vbest) h += `<button class="f" data-act="gorace" data-race="${vbest.a.race.id}"><small>Closest to value</small><b>R${vbest.a.race.no} #${vbest.r.n} ${esc(vbest.r.name)}</b><span class="num muted" style="font-size:.8rem">${odds$(vbest.r.win)} · edge ${evTxt(vbest.r.own.ev)} · not a bet yet</span></button>`;
       else h += `<div class="f" style="cursor:default"><small>Best value</small><b class="muted">None at these prices</b><span class="muted" style="font-size:.8rem">nothing clears the betting bar yet</span></div>`;
       if (safe) h += `<button class="f" data-act="gorace" data-race="${safe.a.race.id}"><small>Safest place bet</small><b>R${safe.a.race.no} #${safe.r.n} ${esc(safe.r.name)}</b><span class="num muted" style="font-size:.8rem">${odds$(safe.r.place)} place · ${pct(safe.r.pPl, 0)} to place</span></button>`;
       h += goBtn + `</div>`;
@@ -2869,7 +2878,7 @@ function tpRow(p) {
       <span class="sub">${danger ? `<span>Danger: #${danger.n} ${esc(danger.name)} (${odds$(danger.win)})</span>` : ''}${safePl ? `<span>Safer: place ${odds$(r.place)}, ${pct(r.pPl, 0)} to place</span>` : ''}</span>${noteLine(a.race.id)}${noteLine(a.race.id + ':' + r.n)}<span class="acts-r tp-acts">${pickBtn(a.race.id, r)}${sbLink(a.race, true)}${copyBtn(a.race, r, null, true)}</span></span>
     <span class="n c-p">${odds$(r.win)}</span>
     <span class="n c-c muted">${pct(r.p, 0)}</span>
-    <span class="cf">${conf ? `<span class="conf ${conf.k}" title="${esc(conf.tip)}">${conf.txt}</span>` : ''}${p.stake ? `<span class="status go">Bet ${money(p.stake)}</span>` : isVal ? `<span class="tag bestp">Value ${evTxt(ownOf(o).ev)}</span>` : value ? `<span class="muted" style="font-size:.76rem">Value: #${value.n}</span>` : ''}</span>
+    <span class="cf">${conf ? `<span class="conf ${conf.k}" title="${esc(conf.tip)}">${conf.txt}</span>` : ''}${p.stake ? `<span class="status go">Bet ${money(p.stake)}</span>` : isVal ? `<span class="tag bestp">Value ${evTxt(ownOf(o).ev)}</span>` : p.near ? `<span class="status wait" title="Best price for its chance in this race, but not a bet yet">Closest to value ${evTxt(ownOf(o).ev)}</span>` : value ? `<span class="muted" style="font-size:.76rem">Value: #${value.n}</span>` : ''}</span>
   </div>`;
 }
 
@@ -3802,7 +3811,7 @@ function renderSettings(C) {
     <div class="ph"><h3>Best picks by track</h3><label class="check"><input type="checkbox" id="tp-on" ${st.trackPicks ? 'checked' : ''}> On</label></div>
     <p class="d">Adds a section under the Top 10 on Snipes: one pick for every race at each meeting, with how confident it is, the danger horse, and a safer place option. Tap a race to open its card.</p>
     <div class="field"><span class="lbl">Pick each race by</span><div class="seg" role="group"><button data-act="tpby" data-v="likely" aria-pressed="${st.trackPickBy !== 'value'}">Most likely winner</button><button data-act="tpby" data-v="value" aria-pressed="${st.trackPickBy === 'value'}">Best value</button></div>
-    <span class="hint">${st.trackPickBy === 'value' ? 'Uses the race\'s best value bet where one clears the betting bar, otherwise the most likely winner.' : 'The horse most likely to win each race. Easiest to follow; prices are often short.'}</span></div>
+    <span class="hint">${st.trackPickBy === 'value' ? 'Uses the race\'s best value bet where one clears the betting bar, otherwise the horse priced closest to fair (with at least a 10% chance), marked Closest to value.' : 'The horse most likely to win each race. Easiest to follow; prices are often short.'}</span></div>
     <div class="field"><span class="lbl">Races shown</span><div class="seg" role="group"><button data-act="tpshow" data-v="left" aria-pressed="${st.trackShow !== 'next3'}">All races left</button><button data-act="tpshow" data-v="next3" aria-pressed="${st.trackShow === 'next3'}">Next 3 per track</button></div></div>
   </div>`;
   h += `<div class="card panel">
