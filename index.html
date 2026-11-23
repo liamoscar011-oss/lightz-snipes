@@ -497,6 +497,24 @@ html.noanim .pxa{display:none}
 @media (max-width:600px){.njb-l{display:none}.njb-in{padding-inline:10px}}
 /* next to jump */
 .nx{padding:12px 0 12px 16px;display:grid;gap:8px;overflow:hidden}
+/* Market movers, under Next to jump */
+.mvp{padding:12px 16px 12px;display:grid;gap:8px}
+.mvp .nx-h{padding-right:0}
+.mvp-g{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 18px}
+@media (max-width:640px){.mvp-g{grid-template-columns:minmax(0,1fr)}}
+.mvc{display:grid;gap:1px;align-content:start;min-width:0}
+.mvc-h{display:flex;gap:8px;align-items:baseline;font-size:.9rem;padding:0 4px 5px;border-bottom:1px solid var(--line);margin-bottom:2px}
+.mvc-h .muted{font-size:.76rem}
+.mvr{appearance:none;border:0;background:none;color:inherit;font:inherit;text-align:left;width:100%;display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:10px;align-items:center;padding:5px 4px;cursor:pointer;border-radius:8px}
+.mvr:hover{background:var(--surface-2)}
+.mvr :is(.silk,.silkpic){width:26px;height:29px}
+.mvr .w{display:grid;min-width:0}
+.mvr .w b{font-size:.92rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mvr .w small{font-size:.76rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mvr .p{display:grid;justify-items:end;font-size:.84rem;font-variant-numeric:tabular-nums;white-space:nowrap}
+.mvr .p small{font-size:.74rem;font-weight:700}
+.mvr .p small.up{color:var(--pos)} .mvr .p small.down{color:var(--neg)}
+.mvc-none{font-size:.84rem;padding:6px 4px}
 .nx-h{display:flex;gap:10px;align-items:baseline;padding-right:16px}
 .nx-row{display:flex;gap:8px;overflow-x:auto;padding:2px 16px 4px 0;scrollbar-width:thin}
 .nx-c{flex:0 0 auto;min-width:190px;max-width:240px;display:grid;gap:4px;text-align:left;border:1px solid var(--line);background:var(--surface-2);border-radius:10px;padding:9px 11px;cursor:pointer}
@@ -2220,7 +2238,7 @@ function renderSnipes(C) {
   let notes = lateMoney(C);
   if (!promosOn) notes += `<div class="notice warn"><p><b>No promo is switched on.</b> Promos give the most reliable edge. Straight picks show a “Watch” price: once Sportsbet's price reaches it, the pick turns into a bet.</p><div class="acts"><button class="btn pri" data-act="goto" data-tab="promos">Add my promos</button><button class="btn" data-act="sample">Try an example promo</button></div></div>`;
   else if (st.example) notes += `<div class="notice warn"><p><b>Example promo:</b> bonus back up to ${money(st.bb.max)} if your horse runs 2nd or 3rd, every race. Swap in your real offers before betting.</p><div class="acts"><button class="btn" data-act="goto" data-tab="promos">Edit promos</button><button class="btn" data-act="unsample">Turn off</button></div></div>`;
-  h += `<div class="snx"><div class="snx-main">` + heroBest(list) + nextUp(C) + notes + `</div>` + riskPanel(picks) + `</div>`; }
+  h += `<div class="snx"><div class="snx-main">` + heroBest(list) + nextUp(C) + moversPanel(C) + notes + `</div>` + riskPanel(picks) + `</div>`; }
   h += t11(list);
   if (st.trackPicks) h += trackPicksHtml(C);
   h += `<div class="card plan">
@@ -2237,6 +2255,33 @@ function renderSnipes(C) {
     h += `<div class="notice"><p><b>Got a bonus bet?</b> Use it on ${esc(r.name)} (${esc(raceLabel(a.race))}, ${odds$(r.win)}). ${st.bonusBets > 0 ? 'Your' : 'A'} ${money(amt)} bonus bet there is worth about <b class="num">${money(amt * r.bonusVal, 2)}</b> in cash.</p><div class="acts"><button class="btn sm" data-act="log" data-race="${a.race.id}" data-n="${r.n}" data-type="bonus">Log bonus bet</button></div></div>`;
   }
   $('#v-snipes').innerHTML = h;
+  requestAnimationFrame(fitMovers);
+}
+// Market movers only fills the space beside the Top 10 by risk list: rows come off the bottom until the left
+// column is no taller than the right (at least 3 each); when the page is one column (phones) it shows 3
+function fitMovers() {
+  const m = document.querySelector('#v-snipes .mvp'); if (!m || !m.offsetParent) return;
+  const main = m.closest('.snx-main'), side = main && main.nextElementSibling, cols = [...m.querySelectorAll('.mvc')];
+  cols.forEach(c => c.querySelectorAll('.mvr').forEach(x => { x.hidden = false; }));
+  const shown = () => Math.max(0, ...cols.map(c => c.querySelectorAll('.mvr:not([hidden])').length));
+  const cut = () => { const n = shown(); cols.forEach(c => { const v = c.querySelectorAll('.mvr:not([hidden])'); if (v.length === n && n) v[n - 1].hidden = true; }); };
+  const single = !side || side.getBoundingClientRect().top >= main.getBoundingClientRect().bottom - 1;
+  if (single) { while (shown() > 3) cut(); return; }
+  while (shown() > 3 && main.getBoundingClientRect().bottom > side.getBoundingClientRect().bottom + 2) cut();
+}
+{ let t; addEventListener('resize', () => { clearTimeout(t); t = setTimeout(fitMovers, 150); }); }
+// Market movers: the biggest firmers and drifters in open races since Sportsbet opened its prices (5%+ moves)
+function moversPanel(C) {
+  if (!C.list.some(a => !a.closed && !hiddenA(a))) return '';
+  const rows = [];
+  C.list.forEach(a => { if (a.closed || hiddenA(a)) return; a.act.forEach(r => {
+    if (r.scr || !(r.win > 1) || !r.flucs || !(r.flucs[0] > 1)) return;
+    const op = r.flucs[0], ch = (r.win - op) / op; if (Math.abs(ch) >= 0.05) rows.push({ a, r, op, ch });
+  }); });
+  const firm = rows.filter(x => x.ch < 0).sort((x, y) => x.ch - y.ch).slice(0, 5), drift = rows.filter(x => x.ch > 0).sort((x, y) => y.ch - x.ch).slice(0, 5);
+  const li = x => `<button class="mvr" data-act="gorace" data-race="${x.a.race.id}" title="Open ${esc(raceLabel(x.a.race))}">${silkPic(x.r)}<span class="w"><b>${esc(x.r.name)}</b><small>${esc(raceLabel(x.a.race))}${isFinite(startMs(x.a.race)) ? ', ' + clockTxt(startMs(x.a.race)) : ''}</small></span><span class="p"><span class="num">${odds$(x.op)} → <b>${odds$(x.r.win)}</b></span><small class="${x.ch < 0 ? 'up' : 'down'}">${x.ch < 0 ? '▼ firmed' : '▲ drifted'} ${Math.round(Math.abs(x.ch) * 100)}%</small></span></button>`;
+  const col = (t, sub, arr, none) => `<div class="mvc"><div class="mvc-h"><b>${t}</b><span class="muted">${sub}</span></div>${arr.length ? arr.map(li).join('') : `<p class="muted mvc-none">${none}</p>`}</div>`;
+  return `<div class="card mvp"><div class="nx-h"><h3>Market movers</h3><span class="muted" style="font-size:.84rem">since Sportsbet opened its prices</span></div><div class="mvp-g">${col('Firming', 'money coming for them', firm, 'No big firmers yet.')}${col('Drifting', 'easing in the market', drift, 'No big drifters yet.')}</div></div>`;
 }
 function nextUp(C) {
   const di = dayInfo(), cut = di && di.updatedAt ? new Date(di.updatedAt).getTime() - 75 * 60000 : 0, now = Date.now();
