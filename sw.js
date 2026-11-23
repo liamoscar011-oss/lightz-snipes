@@ -1,6 +1,6 @@
 // Lightz Snipes offline shell: app files come from the network when online (so updates land straight away)
 // and from this cache when there's no signal. Race data has its own cache inside the app.
-const CACHE = 'lightz-shell-v17';
+const CACHE = 'lightz-shell-v18';
 const SHELL = ['./', 'index.html', 'standalone.js', 'config.js', 'vendor/supabase.js', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
