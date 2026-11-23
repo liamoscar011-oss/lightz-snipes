@@ -602,6 +602,8 @@ html.noanim .pxa{display:none}
 .why .lead{font-weight:600}
 .why ul{margin:0;padding-left:18px;display:grid;gap:2px}
 .why .pro li::marker{color:var(--pos)} .why .con li::marker{color:var(--neg)}
+.story{margin:0;padding-left:18px;display:grid;gap:3px}.story li::marker{color:var(--muted)}.story li.sp::marker{color:var(--pos)}.story li.sn::marker{color:var(--neg)}
+.story li.sp::marker,.story li.sn::marker{font-weight:700}
 .why .k{font-size:.68rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 .t10-r .why{margin-top:2px}
 .rr.cx-hi{box-shadow:inset 5px 0 0 var(--chi)} .rr.cx-md{box-shadow:inset 5px 0 0 var(--cmd)} .rr.cx-lo{box-shadow:inset 5px 0 0 var(--clo)}
@@ -2306,7 +2308,36 @@ function nextUp(C) {
       ${bk ? `<span class="nx-p" style="color:#e0a800">★ <b>${esc(bk.name)}</b></span>` : ''}</button>`;
   }).join('')}</div></div>`;
 }
-// Plain-English reasons behind a pick: the numbers, then the form factors for and against
+// The story behind a runner in plain words, in race order: its last runs, today's rivals it has met before,
+// the jockey, where it should settle and the form guide's comment. Each line is marked for (+), against (-) or neither.
+const lenTxt = m => { const x = /^(\d+(?:\.\d+)?)L$/i.exec(String(m || '').trim()); if (x) return +x[1] === 1 ? '1 length' : x[1] + ' lengths';
+  return { SHD: 'a short head', SH: 'a short head', HD: 'a head', NSE: 'a nose', NOSE: 'a nose', NK: 'a neck', LNK: 'a long neck', DH: 'a dead heat' }[String(m || '').toUpperCase().replace(/[^A-Z]/g, '')] || String(m || ''); };
+const dayMon = d => { const t = Date.parse(d + 'T12:00:00'); return isFinite(t) ? new Date(t).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' }) : ''; };
+const jName = j => String(j || '').replace(/\s*\(.*?\)\s*/g, ' ').trim();
+function storyOf(a, r) {
+  const out = [], L = r.ls;
+  if (L && L.pl) {
+    const where = `${L.tk || '?'}${L.ds ? ' over ' + L.ds + 'm' : ''}${L.tc ? ' (' + L.tc + ')' : ''}${L.d ? ' on ' + dayMon(L.d) : ''}`, sp = L.sp > 1 ? `, starting at ${odds$(L.sp)}` : '';
+    if (L.pl === 1) out.push([`Won last start at ${where}${L.mg ? ', by ' + lenTxt(L.mg) : ''}${L.vs ? ' from ' + L.vs : ''}${sp}.`, '+']);
+    else { const mg = parseFloat(L.mg) || 0;
+      out.push([`Ran ${ordN(L.pl)}${L.of ? ' of ' + L.of : ''} last start at ${where}${L.mg ? ', ' + lenTxt(L.mg) + ' behind ' + (L.vs || 'the winner') : L.vs ? ', won by ' + L.vs : ''}${sp}.`, L.pl <= 3 || (mg > 0 && mg <= 2) ? '+' : L.of && L.pl > L.of / 2 && mg >= 5 ? '-' : '']); }
+  }
+  if (Array.isArray(r.l3) && r.l3.length) out.push(['Before that: ' + r.l3.map(x => `${x[3] ? ordN(x[3]) + (x[4] ? ' of ' + x[4] : '') : 'ran'} at ${x[1]}${x[2] ? ' (' + x[2] + 'm)' : ''}${x[5] && x[3] !== 1 ? ', ' + lenTxt(x[5]) + ' back' : ''}`).join('; ') + '.', '']);
+  // Today's rivals it has met before (same race on the same day), latest first
+  const field = new Map(a.act.map(x => [x.n, x])), fav = a.act.slice().sort((x, y) => x.win - y.win)[0], beat = [], lost = [];
+  (r.hh || []).forEach(h => { const [n, d, tk, me, them] = h, q = field.get(n); if (!q || !me || !them || me === them) return;
+    const who = (q === fav ? 'the favourite ' : '') + q.name, when = `${me === 1 ? 'winning' : ordN(me)} at ${tk}${d ? ' on ' + dayMon(d) : ''}`;
+    if (me < them) beat.push(`${who} (${ordN(them)}) when ${when}`); else lost.push(`${who} (${them === 1 ? 'won' : ordN(them)}) when ${when}`); });
+  if (beat.length) out.push([`Has beaten ${beat.length === 1 ? 'one of today\'s rivals' : beat.length + ' of today\'s rivals'}: ${beat.slice(0, 3).join('; ')}.`, '+']);
+  if (lost.length) out.push([`Finished behind ${lost.length === 1 ? 'one of today\'s rivals' : lost.length + ' of today\'s rivals'}: ${lost.slice(0, 3).join('; ')}.`, '-']);
+  const jn = jName(r.j), jl = L ? jName(L.j) : '', jh = ksRec(r, /^(jockey|jcky)\s*\/\s*horse$/i);
+  if (jn && jl && normName(jn) !== normName(jl)) out.push([`Jockey change: ${jn} rides today${topJ(jn) ? ' (a top jockey)' : ''}, ${jl} rode it last start.`, topJ(jn) && !topJ(jl) ? '+' : '']);
+  else if (jn && jl) out.push([`${jn} keeps the ride${jh && jh.s ? ` (${jh.w} win${jh.w === 1 ? '' : 's'} from ${jh.s} ride${jh.s === 1 ? '' : 's'} on it)` : ''}.`, jh && jh.s >= 2 && jh.w / jh.s >= 0.3 ? '+' : '']);
+  if (r.esp) out.push([`Speed map: should settle ${String(r.esp).toLowerCase()}${r.bar ? ' from barrier ' + r.bar : ''}.`, /lead/i.test(r.esp) ? '+' : '']);
+  if (r.cm) out.push(['Form guide: ' + r.cm, '']);
+  return out;
+}
+// Plain-English reasons behind a pick: the numbers, the story, then the form factors for and against
 function whyInfo(s) {
   const { a, r, o } = s, st = S.settings, ch = chanceOf(r, o), need = 1 / o.odds;
   let lead;
@@ -2326,21 +2357,24 @@ function whyInfo(s) {
   if (oo.ev >= bar) verdict = `Edge ${evTxt(oo.ev)} on its own: on average each $1 bet returns ${money(1 + oo.ev, 2)}.${o !== oo ? ` The promo adds more on top (${evTxt(o.ev)} with it), but the horse is a bet without it.` : ''}${s.stake ? ` Your plan puts ${money(s.stake)} on it.` : ''}`;
   else { const tg = oo.type === 'place' && r.pPl ? (1 + MIN_PLACE) / r.pPl : targetFor(a, r); verdict = `Not a bet at this price yet (edge ${evTxt(oo.ev)}). A promo won't make it one.${tg ? ` It becomes one at ${odds$(tg)} or better.` : ''}`; }
   const lose = o.type === 'place' ? 1 - ch : 1 - r.p;
-  return { lead, pts, pro, con, verdict, lose };
+  return { lead, pts, pro, con, verdict, lose, story: storyOf(a, r) };
 }
 function whyBtn(s) {
   const k = s.a.race.id + ':' + s.r.n, open = S.why.has(k), w = whyInfo(s);
-  const tip = [w.lead, ...w.pro.slice(0, 3).map(x => '+ ' + x), ...w.con.slice(0, 1).map(x => '− ' + x)].join('\n');
+  const tip = [w.lead, ...w.story.filter(x => /rivals/.test(x[0])).map(x => (x[1] === '-' ? '− ' : '+ ') + x[0]), ...w.pro.slice(0, 3).map(x => '+ ' + x), ...w.con.slice(0, 1).map(x => '− ' + x)].join('\n');
   return `<button class="why-btn" data-act="why" data-key="${esc(k)}" aria-expanded="${open}" title="${esc(tip)}">Why?</button>`;
+}
+function whyBody(w) {
+  return `<p class="lead">${esc(w.lead)}</p>
+    ${w.pts.length ? `<p>${w.pts.map(esc).join(' ')}</p>` : ''}
+    ${w.story.length ? `<div><div class="k">The story</div><ul class="story">${w.story.map(x => `<li class="${x[1] === '+' ? 'sp' : x[1] === '-' ? 'sn' : ''}">${esc(x[0])}</li>`).join('')}</ul></div>` : ''}
+    ${w.pro.length ? `<div><div class="k">In its favour</div><ul class="pro">${w.pro.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>` : ''}
+    ${w.con.length ? `<div><div class="k">Against it</div><ul class="con">${w.con.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>` : ''}
+    <p><b>${esc(w.verdict)}</b> <span class="muted">It still loses about ${Math.round(w.lose * 100)} times in 100.</span></p>`;
 }
 function whyPanel(s) {
   if (!S.why.has(s.a.race.id + ':' + s.r.n)) return '';
-  const w = whyInfo(s);
-  return `<div class="why"><p class="lead">${esc(w.lead)}</p>
-    ${w.pts.length ? `<p>${w.pts.map(esc).join(' ')}</p>` : ''}
-    ${w.pro.length ? `<div><div class="k">In its favour</div><ul class="pro">${w.pro.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>` : ''}
-    ${w.con.length ? `<div><div class="k">Against it</div><ul class="con">${w.con.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>` : ''}
-    <p><b>${esc(w.verdict)}</b> <span class="muted">It still loses about ${Math.round(w.lose * 100)} times in 100.</span></p></div>`;
+  return `<div class="why">${whyBody(whyInfo(s))}</div>`;
 }
 function tierCard(t, s) {
   if (!s) return `<div class="card th ${t}"><div class="k"><span>Best ${TIERS[t][0].toLowerCase()}</span><span>${TIERS[t][1]}</span></div><p class="muted">No open runners in this range.</p></div>`;
@@ -3293,7 +3327,7 @@ function openHorse(raceId, n) {
     <section><h4>Records</h4>${keyStatsHtml(r, race)}</section>
     <section class="hp-2"><div><h4>Jockey and trainer</h4><p>${r.j ? `<b>${esc(r.j)}</b>${jt.j ? `, wins ${pct(jt.j.rate, 0)} of ${jt.j.s} rides (12 months)` : ''}${topJ(r.j) ? ' <span class="tag">Top jockey</span>' : ''}` : 'Jockey not listed'}<br>${r.t ? `Trainer <b>${esc(r.t)}</b>${jt.t ? `, wins ${pct(jt.t.rate, 0)} of ${jt.t.s} starters` : ''}` : ''}</p></div>
       <div><h4>Price moves</h4>${flucs.length >= 2 ? `<div class="hp-mv ${mv && mv.firm ? 'up' : mv && mv.drift ? 'down' : ''}">${sparkline(flucs)}<span>Opened ${odds$(flucs[0])}, now ${odds$(flucs[flucs.length - 1])}${mv && mv.firm ? ': firming (money coming)' : mv && mv.drift ? ': drifting' : ''}</span></div>` : '<p class="muted">No price moves on the card.</p>'}</div></section>
-    ${w ? `<section><h4>Why we like it</h4><div class="why"><p class="lead">${esc(w.lead)}</p>${w.pts.length ? `<p>${w.pts.map(esc).join(' ')}</p>` : ''}${w.pro.length ? `<div><div class="k">In its favour</div><ul class="pro">${w.pro.map(t => `<li>${esc(t)}</li>`).join('')}</ul></div>` : ''}${w.con.length ? `<div><div class="k">Against it</div><ul class="con">${w.con.map(t => `<li>${esc(t)}</li>`).join('')}</ul></div>` : ''}<p><b>${esc(w.verdict)}</b></p></div></section>` : ''}
+    ${w ? `<section><h4>Why we like it</h4><div class="why">${whyBody(w)}</div></section>` : (() => { const hh = storyOf(a, r).filter(x => /rivals/.test(x[0])); return hh.length ? `<section><h4>Met these rivals before</h4><ul class="story">${hh.map(x => `<li class="${x[1] === '+' ? 'sp' : 'sn'}">${esc(x[0])}</li>`).join('')}</ul></section>` : ''; })()}
     <section><h4>Other runs on your loaded days</h4>${hist.length ? `<table class="tbl hp-t2"><tbody>${hist.map(h => `<tr><td class="num">${esc(dateTxt(h.race.date))}</td><td>${esc(raceLabel(h.race))}${h.race.dist ? ', ' + h.race.dist + 'm' : ''}</td><td class="${h.won ? 'pos' : ''}"><b>${h.fin}</b></td><td class="num">${h.r.win > 1 ? odds$(h.r.win) : ''}</td></tr>`).join('')}</tbody></table>` : '<p class="muted">None yet. Its runs show here as more race days load.</p>'}</section>
     <section><h4>Your bets on ${esc(r.name)}</h4>${mine.length ? `<table class="tbl hp-t2"><tbody>${mine.slice(0, 8).map(b => { const pl = b.result === 'pending' ? null : plOfBet(b); return `<tr><td class="num">${esc(dateTxt(perthDay(b.ts)))}</td><td>${esc(b.race || '')}</td><td>${esc(b.label || b.type || '')} ${b.odds ? odds$(b.odds) : ''}</td><td class="num ${pl === null ? '' : pl >= 0 ? 'pos' : 'neg'}">${pl === null ? 'Pending' : (pl >= 0 ? '+' : '') + money(pl, 2)}</td></tr>`; }).join('')}</tbody></table><p class="muted" style="font-size:.84rem">${mine.length} bet${mine.length > 1 ? 's' : ''}, ${minePL >= 0 ? '+' : ''}${money(minePL, 2)} overall.</p>` : '<p class="muted">You haven’t bet on this horse yet.</p>'}</section>
     ${r.fm ? formPanel(race, r) : ''}
