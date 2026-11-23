@@ -970,6 +970,8 @@ svg.plc .hit{fill:transparent;cursor:crosshair}
 .fch i.x{background:transparent;width:9px}
 .t11 .pr{display:grid;justify-items:end;gap:2px;line-height:1.2}
 .t11 .pr b{font-family:var(--head);font-stretch:80%;font-weight:800;font-size:1.3rem}
+.t11 .pr .pk{font-size:.68rem;font-weight:700;color:var(--muted);line-height:1}
+.t11 .pr .pk.pl{color:var(--blue)}
 .t11 .mv{font-size:.72rem;font-weight:600;color:var(--muted);text-align:right}
 .t11 .mv.up{color:var(--pos)} .t11 .mv.down{color:var(--neg)}
 .t11 .bt{display:grid;justify-items:end;gap:4px;max-width:100%}
@@ -1905,9 +1907,10 @@ function buildOpts(a, r, conv) {
 // The horse is judged on its own price. A promo never makes a horse a pick or lifts it up the lists:
 // the plain bet (win or place) has to clear its bar first. Only then is a win promo (bonus back, boost)
 // used, as a free extra on top. r.own is the plain bet; ownOf(o) gives it back from a promo bet.
+// A horse that isn't a bet shows its win price; a place price only shows when the place bet itself qualifies.
 function setBest(r) {
   const plain = r.opts.filter(o => !o.promo), qual = plain.filter(o => o.ev >= barOf(o)).sort((x, y) => y.ev - x.ev);
-  r.own = qual[0] || plain.reduce((m, o) => !m || o.ev > m.ev ? o : m, null) || r.opts[0];
+  r.own = qual[0] || plain.find(o => o.type === 'win') || plain[0] || r.opts[0];   // not a bet: show the win price, never a short place price
   const promo = r.own && r.own.type === 'win' && qual.length ? r.opts.filter(o => o.promo).sort((x, y) => y.ev - x.ev)[0] : null;
   if (promo && promo.ev > r.own.ev) { promo.own = r.own; r.best = promo; } else r.best = r.own;
   return r.best;
@@ -2367,7 +2370,7 @@ function riskPanel(all) {
   return `<section class="card rk10" aria-label="Top 10 by risk">
     <h3>Top 10 by risk</h3>
     <div class="rk-seg" role="group" aria-label="Risk level">${['low', 'mid', 'high'].map(k => `<button class="${k}" data-act="rtier" data-v="${k}" aria-pressed="${t === k}"><b>${nm[k]}</b><small>${TIERS[k][1]}</small></button>`).join('')}</div>
-    ${list.length ? `<ol class="rk-list">${list.map((s, i) => `<li><button class="rk-r" data-act="gorace" data-race="${s.a.race.id}" title="Open ${esc(raceLabel(s.a.race))}"><span class="n">${i + 1}</span>${silkPic(s.r)}<span class="w"><b>${esc(s.r.name)}</b><small>${esc(raceLabel(s.a.race))}${isFinite(startMs(s.a.race)) ? ', ' + clockTxt(startMs(s.a.race)) : ''}</small></span><span class="p"><b>${odds$(s.o.odds)}</b><small class="${evCls(ownOf(s.o).ev)}">${evTxt(ownOf(s.o).ev)}</small></span></button></li>`).join('')}</ol>` : `<p class="muted">No open runners in this price range.</p>`}
+    ${list.length ? `<ol class="rk-list">${list.map((s, i) => `<li><button class="rk-r" data-act="gorace" data-race="${s.a.race.id}" title="Open ${esc(raceLabel(s.a.race))}"><span class="n">${i + 1}</span>${silkPic(s.r)}<span class="w"><b>${esc(s.r.name)}</b><small>${esc(raceLabel(s.a.race))}${isFinite(startMs(s.a.race)) ? ', ' + clockTxt(startMs(s.a.race)) : ''}</small></span><span class="p"><b>${s.o.type === 'place' ? '<small class="pk">Place</small> ' : ''}${odds$(s.o.odds)}</b><small class="${evCls(ownOf(s.o).ev)}">${evTxt(ownOf(s.o).ev)}</small></span></button></li>`).join('')}</ol>` : `<p class="muted">No open runners in this price range.</p>`}
   </section>`;
 }
 function t11Row(s, rank) {
@@ -2383,7 +2386,7 @@ function t11Row(s, rank) {
     <td class="c-ch"><span class="v">${pct(ch, 0)}</span><small>fair ${ch > 0 ? odds$(1 / ch) : '—'}</small></td>
     <td class="c-fm">${formChips(r.form)}</td>
     <td class="c-rc"><span class="rc"><small>Track</small>${recCell(r, 'track')}</span><span class="rc"><small>Dist</small>${recCell(r, 'dist')}</span></td>
-    <td class="c-pr"><span class="pr"><b data-px="${a.race.id}_${r.n}">${odds$(o.odds)}</b><span class="ev ${evCls(ownOf(o).ev)}">${evTxt(ownOf(o).ev)}</span>${mvTxt}</span></td>
+    <td class="c-pr"><span class="pr"><small class="pk ${o.type === 'place' ? 'pl' : ''}">${o.type === 'place' ? 'Place' : 'Win'}</small><b data-px="${a.race.id}_${r.n}">${odds$(o.odds)}</b><span class="ev ${evCls(ownOf(o).ev)}">${evTxt(ownOf(o).ev)}</span>${mvTxt}</span></td>
     <td class="c-bt"><span class="bt">${statusOf(s)}<span class="acts-r">${betBtns(a, r, o, s.stake)}${sbLink(a.race, true)}</span></span></td>
   </tr>`;
   const wp = whyPanel(s);
