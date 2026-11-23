@@ -2314,6 +2314,10 @@ const lenTxt = m => { const x = /^(\d+(?:\.\d+)?)L$/i.exec(String(m || '').trim(
   return { SHD: 'a short head', SH: 'a short head', HD: 'a head', NSE: 'a nose', NOSE: 'a nose', NK: 'a neck', LNK: 'a long neck', DH: 'a dead heat' }[String(m || '').toUpperCase().replace(/[^A-Z]/g, '')] || String(m || ''); };
 const dayMon = d => { const t = Date.parse(d + 'T12:00:00'); return isFinite(t) ? new Date(t).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' }) : ''; };
 const jName = j => String(j || '').replace(/\s*\(.*?\)\s*/g, ' ').trim();
+// Same jockey written two ways ("Ms M Weir" and "Mikayla Weir"): same surname and first initial
+const jSame = (a, b) => { const k = x => normName(x).replace(/^(ms|mr|mrs|miss|mme)\s+/, '').split(' ').filter(Boolean); const x = k(a), y = k(b);
+  return x.length && y.length && x[x.length - 1] === y[y.length - 1] && x[0][0] === y[0][0]; };
+const SETTLE_TXT = { leader: 'in front', pace: 'on the pace', 'on pace': 'on the pace', 'off pace': 'just off the pace', 'off the pace': 'just off the pace', midfield: 'in midfield', 'off midfield': 'just behind midfield', backmarker: 'near the back' };
 function storyOf(a, r) {
   const out = [], L = r.ls;
   if (L && L.pl) {
@@ -2331,9 +2335,9 @@ function storyOf(a, r) {
   if (beat.length) out.push([`Has beaten ${beat.length === 1 ? 'one of today\'s rivals' : beat.length + ' of today\'s rivals'}: ${beat.slice(0, 3).join('; ')}.`, '+']);
   if (lost.length) out.push([`Finished behind ${lost.length === 1 ? 'one of today\'s rivals' : lost.length + ' of today\'s rivals'}: ${lost.slice(0, 3).join('; ')}.`, '-']);
   const jn = jName(r.j), jl = L ? jName(L.j) : '', jh = ksRec(r, /^(jockey|jcky)\s*\/\s*horse$/i);
-  if (jn && jl && normName(jn) !== normName(jl)) out.push([`Jockey change: ${jn} rides today${topJ(jn) ? ' (a top jockey)' : ''}, ${jl} rode it last start.`, topJ(jn) && !topJ(jl) ? '+' : '']);
+  if (jn && jl && !jSame(jn, jl)) out.push([`Jockey change: ${jn} rides today${topJ(jn) ? ' (a top jockey)' : ''}, ${jl} rode it last start.`, topJ(jn) && !topJ(jl) ? '+' : '']);
   else if (jn && jl) out.push([`${jn} keeps the ride${jh && jh.s ? ` (${jh.w} win${jh.w === 1 ? '' : 's'} from ${jh.s} ride${jh.s === 1 ? '' : 's'} on it)` : ''}.`, jh && jh.s >= 2 && jh.w / jh.s >= 0.3 ? '+' : '']);
-  if (r.esp) out.push([`Speed map: should settle ${String(r.esp).toLowerCase()}${r.bar ? ' from barrier ' + r.bar : ''}.`, /lead/i.test(r.esp) ? '+' : '']);
+  if (r.esp) { const e = String(r.esp).toLowerCase().trim(); out.push([`Speed map: should settle ${SETTLE_TXT[e] || e}${r.bar ? ' from barrier ' + r.bar : ''}.`, /^(leader|pace|on pace)$/.test(e) ? '+' : '']); }
   if (r.cm) out.push(['Form guide: ' + r.cm, '']);
   return out;
 }
