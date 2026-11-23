@@ -1021,8 +1021,8 @@ svg.plc .hit{fill:transparent;cursor:crosshair}
   .top .top-in .top-meta{order:3;margin:auto 0 0;flex-direction:column;align-items:stretch;gap:8px}
   .top .top-in .top-meta .pill-top{white-space:normal;border-radius:10px;padding:8px 12px;line-height:1.3}
   .top .top-in .top-meta .pill-top.bank{font-family:var(--head);font-stretch:80%;font-weight:800;font-size:1.35rem;padding:10px 12px}
-  /* Pages stop a little short of the right edge (about 150px on a 1920 screen); the Next up bar still runs the full width */
-  main.wrap,footer .wrap{max-width:1540px;margin:0;padding-inline:32px}
+  /* Pages stop a little short of the right edge (about 75px on a 1920 screen); the Next up bar still runs the full width */
+  main.wrap,footer .wrap{max-width:1612px;margin:0;padding-inline:32px}
   .njb .njb-in{max-width:2400px;margin:0;padding-inline:32px}
   .daybar .dayb{flex:1 1 0}
 }
@@ -1255,7 +1255,7 @@ const $ = (s, el = document) => el.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const MINUS = '\u2212';
 const TABS = ['snipes', 'picks', 'tracks', 'promos', 'calendar', 'places', 'multis', 'blackbook', 'results', 'tracker', 'settings', 'paste'];
-const MIN_EDGE = 0.02;     // promo bets need a 2% edge to make the plan
+const MIN_EDGE = 0.02;     // a promo bet's own bar (a promo never makes a pick by itself: see setBest)
 const MIN_STRAIGHT = 0.03; // straight bets need 3%: the form edge is less certain
 const MIN_PLACE = 0.05;    // place bets need 5%: place prices carry a bigger margin
 const MIN_PLACE_PRICE = 2; // place bets only at $2 or longer
@@ -1902,6 +1902,17 @@ function buildOpts(a, r, conv) {
   }
   return opts;
 }
+// The horse is judged on its own price. A promo never makes a horse a pick or lifts it up the lists:
+// the plain bet (win or place) has to clear its bar first. Only then is a win promo (bonus back, boost)
+// used, as a free extra on top. r.own is the plain bet; ownOf(o) gives it back from a promo bet.
+function setBest(r) {
+  const plain = r.opts.filter(o => !o.promo), qual = plain.filter(o => o.ev >= barOf(o)).sort((x, y) => y.ev - x.ev);
+  r.own = qual[0] || plain.reduce((m, o) => !m || o.ev > m.ev ? o : m, null) || r.opts[0];
+  const promo = r.own && r.own.type === 'win' && qual.length ? r.opts.filter(o => o.promo).sort((x, y) => y.ev - x.ev)[0] : null;
+  if (promo && promo.ev > r.own.ev) { promo.own = r.own; r.best = promo; } else r.best = r.own;
+  return r.best;
+}
+const ownOf = o => (o && o.own) || o;
 function compute() {
   if (S.settings.formW === 'auto') {
     fitAuto();
@@ -1913,7 +1924,7 @@ function compute() {
   list.forEach(a => { if (!a.closed) a.act.forEach(r => { if (r.win >= 1.5 && (!bestUse || r.bonusVal > bestUse.r.bonusVal)) bestUse = { a, r }; }); });
   const convAuto = bestUse ? bestUse.r.bonusVal : 0.65;
   const conv = S.settings.convMode === 'auto' ? convAuto : S.settings.convManual;
-  list.forEach(a => a.act.forEach(r => { r.opts = buildOpts(a, r, conv); r.best = r.opts.reduce((m, o) => o.ev > m.ev ? o : m, r.opts[0]); r.plan = null; }));
+  list.forEach(a => a.act.forEach(r => { r.opts = buildOpts(a, r, conv); setBest(r); r.plan = null; }));
   const C = { list, conv, convAuto, bestUse };
   C.plan = buildPlan(C);
   return C;
@@ -1928,19 +1939,19 @@ function bankGuard() { const st = S.settings, t = perthToday(), y = new Date(Dat
 function buildPlan(C) {
   const st = S.settings, G = bankGuard(), B = st.bankroll * G.f, items = [];
   C.list.forEach(a => { if (a.closed || hiddenA(a)) return; a.act.forEach(r => {
-    const o = r.opts.filter(x => x.ev >= barOf(x)).sort((x, y) => y.ev - x.ev)[0];
-    if (!o) return;
+    const own = r.own; if (!own || !(own.ev >= barOf(own))) return;   // a bet on its own merits, promo or not
+    const o = r.best;
     const rr = rfRule(a, r, o); r.rf = rr;
     if (rr && rr.rule === 'skip') return;
     const h = rr && rr.rule === 'half' ? 0.5 : 1;
-    items.push({ a, r, o, w: o.kf * (o.promo ? 1 : 0.5) * h, cap: Math.min(o.cap || Infinity, st.stakeMode === 'spread' ? B * st.maxBetPct / 100 : Infinity) * h, half: h < 1 });
+    items.push({ a, r, o, own, w: own.kf * 0.5 * h, cap: Math.min(o.cap || Infinity, st.stakeMode === 'spread' ? B * st.maxBetPct / 100 : Infinity) * h, half: h < 1 });
   }); });
   if (st.stakeMode === 'spread') allocate(items, B);
   else {
-    items.forEach(i => { i.stake = i.half ? Math.floor(i.o.kstake / 2) : i.o.kstake; });
+    items.forEach(i => { i.stake = i.half ? Math.floor(i.own.kstake / 2) : i.own.kstake; });
     if (items.reduce((s, i) => s + i.stake, 0) > B) { items.forEach(i => { i.w = i.stake; i.cap = i.stake; }); allocate(items, B); }
   }
-  const live = items.filter(i => i.stake >= 1).sort((x, y) => y.stake - x.stake || y.o.ev - x.o.ev);
+  const live = items.filter(i => i.stake >= 1).sort((x, y) => y.stake - x.stake || y.own.ev - x.own.ev);
   live.forEach(i => { i.r.plan = { o: i.o, stake: i.stake }; });
   return { guard: G, items: live, total: live.reduce((s, i) => s + i.stake, 0), exp: live.reduce((s, i) => s + i.o.ev * i.stake, 0) };
 }
@@ -1952,7 +1963,7 @@ function snipes(C) {
     const o = r.plan ? r.plan.o : r.best;
     out.push({ a, r, o, tier: tierOf(o.odds), stake: r.plan ? r.plan.stake : 0 });
   }); });
-  return out.sort((x, y) => y.o.ev - x.o.ev);
+  return out.sort((x, y) => ownOf(y.o).ev - ownOf(x.o).ev);
 }
 // Best bets: horses priced above what they're worth, with a decent chance, ranked by long-run profit.
 // Profit is the Kelly growth rate of the bet (what it adds to the bank over time), with very large edges
@@ -1973,8 +1984,8 @@ function pickList(C) {
       if (HP.has(a.race.id + '_' + r.n)) return;
       const o = r.plan ? r.plan.o : r.best, other = act.reduce((m, x) => x !== r && x.p > m ? x.p : m, 0), mv = move(r);
       const rr = rfRule(a, r, o); if (rr && rr.rule === 'skip') return;
-      const g = growthOf(o) * (rr ? 0.5 : 1), ok = o.type === 'place' ? (r.pPl || 0) >= 0.55 : r.p >= MIN_PICK;
-      const lk = (rr ? -0.04 : 0) + r.p + 0.35 * (r.p - other) + 0.8 * Math.min(o.ev, 0) + (mv && mv.firm ? 0.02 : mv && mv.drift ? -0.02 : 0) + (allAgree(a, r) ? 0.03 : 0);
+      const oo = ownOf(o), g = growthOf(oo) * (rr ? 0.5 : 1), ok = oo.type === 'place' ? (r.pPl || 0) >= 0.55 : r.p >= MIN_PICK;
+      const lk = (rr ? -0.04 : 0) + r.p + 0.35 * (r.p - other) + 0.8 * Math.min(oo.ev, 0) + (mv && mv.firm ? 0.02 : mv && mv.drift ? -0.02 : 0) + (allAgree(a, r) ? 0.03 : 0);
       out.push({ a, r, o, tier: tierOf(o.odds), stake: r.plan ? r.plan.stake : 0, g, ok, lk });
     });
   });
@@ -2115,7 +2126,7 @@ function move(r) {
 }
 function statusOf(s) {
   if (s.stake) return `<span class="status go">Bet ${money(s.stake)}</span>`;
-  if (!s.o.promo) { const tgt = s.o.type === 'place' && s.r.pPl ? (1 + MIN_PLACE) / s.r.pPl : targetFor(s.a, s.r); if (tgt) return `<span class="status wait">Watch · ${odds$(tgt)}+</span>`; }
+  { const oo = ownOf(s.o), tgt = oo.type === 'place' && s.r.pPl ? (1 + MIN_PLACE) / s.r.pPl : targetFor(s.a, s.r); if (tgt) return `<span class="status wait">Watch · ${odds$(tgt)}+</span>`; }
   return `<span class="status wait">Watch</span>`;
 }
 let toastT;
@@ -2239,10 +2250,10 @@ function whyInfo(s) {
   const con = parts.filter(x => x[1] <= -0.02).sort((x, y) => x[1] - y[1]).slice(0, 3).map(x => x[0]);
   const bp = bestPrice(r);
   if (o.type !== 'place' && bp.k !== 'sb' && bp.v > r.win * 1.03) pts.push(`${bookOf(bp.k).name} has ${odds$(bp.v)}, better than Sportsbet's ${odds$(r.win)}.`);
-  const bar = o.promo ? MIN_EDGE : MIN_STRAIGHT;
+  const oo = ownOf(o), bar = barOf(oo);
   let verdict;
-  if (o.ev >= bar) verdict = `Edge ${evTxt(o.ev)}: on average each $1 bet returns ${money(1 + o.ev, 2)}.${s.stake ? ` Your plan puts ${money(s.stake)} on it.` : ''}`;
-  else { const tg = o.type === 'place' && r.pPl ? (1 + MIN_STRAIGHT) / r.pPl : (!o.promo ? targetFor(a, r) : null); verdict = `Not a bet at this price yet (edge ${evTxt(o.ev)}).${tg ? ` It becomes one at ${odds$(tg)} or better.` : ''}`; }
+  if (oo.ev >= bar) verdict = `Edge ${evTxt(oo.ev)} on its own: on average each $1 bet returns ${money(1 + oo.ev, 2)}.${o !== oo ? ` The promo adds more on top (${evTxt(o.ev)} with it), but the horse is a bet without it.` : ''}${s.stake ? ` Your plan puts ${money(s.stake)} on it.` : ''}`;
+  else { const tg = oo.type === 'place' && r.pPl ? (1 + MIN_PLACE) / r.pPl : targetFor(a, r); verdict = `Not a bet at this price yet (edge ${evTxt(oo.ev)}). A promo won't make it one.${tg ? ` It becomes one at ${odds$(tg)} or better.` : ''}`; }
   const lose = o.type === 'place' ? 1 - ch : 1 - r.p;
   return { lead, pts, pro, con, verdict, lose };
 }
@@ -2345,7 +2356,7 @@ function heroBest(all) {
     <div class="hero-figs">
       <div><small>Price</small><b>${odds$(o.odds)}</b></div>
       <div><small>Fair price</small><b>${ch > 0 ? odds$(1 / ch) : '—'}</b></div>
-      <div><small>Edge</small><b class="edge">${evTxt(o.ev)}</b></div>
+      <div><small>Edge</small><b class="edge">${evTxt(ownOf(o).ev)}</b></div>
       <div><small>${o.type === 'place' ? 'Place chance' : 'Win chance'}</small><b>${pct(ch, 0)}</b></div>
     </div>
     ${whyPanel(s)}
@@ -2356,7 +2367,7 @@ function riskPanel(all) {
   return `<section class="card rk10" aria-label="Top 10 by risk">
     <h3>Top 10 by risk</h3>
     <div class="rk-seg" role="group" aria-label="Risk level">${['low', 'mid', 'high'].map(k => `<button class="${k}" data-act="rtier" data-v="${k}" aria-pressed="${t === k}"><b>${nm[k]}</b><small>${TIERS[k][1]}</small></button>`).join('')}</div>
-    ${list.length ? `<ol class="rk-list">${list.map((s, i) => `<li><button class="rk-r" data-act="gorace" data-race="${s.a.race.id}" title="Open ${esc(raceLabel(s.a.race))}"><span class="n">${i + 1}</span>${silkPic(s.r)}<span class="w"><b>${esc(s.r.name)}</b><small>${esc(raceLabel(s.a.race))}${isFinite(startMs(s.a.race)) ? ', ' + clockTxt(startMs(s.a.race)) : ''}</small></span><span class="p"><b>${odds$(s.o.odds)}</b><small class="${evCls(s.o.ev)}">${evTxt(s.o.ev)}</small></span></button></li>`).join('')}</ol>` : `<p class="muted">No open runners in this price range.</p>`}
+    ${list.length ? `<ol class="rk-list">${list.map((s, i) => `<li><button class="rk-r" data-act="gorace" data-race="${s.a.race.id}" title="Open ${esc(raceLabel(s.a.race))}"><span class="n">${i + 1}</span>${silkPic(s.r)}<span class="w"><b>${esc(s.r.name)}</b><small>${esc(raceLabel(s.a.race))}${isFinite(startMs(s.a.race)) ? ', ' + clockTxt(startMs(s.a.race)) : ''}</small></span><span class="p"><b>${odds$(s.o.odds)}</b><small class="${evCls(ownOf(s.o).ev)}">${evTxt(ownOf(s.o).ev)}</small></span></button></li>`).join('')}</ol>` : `<p class="muted">No open runners in this price range.</p>`}
   </section>`;
 }
 function t11Row(s, rank) {
@@ -2372,7 +2383,7 @@ function t11Row(s, rank) {
     <td class="c-ch"><span class="v">${pct(ch, 0)}</span><small>fair ${ch > 0 ? odds$(1 / ch) : '—'}</small></td>
     <td class="c-fm">${formChips(r.form)}</td>
     <td class="c-rc"><span class="rc"><small>Track</small>${recCell(r, 'track')}</span><span class="rc"><small>Dist</small>${recCell(r, 'dist')}</span></td>
-    <td class="c-pr"><span class="pr"><b data-px="${a.race.id}_${r.n}">${odds$(o.odds)}</b><span class="ev ${evCls(o.ev)}">${evTxt(o.ev)}</span>${mvTxt}</span></td>
+    <td class="c-pr"><span class="pr"><b data-px="${a.race.id}_${r.n}">${odds$(o.odds)}</b><span class="ev ${evCls(ownOf(o).ev)}">${evTxt(ownOf(o).ev)}</span>${mvTxt}</span></td>
     <td class="c-bt"><span class="bt">${statusOf(s)}<span class="acts-r">${betBtns(a, r, o, s.stake)}${sbLink(a.race, true)}</span></span></td>
   </tr>`;
   const wp = whyPanel(s);
@@ -2595,7 +2606,7 @@ function rfRule(a, r, o) {
 }
 function racePickOf(a) {
   const act = a.act.filter(r => r.opts && r.opts.length && r.p > 0); if (!act.length) return null;
-  const c = act.map(r => { const o = r.best, other = act.reduce((m, x) => x !== r && x.p > m ? x.p : m, 0); return { r, o, g: growthOf(o), ok: o.type === 'place' ? (r.pPl || 0) >= 0.55 : r.p >= MIN_PICK, lk: r.p + 0.35 * (r.p - other) + 0.8 * Math.min(o.ev, 0) }; });
+  const c = act.map(r => { const o = ownOf(r.best), other = act.reduce((m, x) => x !== r && x.p > m ? x.p : m, 0); return { r, o, g: growthOf(o), ok: o.type === 'place' ? (r.pPl || 0) >= 0.55 : r.p >= MIN_PICK, lk: r.p + 0.35 * (r.p - other) + 0.8 * Math.min(o.ev, 0) }; });
   const good = c.filter(x => x.g > 0 && x.ok).sort((x, y) => y.g - x.g || y.lk - x.lk)[0]; if (good) return good;
   return c.filter(x => x.g > 0).sort((x, y) => y.r.p - x.r.p)[0] || null;
 }
@@ -2606,7 +2617,7 @@ function reportCard(C) {
   const seg = {}, all = { n: 0, w: 0, ret: 0 };
   races.forEach(race => {
     const a = analyse(race);
-    a.act.forEach(r => { r.opts = buildOpts(a, r, C.conv); r.best = r.opts.reduce((m, o) => o.ev > m.ev ? o : m, r.opts[0]); });
+    a.act.forEach(r => { r.opts = buildOpts(a, r, C.conv); setBest(r); });
     const pk = racePickOf(a); if (!pk) return;
     const pos = race.result.indexOf(pk.r.n), ret = payout(pk.o, a, pos), hit = pk.o.type === 'place' ? pos >= 0 && pos < (a.places || 3) : pos === 0;
     const add = x => { x.n++; x.w += hit ? 1 : 0; x.ret += ret; };
@@ -2823,7 +2834,7 @@ function trackPicksHtml(C) {
     if (!isOpen) { h += `</div>`; return; }
     const goBtn = `<span class="acts-r" style="margin-left:auto;align-self:center;flex-wrap:wrap">${trackBtns(slug)}<button class="btn sm" data-act="gomeet" data-slug="${esc(slug)}">Open racecards</button></span>`;
     if (picks.length) {
-      const vals = open.map(bestPickOf).filter(Boolean).map(r => ({ r, a: open.find(a => a.act.includes(r)) })).sort((x, y) => y.r.best.ev - x.r.best.ev);
+      const vals = open.map(bestPickOf).filter(Boolean).map(r => ({ r, a: open.find(a => a.act.includes(r)) })).sort((x, y) => ownOf(y.r.best).ev - ownOf(x.r.best).ev);
       const safe = picks.filter(p => p.safePl).sort((x, y) => y.r.pPl - x.r.pPl)[0];
       h += `<div class="tpk-sum">`;
       h += `<button class="f" data-act="gorace" data-race="${banker.a.race.id}"><small>Track banker</small><b>R${banker.a.race.no} #${banker.r.n} ${esc(banker.r.name)}</b><span class="num muted" style="font-size:.8rem">${odds$(banker.r.win)} · ${pct(banker.r.p, 0)} to win</span></button>`;
@@ -2855,7 +2866,7 @@ function tpRow(p) {
       <span class="sub">${danger ? `<span>Danger: #${danger.n} ${esc(danger.name)} (${odds$(danger.win)})</span>` : ''}${safePl ? `<span>Safer: place ${odds$(r.place)}, ${pct(r.pPl, 0)} to place</span>` : ''}</span>${noteLine(a.race.id)}${noteLine(a.race.id + ':' + r.n)}<span class="acts-r tp-acts">${pickBtn(a.race.id, r)}${sbLink(a.race, true)}${copyBtn(a.race, r, null, true)}</span></span>
     <span class="n c-p">${odds$(r.win)}</span>
     <span class="n c-c muted">${pct(r.p, 0)}</span>
-    <span class="cf">${conf ? `<span class="conf ${conf.k}" title="${esc(conf.tip)}">${conf.txt}</span>` : ''}${p.stake ? `<span class="status go">Bet ${money(p.stake)}</span>` : isVal ? `<span class="tag bestp">Value ${evTxt(o.ev)}</span>` : value ? `<span class="muted" style="font-size:.76rem">Value: #${value.n}</span>` : ''}</span>
+    <span class="cf">${conf ? `<span class="conf ${conf.k}" title="${esc(conf.tip)}">${conf.txt}</span>` : ''}${p.stake ? `<span class="status go">Bet ${money(p.stake)}</span>` : isVal ? `<span class="tag bestp">Value ${evTxt(ownOf(o).ev)}</span>` : value ? `<span class="muted" style="font-size:.76rem">Value: #${value.n}</span>` : ''}</span>
   </div>`;
 }
 
@@ -2883,7 +2894,7 @@ const ANA = new Map();
 function analyseCached(race) {
   const k = race.id + '|' + (race.updatedAt || '') + '|' + S.settings.market + '|' + S.settings.formW;
   let a = ANA.get(k);
-  if (!a) { a = analyse(race); a.act.forEach(r => { r.opts = buildOpts(a, r, 0.7); r.best = r.opts.reduce((m, o) => o.ev > m.ev ? o : m, r.opts[0]); }); ANA.set(k, a); if (ANA.size > 400) ANA.delete(ANA.keys().next().value); }
+  if (!a) { a = analyse(race); a.act.forEach(r => { r.opts = buildOpts(a, r, 0.7); setBest(r); }); ANA.set(k, a); if (ANA.size > 400) ANA.delete(ANA.keys().next().value); }
   return a;
 }
 const dayLabel = d => { const t = perthToday(), tm = isoDay(addDays(new Date(t + 'T12:00:00'), 1)); return d === t ? 'Today' : d === tm ? 'Tomorrow' : dateTxt(d); };
@@ -3066,10 +3077,10 @@ function renderTracks(C) {
 const chanceCls = p => p >= 0.25 ? 'cx-hi' : p >= 0.10 ? 'cx-md' : 'cx-lo';
 function bestPickOf(a) {
   if (a.closed) return null;
-  const ok = a.act.filter(r => r.opts && r.opts.some(o => o.ev >= (o.promo ? MIN_EDGE : MIN_STRAIGHT)));
+  const ok = a.act.filter(r => r.own && r.own.ev >= barOf(r.own));
   if (!ok.length) return null;
   const planned = ok.filter(r => r.plan).sort((x, y) => y.plan.stake - x.plan.stake);
-  return planned[0] || ok.sort((x, y) => y.best.ev - x.best.ev)[0];
+  return planned[0] || ok.sort((x, y) => y.own.ev - x.own.ev)[0];
 }
 function raceLine(a) {
   const t = a.ranked[0];
@@ -3838,7 +3849,7 @@ function renderSettings(C) {
     <p><b>Track bias.</b> Once 3 races have been run at a meeting, inside barriers and on-pace runners are checked against how often the market expected them to place. A clear lean nudges the races still to come.</p>
     <p><b>Edge.</b> What a $1 bet returns on average. Win: chance × price − 1. Bonus back adds the chance of running 2nd/3rd × what the bonus bet is worth.</p>
     <p><b>Risk tiers.</b> Low risk is $3 or under, mid is $3 to $8, high risk is over $8. Longer prices win less often, so expect longer losing runs on high-risk snipes.</p>
-    <p><b>Bets vs watch.</b> Win bets need a 3% edge, place bets 5% and get half the stake weight; promo bets need 2%. Anything under the bar shows as “Watch” with the price it needs, assuming the rest of the market stays put. Because each chance comes from Sportsbet's own prices, a horse's chance drops as it drifts, so most need a big drift before they're value.</p>
+    <p><b>Bets vs watch.</b> Win bets need a 3% edge, place bets 5% and get half the stake weight. A promo never makes a horse a bet: the plain bet has to clear its bar first, and only then is the promo used, as an extra on top, without raising the stake. Anything under the bar shows as “Watch” with the price it needs, assuming the rest of the market stays put. Because each chance comes from Sportsbet's own prices, a horse's chance drops as it drifts, so most need a big drift before they're value.</p>
   </div>`;
   $('#v-settings').innerHTML = h;
 }
@@ -3890,11 +3901,11 @@ function scorecard(C) {
   const rows = [];
   closedRaces().forEach(race => {
     const a = analyse(race);
-    a.act.forEach(r => { r.opts = buildOpts(a, r, C.conv); r.best = r.opts.reduce((m, o) => o.ev > m.ev ? o : m, r.opts[0]); });
+    a.act.forEach(r => { r.opts = buildOpts(a, r, C.conv); setBest(r); });
     const top = a.ranked[0];
     a.act.forEach(r => {
       const pos = race.result.indexOf(r.n), o = r.best;
-      rows.push({ date: race.date, raceId: race.id, venue: race.venue, odds: o.odds, label: raceLabel(race), name: r.name, tier: tierOf(o.odds), promo: !!o.promo, qual: o.ev >= barOf(o), ev: o.ev, ret: payout(o, a, pos) });
+      rows.push({ date: race.date, raceId: race.id, venue: race.venue, odds: o.odds, label: raceLabel(race), name: r.name, tier: tierOf(o.odds), promo: !!o.promo, qual: ownOf(o).ev >= barOf(ownOf(o)), ev: o.ev, ret: payout(o, a, pos) });
       if (r === top) { const w = r.opts[0]; rows.push({ fav: true, date: race.date, raceId: race.id, ev: w.ev, ret: payout(w, a, pos) }); }
     });
   });
