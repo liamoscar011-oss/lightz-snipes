@@ -179,7 +179,7 @@ main{padding-block:20px 40px}
 .seg button[aria-pressed="true"]{background:var(--blue);color:#fff}
 
 /* tracks */
-.meets{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(230px,100%),1fr));gap:12px}
+.meets{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(230px,100%),1fr));gap:12px}
 .mc{padding:14px;display:grid;gap:8px;text-align:left;cursor:pointer;width:100%}
 .mc:hover{border-color:var(--blue)}
 .mc-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
@@ -973,7 +973,8 @@ svg.plc .hit{fill:transparent;cursor:crosshair}
   .top .top-in .top-meta{order:3;margin:auto 0 0;flex-direction:column;align-items:stretch;gap:8px}
   .top .top-in .top-meta .pill-top{white-space:normal;border-radius:10px;padding:8px 12px;line-height:1.3}
   .top .top-in .top-meta .pill-top.bank{font-family:var(--head);font-stretch:80%;font-weight:800;font-size:1.35rem;padding:10px 12px}
-  main.wrap,footer .wrap{max-width:1500px;margin:0;padding-inline:32px}
+  main.wrap,footer .wrap,.njb .njb-in{max-width:2400px;margin:0;padding-inline:32px}
+  .daybar .dayb{flex:1 1 0}
 }
 /* ===== Horse profile, speed map, compare, track guide, bet slip, tracker extras ===== */
 .hname{appearance:none;border:0;background:none;padding:0;margin:0;font:inherit;color:inherit;text-align:left;cursor:pointer;text-decoration:underline;text-decoration-color:color-mix(in srgb,currentColor 30%,transparent);text-underline-offset:3px}
@@ -1116,7 +1117,7 @@ body:has(#cmpbar:not([hidden])) #slipbtn{bottom:calc(74px + env(safe-area-inset-
 .pr-b{padding:14px 16px;display:grid;gap:10px}
 .pr-bh{display:flex;gap:10px;align-items:center}
 .pr-chip{color:#fff;font-weight:800;border-radius:6px;padding:4px 10px;font-size:.92rem}
-.pr-g{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}
+.pr-g{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:10px}
 .pr-o{border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:grid;gap:6px;align-content:start;background:var(--surface)}
 .pr-o.on{border-color:var(--blue);box-shadow:inset 3px 0 0 var(--blue)}
 .pr-t{font-size:.98rem;line-height:1.3}
@@ -2154,7 +2155,7 @@ function nextUp(C) {
   const di = dayInfo(), cut = di && di.updatedAt ? new Date(di.updatedAt).getTime() - 75 * 60000 : 0, now = Date.now();
   let list = [], title = 'Next to jump', sub = '';
   const timed = C.list.filter(a => !a.closed && !hiddenA(a) && isFinite(startMs(a.race)));
-  if (timed.length) { list = timed.filter(a => startMs(a.race) > now - 3 * 60000).sort((x, y) => startMs(x.race) - startMs(y.race)).slice(0, 6); sub = 'jump times in your time zone'; }
+  if (timed.length) { list = timed.filter(a => startMs(a.race) > now - 3 * 60000).sort((x, y) => startMs(x.race) - startMs(y.race)).slice(0, 10); sub = 'jump times in your time zone'; }
   if (!list.length && liveOn()) { list = C.list.filter(a => !a.closed && a.race.jump && (!a.race.updatedAt || new Date(a.race.updatedAt).getTime() >= cut)).sort((x, y) => x.race.jump - y.race.jump).slice(0, 5); sub = di && di.updatedAt ? 'as of ' + timeTxt(di.updatedAt) : ''; }
   if (!list.length) {
     // No jump order yet (before the race-day refresh, or the saved card): earliest open races at each meeting, R1s first
