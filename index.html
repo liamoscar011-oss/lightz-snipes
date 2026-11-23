@@ -498,16 +498,16 @@ html.noanim .pxa{display:none}
 /* next to jump */
 .nx{padding:12px 0 12px 16px;display:grid;gap:8px;overflow:hidden}
 /* Market movers, under Next to jump */
-.mvp{padding:12px 16px 12px;display:grid;gap:8px}
+.mvp{padding:10px 16px 10px;display:grid;gap:6px}
 .mvp .nx-h{padding-right:0}
 .mvp-g{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 18px}
 @media (max-width:640px){.mvp-g{grid-template-columns:minmax(0,1fr)}}
 .mvc{display:grid;gap:1px;align-content:start;min-width:0}
 .mvc-h{display:flex;gap:8px;align-items:baseline;font-size:.9rem;padding:0 4px 5px;border-bottom:1px solid var(--line);margin-bottom:2px}
 .mvc-h .muted{font-size:.76rem}
-.mvr{appearance:none;border:0;background:none;color:inherit;font:inherit;text-align:left;width:100%;display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:10px;align-items:center;padding:5px 4px;cursor:pointer;border-radius:8px}
+.mvr{appearance:none;border:0;background:none;color:inherit;font:inherit;text-align:left;width:100%;display:grid;grid-template-columns:24px minmax(0,1fr) auto;gap:10px;align-items:center;padding:3px 4px;cursor:pointer;border-radius:8px;line-height:1.25}
 .mvr:hover{background:var(--surface-2)}
-.mvr :is(.silk,.silkpic){width:26px;height:29px}
+.mvr :is(.silk,.silkpic){width:22px;height:25px}
 .mvr .w{display:grid;min-width:0}
 .mvr .w b{font-size:.92rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mvr .w small{font-size:.76rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -2258,7 +2258,7 @@ function renderSnipes(C) {
   requestAnimationFrame(fitMovers);
 }
 // Market movers only fills the space beside the Top 10 by risk list: rows come off the bottom until the left
-// column is no taller than the right (at least 3 each); when the page is one column (phones) it shows 3
+// column is no taller than the right (at least 2 each); when the page is one column (phones) it shows 3
 function fitMovers() {
   const m = document.querySelector('#v-snipes .mvp'); if (!m || !m.offsetParent) return;
   const main = m.closest('.snx-main'), side = main && main.nextElementSibling, cols = [...m.querySelectorAll('.mvc')];
@@ -2267,16 +2267,17 @@ function fitMovers() {
   const cut = () => { const n = shown(); cols.forEach(c => { const v = c.querySelectorAll('.mvr:not([hidden])'); if (v.length === n && n) v[n - 1].hidden = true; }); };
   const single = !side || side.getBoundingClientRect().top >= main.getBoundingClientRect().bottom - 1;
   if (single) { while (shown() > 3) cut(); return; }
-  while (shown() > 3 && main.getBoundingClientRect().bottom > side.getBoundingClientRect().bottom + 2) cut();
+  while (shown() > 2 && main.getBoundingClientRect().bottom > side.getBoundingClientRect().bottom + 2) cut();
 }
 { let t; addEventListener('resize', () => { clearTimeout(t); t = setTimeout(fitMovers, 150); }); }
-// Market movers: the biggest firmers and drifters in open races since Sportsbet opened its prices (5%+ moves)
+// Market movers: the biggest firmers and drifters in open races since Sportsbet opened its prices (5%+ moves),
+// only horses in the market ($21 or shorter now or at the open), so roughies going $51 to $151 don't crowd it out
 function moversPanel(C) {
   if (!C.list.some(a => !a.closed && !hiddenA(a))) return '';
   const rows = [];
   C.list.forEach(a => { if (a.closed || hiddenA(a)) return; a.act.forEach(r => {
     if (r.scr || !(r.win > 1) || !r.flucs || !(r.flucs[0] > 1)) return;
-    const op = r.flucs[0], ch = (r.win - op) / op; if (Math.abs(ch) >= 0.05) rows.push({ a, r, op, ch });
+    const op = r.flucs[0], ch = (r.win - op) / op; if (Math.abs(ch) >= 0.05 && Math.min(op, r.win) <= 21) rows.push({ a, r, op, ch });
   }); });
   const firm = rows.filter(x => x.ch < 0).sort((x, y) => x.ch - y.ch).slice(0, 5), drift = rows.filter(x => x.ch > 0).sort((x, y) => y.ch - x.ch).slice(0, 5);
   const li = x => `<button class="mvr" data-act="gorace" data-race="${x.a.race.id}" title="Open ${esc(raceLabel(x.a.race))}">${silkPic(x.r)}<span class="w"><b>${esc(x.r.name)}</b><small>${esc(raceLabel(x.a.race))}${isFinite(startMs(x.a.race)) ? ', ' + clockTxt(startMs(x.a.race)) : ''}</small></span><span class="p"><span class="num">${odds$(x.op)} → <b>${odds$(x.r.win)}</b></span><small class="${x.ch < 0 ? 'up' : 'down'}">${x.ch < 0 ? '▼ firmed' : '▲ drifted'} ${Math.round(Math.abs(x.ch) * 100)}%</small></span></button>`;
