@@ -233,11 +233,12 @@
   }
   function hideGate() { if (gate) { gate.remove(); gate = null; } }
 
+  const splash = () => { try { if (window.lsSplash) window.lsSplash(); } catch (e) {} };
   sb.auth.onAuthStateChange((ev, s) => {
     session = s;
-    if (s) { hideGate(); readyRes(s); }
+    if (s) { const wasGated = !!gate; hideGate(); readyRes(s); if (wasGated) splash(); }
   });
-  const boot = () => sb.auth.getSession().then(({ data }) => { session = data.session; if (session) readyRes(session); else showGate(); });
+  const boot = () => sb.auth.getSession().then(({ data }) => { session = data.session; if (session) { readyRes(session); splash(); } else showGate(); });
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
 
   /* ---------- offline shell ---------- */
