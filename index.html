@@ -104,6 +104,8 @@ button,input,select,textarea{font:inherit;color:inherit}
 .tab{background:none;border:0;color:var(--on-navy);opacity:.72;padding:10px 12px 11px;font-weight:600;font-size:.95rem;cursor:pointer;white-space:nowrap;border-bottom:3px solid transparent}
 .tab:hover{opacity:1}
 .tab[aria-selected="true"]{opacity:1;border-bottom-color:var(--yellow)}
+.tab{display:inline-flex;align-items:center;gap:8px}
+.tab .ti{width:17px;height:17px;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;opacity:.9}
 .tab .cnt{font-family:var(--mono);font-size:.72rem;margin-left:6px;padding:1px 6px;border-radius:999px;background:var(--yellow);color:var(--on-yellow)}
 
 main{padding-block:20px 40px}
@@ -1248,8 +1250,8 @@ body:has(#cmpbar:not([hidden])) #slipbtn{bottom:calc(74px + env(safe-area-inset-
     </div>
     <nav class="tabs" role="tablist" aria-label="Sections">
       <button class="tab" role="tab" data-tab="snipes" id="tab-snipes">Snipes</button>
-      <button class="tab" role="tab" data-tab="picks" id="tab-picks">My picks</button>
       <button class="tab" role="tab" data-tab="tracks" id="tab-tracks">Tracks</button>
+      <button class="tab" role="tab" data-tab="picks" id="tab-picks">My picks</button>
       <button class="tab" role="tab" data-tab="promos" id="tab-promos">Promos</button>
       <button class="tab" role="tab" data-tab="calendar" id="tab-calendar">Calendar</button>
       <button class="tab" role="tab" data-tab="places" id="tab-places">Place bets</button>
@@ -1298,7 +1300,24 @@ const HORSE = 'M22 6V9.5L20.5 10L18.96 7.54C18.83 7.33 18.5 7.42 18.5 7.67V11.25
 const $ = (s, el = document) => el.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const MINUS = '\u2212';
-const TABS = ['snipes', 'picks', 'tracks', 'promos', 'calendar', 'places', 'multis', 'blackbook', 'results', 'tracker', 'settings', 'paste'];
+// Menu icons (24px line drawings in the text colour)
+const TAB_ICON = {
+  snipes: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2.5"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/>',
+  tracks: '<ellipse cx="12" cy="12" rx="10" ry="6.5"/><ellipse cx="12" cy="12" rx="5" ry="2"/><path d="M12 5.5v4"/>',
+  picks: '<path d="M6 3h12v18l-6-4.5L6 21z"/>',
+  promos: '<path d="M3 12V3h9l9 9-9 9z"/><circle cx="7.5" cy="7.5" r="1.5"/>',
+  calendar: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+  places: '<path d="M3 6h18v4a2 2 0 0 0 0 4v4H3v-4a2 2 0 0 0 0-4z"/><path d="M14 6v2M14 11v2M14 16v2"/>',
+  multis: '<path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/>',
+  blackbook: '<path d="M5 4h11a3 3 0 0 1 3 3v14H8a3 3 0 0 1-3-3z"/><path d="M5 18a3 3 0 0 1 3-3h11"/>',
+  results: '<path d="M5 21V4h13l-2.5 4 2.5 4H5"/>',
+  tracker: '<path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 6-7"/>',
+  settings: '<path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/>',
+  paste: '<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 3h6v3H9zM9 11h6M9 15h4"/>'
+};
+const tabHtml = (k, label, n) => `<svg class="ti" viewBox="0 0 24 24" aria-hidden="true">${TAB_ICON[k] || ''}</svg><span class="tl">${label}</span>` + (n ? `<span class="cnt">${n}</span>` : '');
+document.querySelectorAll('.tabs .tab[data-tab]').forEach(b => { b.innerHTML = tabHtml(b.dataset.tab, b.textContent.trim()); });
+const TABS = ['snipes', 'tracks', 'picks', 'promos', 'calendar', 'places', 'multis', 'blackbook', 'results', 'tracker', 'settings', 'paste'];
 const MIN_EDGE = 0.02;     // a promo bet's own bar (a promo never makes a pick by itself: see setBest)
 const MIN_STRAIGHT = 0.03; // straight bets need 3%: the form edge is less certain
 const MIN_PLACE = 0.05;    // place bets need 5%: place prices carry a bigger margin
@@ -2191,13 +2210,13 @@ function renderHeader(C) {
     const pl = tb.reduce((x, b) => x + plOfBet(b), 0); ch.hidden = !tb.length; ch.innerHTML = `${tb.length} bet${tb.length === 1 ? '' : 's'} · <b style="color:${pl >= 0 ? '#5be38f' : '#ff8080'}">${pl >= 0 ? '+' : ''}${money(pl)}</b> today`; }
   winBanner();
   const n = C.plan.items.length, bbn = bbRunners(C).length;
-  $('#tab-snipes').innerHTML = 'Snipes' + (n ? `<span class="cnt">${n}</span>` : '');
+  $('#tab-snipes').innerHTML = tabHtml('snipes', 'Snipes', n);
   const up = S.shortlist.filter(x => x.date >= perthToday()).length;
-  $('#tab-picks').innerHTML = 'My picks' + (up ? `<span class="cnt">${up}</span>` : '');
-  $('#tab-blackbook').innerHTML = 'Blackbook' + (bbn ? `<span class="cnt">${bbn}</span>` : '');
+  $('#tab-picks').innerHTML = tabHtml('picks', 'My picks', up);
+  $('#tab-blackbook').innerHTML = tabHtml('blackbook', 'Blackbook', bbn);
   promoBadge();
   const open = S.bets.filter(b => b.result === 'pending').length;
-  $('#tab-tracker').innerHTML = 'Tracker' + (open ? `<span class="cnt">${open}</span>` : '');
+  $('#tab-tracker').innerHTML = tabHtml('tracker', 'Tracker', open);
   renderSaveNote(); setTimeout(cdBarPaint, 0);
 }
 function winBanner() {
@@ -2574,7 +2593,7 @@ function promoOffers(C) {
 function promoBadge() {
   const el = $('#tab-promos'); if (!el) return;
   let n = 0; try { n = LASTC ? promoOffers(LASTC).list.filter(o => o.onCard).length : 0; } catch (e) {}
-  el.innerHTML = 'Promos' + (n ? `<span class="cnt">${n}</span>` : '');
+  el.innerHTML = tabHtml('promos', 'Promos', n);
 }
 // Every licensed bookie, with today's public offers counted. Bookies without public offers still link to their site,
 // where offers show once you're logged in.
