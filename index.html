@@ -227,7 +227,7 @@ main{padding-block:20px 40px}
 .rchip .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--yellow);margin-left:5px;vertical-align:1px;box-shadow:0 0 0 1px var(--navy)}
 .rchip .bk{color:#e0a800;margin-left:3px;font-size:.8rem}
 .meet{overflow:hidden}
-.rl{display:grid;grid-template-columns:40px 60px minmax(0,1fr) 66px 46px 116px;gap:12px;align-items:center;padding:10px 16px;width:100%;background:none;border:0;border-top:1px solid var(--line);text-align:left;cursor:pointer}
+.rl{display:grid;grid-template-columns:66px 60px minmax(0,1fr) 66px 46px 116px;gap:12px;align-items:center;padding:10px 16px;width:100%;background:none;border:0;border-top:1px solid var(--line);text-align:left;cursor:pointer}
 .rl:first-child{border-top:0}
 .rl:hover{background:var(--surface-2)}
 .rl .no{font-family:var(--head);font-weight:700;font-size:1.15rem}
@@ -237,7 +237,10 @@ main{padding-block:20px 40px}
 .rl .pk b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
 .rl .n{font-family:var(--mono);font-weight:600;text-align:right;font-variant-numeric:tabular-nums}
 .rl .bet{text-align:right;font-size:.84rem}
-@media (max-width:560px){.rl{grid-template-columns:34px minmax(0,1fr) 58px 92px} .rl .dist,.rl .pc{display:none}}
+/* phones: two lines per race (horse and price, then the bet or result) so names have room */
+@media (max-width:560px){.rl{grid-template-columns:52px minmax(0,1fr) auto;grid-template-areas:"no pk pr" "no bt bt";row-gap:4px} .rl .dist,.rl .pc{display:none}
+  .rl .no{grid-area:no;align-self:start} .rl .pk{grid-area:pk} .rl > .n:not(.pc){grid-area:pr} .rl .bet{grid-area:bt}
+  .rl .no .rcls{font-size:.64rem;padding:0 6px}}
 
 .race{overflow:hidden}
 .race-h{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px 16px;padding:16px}
@@ -583,13 +586,32 @@ html.noanim .pxa{display:none}
 .why .pro li::marker{color:var(--pos)} .why .con li::marker{color:var(--neg)}
 .why .k{font-size:.68rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 .t10-r .why{margin-top:2px}
-.rr.cx-hi{box-shadow:inset 4px 0 0 var(--chi)} .rr.cx-md{box-shadow:inset 4px 0 0 var(--cmd)} .rr.cx-lo{box-shadow:inset 4px 0 0 var(--clo)}
+.rr.cx-hi{box-shadow:inset 5px 0 0 var(--chi)} .rr.cx-md{box-shadow:inset 5px 0 0 var(--cmd)} .rr.cx-lo{box-shadow:inset 5px 0 0 var(--clo)}
+/* chance tiers: a soft tint of the tier colour across the row, enough to tell them apart at a glance */
+.rr.cx-hi:not(.planned){background:color-mix(in srgb,var(--chi) 8%,var(--surface))}
+.rr.cx-md:not(.planned){background:color-mix(in srgb,var(--cmd) 8%,var(--surface))}
+.rr.cx-lo:not(.planned){background:color-mix(in srgb,var(--clo) 5%,var(--surface))}
 .rr.cx-hi .ch .fill:not(.pl){background:var(--chi)} .rr.cx-md .ch .fill:not(.pl){background:var(--cmd)} .rr.cx-lo .ch .fill:not(.pl){background:var(--clo)}
 .rr.cx-hi .ch .row:first-child .v{color:var(--chi)} .rr.cx-md .ch .row:first-child .v{color:var(--cmd)} .rr.cx-lo .ch .row:first-child .v{color:var(--clo)}
 .rr.bestp{box-shadow:inset 6px 0 0 var(--best);background:var(--best-bg)}
 .tag.bestp{background:var(--best);color:#fff}
-.cleg{display:flex;flex-wrap:wrap;gap:6px 14px;padding:8px 16px;font-size:.8rem;color:var(--muted);border-top:1px solid var(--line)}
-.cleg i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.cleg{display:flex;flex-wrap:wrap;gap:6px 8px;padding:10px 16px;font-size:.8rem;color:var(--muted);border-top:1px solid var(--line)}
+.cleg i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.cleg > span{display:inline-flex;align-items:center;padding:3px 10px 3px 8px;border-radius:999px;border:1px solid var(--line);color:var(--ink);font-weight:600}
+.cleg .cl-hi{background:color-mix(in srgb,var(--chi) 10%,var(--surface));border-color:color-mix(in srgb,var(--chi) 35%,transparent)}
+.cleg .cl-md{background:color-mix(in srgb,var(--cmd) 10%,var(--surface));border-color:color-mix(in srgb,var(--cmd) 35%,transparent)}
+.cleg .cl-lo{background:color-mix(in srgb,var(--clo) 7%,var(--surface));border-color:color-mix(in srgb,var(--clo) 30%,transparent)}
+.cleg .cl-best{background:var(--best-bg);border-color:color-mix(in srgb,var(--best) 40%,transparent)}
+.cleg .cl-none{background:var(--surface-2);border-style:dashed;color:var(--muted);font-weight:500}
+/* race class chip: grey maidens, blue lower grades, teal middle grades, gold top grades */
+:root{--rc-mdn:#667085;--rc-lo:#2f6db5;--rc-md:#0e7c86;--rc-hi:#9a6400}
+:root[data-theme="dark"]{--rc-mdn:#a7b0bd;--rc-lo:#7fb0ec;--rc-md:#4fc7d0;--rc-hi:#f0b94a}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--rc-mdn:#a7b0bd;--rc-lo:#7fb0ec;--rc-md:#4fc7d0;--rc-hi:#f0b94a}}
+.rcls{display:inline-block;font-size:.72rem;font-weight:700;line-height:1.35;padding:1px 8px;border-radius:999px;white-space:nowrap;vertical-align:1px;color:var(--rc-mdn);background:color-mix(in srgb,var(--rc-mdn) 12%,var(--surface));border:1px solid color-mix(in srgb,var(--rc-mdn) 35%,transparent)}
+.rcls.lo{color:var(--rc-lo);background:color-mix(in srgb,var(--rc-lo) 11%,var(--surface));border-color:color-mix(in srgb,var(--rc-lo) 35%,transparent)}
+.rcls.md{color:var(--rc-md);background:color-mix(in srgb,var(--rc-md) 12%,var(--surface));border-color:color-mix(in srgb,var(--rc-md) 35%,transparent)}
+.rcls.hi{color:var(--rc-hi);background:color-mix(in srgb,var(--rc-hi) 13%,var(--surface));border-color:color-mix(in srgb,var(--rc-hi) 40%,transparent)}
+.rl .no .rcls,.tpk-r .no .rcls{display:block;margin-top:3px;width:max-content}
 /* colour themes (Settings → Colour theme); data-skin on <html>, with data-theme forcing light or dark */
 :root[data-skin="sb"]{--bg:#ffffff;--surface:#ffffff;--surface-2:#f3f6fa;--ink:#142841;--muted:#566780;--line:#e1e7ee;--navy:#142841;--navy-2:#1f3a5c;--on-navy:#ffffff;--blue:#00549e;--blue-2:#0a66bf;--blue-bg:#e6f0fa;--yellow:#ffd200;--on-yellow:#142841;--low:#00549e;--focus:#00549e}
 :root[data-skin="sb"] .top{box-shadow:inset 0 -1px 0 rgba(255,255,255,.08)}
@@ -683,7 +705,7 @@ html.noanim .pxa{display:none}
 .tpk-sum .f:hover{border-color:var(--blue)}
 .tpk-sum .f small{font-size:.66rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 .tpk-sum .f b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
-.tpk-r{display:grid;grid-template-columns:58px 36px minmax(0,1fr) 62px 54px 104px;gap:12px;align-items:center;padding:10px 16px;width:100%;background:none;border:0;border-top:1px solid var(--line);text-align:left;cursor:pointer}
+.tpk-r{display:grid;grid-template-columns:66px 36px minmax(0,1fr) 62px 54px 104px;gap:12px;align-items:center;padding:10px 16px;width:100%;background:none;border:0;border-top:1px solid var(--line);text-align:left;cursor:pointer}
 .tpk-sum + .tpk-r{border-top:0}
 .tpk-acts + .tpk-sum{border-top:0;margin-top:8px;border-top:1px solid var(--line)}
 .tpk-r:hover{background:var(--surface-2)}
@@ -700,7 +722,7 @@ html.noanim .pxa{display:none}
 .tpk-done b{color:var(--ink)}
 .tpk-key{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.82rem;color:var(--muted)}
 @media (max-width:640px){
-  .tpk-r{grid-template-columns:44px 30px minmax(0,1fr) auto;gap:10px}
+  .tpk-r{grid-template-columns:62px 30px minmax(0,1fr) auto;gap:10px}
   .tpk-r .silk{width:30px;height:33px}
   .tpk-r > .c-p,.tpk-r > .c-c{display:none}
   .tpk-r .rsn + .rsn{display:none}
@@ -2380,7 +2402,7 @@ function t11Row(s, rank) {
     <td class="c-rk"><span class="rk">${rank}</span></td>
     <td class="c-sk"><span class="sbox">${silkPic(r)}</span></td>
     <td class="c-hn"><span class="hn"><b>${horseBtn(a, r, (bk ? '★ ' : '') + esc(r.name))}</b><span class="tier ${s.tier}" title="${esc(TIERS[s.tier][0])}, ${esc(TIERS[s.tier][1])}">${{ low: 'Low', mid: 'Mid', high: 'High' }[s.tier]}</span>${agreeMark(a, r)}</span>
-      <span class="ln">${esc(raceLabel(a.race))}, ${raceWhen(a)}${a.race.dist ? ', ' + a.race.dist + 'm' : ''}</span>
+      <span class="ln">${esc(raceLabel(a.race))}, ${raceWhen(a)}${a.race.dist ? ', ' + a.race.dist + 'm' : ''} ${clsChip(a.race)}</span>
       <span class="ln m">${[jockeyTxt(r), r.bar ? 'barrier ' + r.bar : ''].filter(Boolean).join(', ') || '&nbsp;'}</span></td>
     <td class="c-wy"><p class="wy" title="${esc(shortWhy(s))}">${esc(shortWhy(s))}</p><span class="sub">${whyBtn(s)}${pickBtn(a.race.id, r)}${o.promo ? '<span class="tag promo">Promo</span>' : ''}</span></td>
     <td class="c-ch"><span class="v">${pct(ch, 0)}</span><small>fair ${ch > 0 ? odds$(1 / ch) : '—'}</small></td>
@@ -2581,6 +2603,20 @@ function classLvl(s) {
   if (/open|quality|stakes|\bhcp\b|handicap|\bcup\b/i.test(s)) return 80;
   return null;
 }
+// Race class as a short label for the chip: mdn = maidens; lo = Class 1-2 and BM up to 64; md = Class 3-6, BM 65-78
+// and handicaps; hi = BM 79 and up, open, Listed and Group races
+function raceClass(name) {
+  const x = String(name || ''); let m;
+  if ((m = /\bG(?:roup)? ?([123])\b/i.exec(x))) return { t: 'Group ' + m[1], k: 'hi' };
+  if (/listed|\bLR\b/i.test(x)) return { t: 'Listed', k: 'hi' };
+  if ((m = /\b(BM|RST?|Rating)\s?(\d{2,3})\b/i.exec(x))) { const n = +m[2]; return { t: (/^bm$/i.test(m[1]) ? 'BM' : 'Rating ') + n, k: n >= 79 ? 'hi' : n >= 65 ? 'md' : 'lo' }; }
+  if ((m = /\b(?:Cls|CL|Class|C)\s?([1-6])\b/i.exec(x))) return { t: 'Class ' + m[1], k: +m[1] >= 3 ? 'md' : 'lo' };
+  if (/maiden|\bmdn\b/i.test(x)) return { t: 'Maiden', k: 'mdn' };
+  if (/open|quality|stakes|\bcup\b/i.test(x)) return { t: 'Open', k: 'hi' };
+  if (/\bhcp\b|handicap/i.test(x)) return { t: 'Handicap', k: 'md' };
+  return null;
+}
+const clsChip = race => { const c = raceClass(race && race.name); return c ? `<span class="rcls ${c.k}" title="Race class">${esc(c.t)}</span>` : ''; };
 function classMove(race, r) {
   if (!r.ls || !r.ls.cl) return null;
   const a = classLvl(race.name), b = classLvl(r.ls.cl); if (a === null || b === null) return null;
@@ -2872,7 +2908,7 @@ function tpRow(p) {
   const { a, r, o, conf, danger, reasons, value, safePl } = p, ms = startMs(a.race), bk = inBlackbook(r.name);
   const isVal = value === r;
   return `<div class="tpk-r" data-act="gorace" data-race="${a.race.id}" role="button" tabindex="0">
-    <span class="no">R${a.race.no}<small>${isFinite(ms) ? clockTxt(ms) : (a.race.dist ? a.race.dist + 'm' : '')}</small></span>
+    <span class="no">R${a.race.no}<small>${isFinite(ms) ? clockTxt(ms) : (a.race.dist ? a.race.dist + 'm' : '')}</small>${clsChip(a.race)}</span>
     ${silk(r.name)}
     <span class="who"><b>${bk ? '★ ' : ''}#${r.n} ${esc(r.name)}</b><span class="sub">${isFinite(ms) ? cdSpan(ms) : ''}${agreeChip(a, r)}${moneyChip(r)}<span class="m-only num">${odds$(r.win)} · ${pct(r.p, 0)}</span>${reasons.map(x => `<span class="rsn">${esc(x)}</span>`).join('')}</span>
       <span class="sub">${danger ? `<span>Danger: #${danger.n} ${esc(danger.name)} (${odds$(danger.win)})</span>` : ''}${safePl ? `<span>Safer: place ${odds$(r.place)}, ${pct(r.pPl, 0)} to place</span>` : ''}</span>${noteLine(a.race.id)}${noteLine(a.race.id + ':' + r.n)}<span class="acts-r tp-acts">${pickBtn(a.race.id, r)}${sbLink(a.race, true)}${copyBtn(a.race, r, null, true)}</span></span>
@@ -3099,7 +3135,7 @@ function raceLine(a) {
   if (!t) return '';
   const planned = a.act.filter(r => r.plan), stake = planned.reduce((s, r) => s + r.plan.stake, 0);
   return `<button class="rl" data-act="race" data-race="${a.race.id}">
-    <span class="no">R${a.race.no}</span><span class="dist">${isFinite(startMs(a.race)) ? clockTxt(startMs(a.race)) + '<br>' : ''}${a.race.dist ? a.race.dist + 'm' : ''}</span>
+    <span class="no">R${a.race.no}${clsChip(a.race)}</span><span class="dist">${isFinite(startMs(a.race)) ? clockTxt(startMs(a.race)) + '<br>' : ''}${a.race.dist ? a.race.dist + 'm' : ''}</span>
     <span class="pk">${silk(t.name)}<span class="cloth lead">${t.n}</span><b>${esc(t.name)}</b>${(() => { const bp = bestPickOf(a); return bp ? `<span class="tag bestp" title="Best pick: ${esc(bp.name)}">${bp === t ? 'Best pick' : 'Best #' + bp.n}</span>` : ''; })()}</span>
     <span class="n">${odds$(t.win)}</span><span class="n pc muted">${pct(t.p, 0)}</span>
     <span class="bet">${a.closed ? `<span class="muted">${Array.isArray(a.race.result) && a.race.result.length ? 'Result ' + a.race.result.join('-') : 'Run'}</span>` : stake ? `<span class="tag promo">${money(stake)} · ${planned.length} bet${planned.length > 1 ? 's' : ''}</span>` : '<span class="muted">No bet</span>'}</span>
@@ -3562,7 +3598,7 @@ function raceCard(a) {
   let h = `<article class="card race">${a.closed ? '' : cdBar(startMs(r0))}
     <div class="race-h">
       <div><h2>${esc(r0.venue)} R${r0.no}</h2><div class="sub">${esc(r0.name || '')}</div>
-        <div class="facts">${isFinite(startMs(r0)) ? `<span>Jumps <b>${clockTxt(startMs(r0))}</b></span>${a.closed ? '' : cdSpan(startMs(r0))}` : ''}${r0.dist ? `<span><b>${r0.dist}m</b></span>` : ''}${r0.track ? `<span>${esc(r0.track)}</span>` : ''}<span><b>${a.n}</b> runners</span><span>${a.places ? `<b>${a.places}</b> places paid` : 'No place betting'}</span><span>Margin <b>${pct(a.book - 1, 0)}</b></span>${r0.updatedAt ? `<span>Odds ${timeTxt(r0.updatedAt)}</span>` : ''}${inRace && !a.closed ? `<span class="tag promo">${money(inRace)} staked here</span>` : ''}${a.closed ? `<span class="tag">${res ? 'Result ' + res.join('-') : 'Race run'}</span>` : ''}</div>
+        <div class="facts">${clsChip(r0)}${isFinite(startMs(r0)) ? `<span>Jumps <b>${clockTxt(startMs(r0))}</b></span>${a.closed ? '' : cdSpan(startMs(r0))}` : ''}${r0.dist ? `<span><b>${r0.dist}m</b></span>` : ''}${r0.track ? `<span>${esc(r0.track)}</span>` : ''}<span><b>${a.n}</b> runners</span><span>${a.places ? `<b>${a.places}</b> places paid` : 'No place betting'}</span><span>Margin <b>${pct(a.book - 1, 0)}</b></span>${r0.updatedAt ? `<span>Odds ${timeTxt(r0.updatedAt)}</span>` : ''}${inRace && !a.closed ? `<span class="tag promo">${money(inRace)} staked here</span>` : ''}${a.closed ? `<span class="tag">${res ? 'Result ' + res.join('-') : 'Race run'}</span>` : ''}</div>
         ${(r0.scr || []).length ? `<div class="facts"><span>Scratched: ${esc(r0.scr.join(', '))}</span></div>` : ''}
         <div class="race-note">${noteBox(r0.id, 'Note on this race, e.g. watch the pace, track bias', 'Race note')}</div>
         <div class="facts"><span>Chances from <b>${a.nBooks > 1 ? a.books.map(k => bookOf(k).name).join(' + ') : 'Sportsbet only'}</b></span>${a.ctx && a.ctx.src === 'tab' ? '<span>Pace from TAB speed map</span>' : ''}${a.ctx && a.ctx.bias && (Math.abs(a.ctx.bias.inside) >= .2 || Math.abs(a.ctx.bias.lead) >= .2) ? `<span class="tag str">${biasTxt(a.ctx.bias)}</span>` : ''}</div></div>
@@ -3573,7 +3609,7 @@ function raceCard(a) {
     ${speedMap(a)}
     <div class="rr-h"><span></span><span>Runner</span><span>Sportsbet · flucs</span><span>Chance</span><span>Your bet</span><span></span></div>
     ${a.rs.map(r => runnerRow(a, r)).join('')}
-    ${a.closed ? '' : `<div class="cleg"><span><i style="background:var(--chi)"></i>High chance (25%+)</span><span><i style="background:var(--cmd)"></i>Mid (10–25%)</span><span><i style="background:var(--clo)"></i>Low (under 10%)</span>${bestPickOf(a) ? '<span><i style="background:var(--best)"></i>Best pick</span>' : '<span>No best pick: nothing clears the betting bar at these prices</span>'}</div>`}
+    ${a.closed ? '' : `<div class="cleg"><span class="cl-hi"><i style="background:var(--chi)"></i>High chance (25%+)</span><span class="cl-md"><i style="background:var(--cmd)"></i>Mid (10–25%)</span><span class="cl-lo"><i style="background:var(--clo)"></i>Low (under 10%)</span>${bestPickOf(a) ? '<span class="cl-best"><i style="background:var(--best)"></i>Best pick</span>' : '<span class="cl-none">No best pick: nothing clears the betting bar at these prices</span>'}</div>`}
   </article>`;
   h += `<p class="muted" style="font-size:.85rem">${liveOn() ? 'Prices refresh about 8am Perth on race mornings, then again in the hour before each race.' : 'Prices are from the saved card.'} Type a live price into any box (edited boxes turn yellow) or paste the full card in Paste card.${(r0.tips || []).length ? ' Sportsbet tipster: ' + r0.tips.join('-') + '.' : ''}</p>`;
   return h;
