@@ -196,7 +196,7 @@
   let gate = null, mode = 'in';
   function showGate() {
     if (gate) return;
-    const pre = document.getElementById('splash'); if (pre && pre.classList.contains('pre')) pre.remove();
+    if (window.lsSplashReady) window.lsSplashReady(); // the start-up splash finishes, then fades to this sign-in screen
     const st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
     gate = document.createElement('div'); gate.id = 'lsgate';
     gate.innerHTML = `<form novalidate>
