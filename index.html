@@ -933,8 +933,9 @@ svg.plc .hit{fill:transparent;cursor:crosshair}
 .rk-r .p small{font-weight:700}
 .rk-r .p small.pos{color:var(--pos)} .rk-r .p small.neg{color:var(--neg)}
 .t11-h{margin-top:6px}
-.t11{overflow-x:auto}
-.t11 table{width:100%;min-width:900px;table-layout:fixed;border-collapse:collapse;font-variant-numeric:tabular-nums}
+/* Top 10 never scrolls sideways: the full table when there's room for it (940px+), stacked rows when there isn't */
+.t11{container:t11/inline-size}
+.t11 table{width:100%;table-layout:fixed;border-collapse:collapse;font-variant-numeric:tabular-nums}
 .t11 .w-rk{width:40px}.t11 .w-sk{width:50px}.t11 .w-ch{width:66px}.t11 .w-fm{width:100px}.t11 .w-rc{width:94px}.t11 .w-pr{width:116px}.t11 .w-bt{width:140px}
 .t11 th{font-size:.78rem;font-weight:600;color:var(--muted);text-align:left;padding:10px 6px 8px;background:var(--surface-2);border-bottom:1px solid var(--line)}
 .t11 th.r{text-align:right}
@@ -948,13 +949,13 @@ svg.plc .hit{fill:transparent;cursor:crosshair}
 .t11 .sbox :is(.silk,.silkpic){width:30px;height:33px}
 .t11 .c-hn,.t11 .c-wy{min-width:0}
 .t11 .hn{display:flex;gap:8px;align-items:center;min-width:0}
-.t11 .hn b{font-size:1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.t11 .hn b{font-size:1rem;overflow-wrap:anywhere}
 .t11 .hn .tier{flex:none}
 .t11 .sub{display:flex;flex-wrap:wrap;gap:2px 8px;align-items:center;font-size:.8rem;margin-top:2px}
 .t11 .sub.m{color:var(--muted)}
-.t11 .ln{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:.8rem;margin-top:2px}
+.t11 .ln{display:block;overflow-wrap:anywhere;font-size:.8rem;margin-top:2px}
 .t11 .ln.m{color:var(--muted)}
-.t11 .wy{margin:0;font-size:.84rem;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.t11 .wy{margin:0;font-size:.84rem;line-height:1.35}
 .t11 .c-wy .sub{gap:4px;margin-top:4px}
 .t11 .c-ch{white-space:nowrap}
 .t11 .c-ch .v,.t11 .rc .v{font-weight:700}
@@ -974,6 +975,19 @@ svg.plc .hit{fill:transparent;cursor:crosshair}
 .t11 .bt{display:grid;justify-items:end;gap:4px}
 .t11 tr.wyx td{padding:0 14px 12px;border-top:0}
 @media (max-width:760px){
+  .t11 table{min-width:0;display:block}
+  .t11 colgroup,.t11 thead{display:none}
+  .t11 tbody{display:block}
+  .t11 tr.row{display:grid;grid-template-columns:30px 42px minmax(0,1fr) auto;grid-template-areas:"rk sk hn pr" "wy wy wy bt" "ch ch fm rc";gap:8px 10px;align-items:center;padding:12px 14px;border-top:1px solid var(--line)}
+  .t11 tbody tr.row:first-child{border-top:0}
+  .t11 tr.row td{display:block;padding:0;border:0}
+  .t11 .c-rk{grid-area:rk}.t11 .c-sk{grid-area:sk}.t11 .c-hn{grid-area:hn}.t11 .c-pr{grid-area:pr}.t11 .c-wy{grid-area:wy}.t11 .c-ch{grid-area:ch}.t11 .c-fm{grid-area:fm}.t11 .c-rc{grid-area:rc}.t11 .c-bt{grid-area:bt}
+  .t11 tr.wyx{display:block}.t11 tr.wyx td{display:block;padding:0 14px 12px}
+  .t11 .hn .tier{display:none}
+  .t11 .c-bt{align-self:start}
+  .t11 .c-rc .rc{justify-content:flex-end}
+}
+@container t11 (max-width:939px){
   .t11 table{min-width:0;display:block}
   .t11 colgroup,.t11 thead{display:none}
   .t11 tbody{display:block}
@@ -1010,7 +1024,7 @@ svg.plc .hit{fill:transparent;cursor:crosshair}
 /* ===== Horse profile, speed map, compare, track guide, bet slip, tracker extras ===== */
 .hname{appearance:none;border:0;background:none;padding:0;margin:0;font:inherit;color:inherit;text-align:left;cursor:pointer;text-decoration:underline;text-decoration-color:color-mix(in srgb,currentColor 30%,transparent);text-underline-offset:3px}
 .hname:hover{text-decoration-color:currentColor}
-.t11 .hn .hname{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+.t11 .hn .hname{overflow-wrap:anywhere;max-width:100%}
 .sheet.hp,.sheet.cmpw,.sheet.slip{width:min(760px,100%);max-height:min(88vh,100% - 20px);gap:14px;padding:18px 20px}
 @media (min-width:900px){.sheet-bg:has(.hp,.cmpw,.slip){place-items:center}}
 .hp-h{display:flex;gap:14px;align-items:center}
