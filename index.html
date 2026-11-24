@@ -604,6 +604,19 @@ html.noanim .pxa{display:none}
 .why .lead{font-weight:600}
 .why ul{margin:0;padding-left:18px;display:grid;gap:2px}
 .why .pro li::marker{color:var(--pos)} .why .con li::marker{color:var(--neg)}
+.dayrev{padding:16px;display:grid;gap:14px;margin:4px 0 16px;border-top:4px solid var(--yellow)}
+.dr-h{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}.dr-h h3{margin:0;font-size:1.25rem}
+.dr-tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.dr-tile{display:grid;gap:2px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--surface-2);min-width:0}
+.dr-tile .k{font-size:.74rem;color:var(--muted);text-transform:none}.dr-tile .v{font-family:var(--mono);font-size:1.35rem;font-weight:700}.dr-tile .muted{font-size:.8rem;overflow-wrap:anywhere}
+.dr-tile .v.pos{color:var(--pos)}.dr-tile .v.neg{color:var(--neg)}
+.dr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:6px}
+.dr-c{appearance:none;font:inherit;color:inherit;text-align:left;cursor:pointer;display:grid;grid-template-columns:26px minmax(0,1fr);gap:8px;align-items:center;padding:6px 8px;border:1px solid var(--line);border-left-width:4px;border-radius:10px;background:var(--surface)}
+.dr-c :is(.silk,.silkpic){width:24px;height:27px}.dr-c:hover{border-color:var(--ink)}
+.dr-c.dr-w{border-left-color:var(--pos)}.dr-c.dr-p{border-left-color:#e8b434}.dr-c.dr-x{border-left-color:color-mix(in srgb,var(--ink) 22%,transparent)}
+.dr-t{display:grid;min-width:0;line-height:1.25}.dr-r{font-size:.72rem;color:var(--muted)}.dr-t b{font-size:.9rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.dr-s{font-size:.76rem;color:var(--muted)}
+.dr-l h4{margin:0 0 6px;font-size:1rem}.dr-l ul{margin:0;padding-left:20px;display:grid;gap:6px}.dr-l li{line-height:1.45}
+@media (max-width:760px){.dr-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}.dr-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.dayrev{padding:12px}}
 .podium{display:grid;gap:12px;padding:16px}.podium .ph{display:flex;align-items:baseline;gap:10px}.podium .ph h3{margin:0}
 .pod-g{display:grid;gap:12px;align-items:end;grid-template-columns:1fr 1.18fr 1fr;width:100%}
 .pod-g.pod-c2{grid-template-columns:1fr 1.18fr}.pod-g.pod-c1{grid-template-columns:minmax(0,320px);justify-content:start}
@@ -2264,6 +2277,72 @@ function renderSaveNote() {
 }
 
 /* ============================ SNIPES ============================ */
+// Day review on the front page once the day's racing is over: today's results, then what the day taught us, all worked out
+// from the results, the race cards and the prices we had before each race.
+function dayReview(C) {
+  const D = Live.date, list = C.list.filter(a => a.race.date === D);
+  if (!list.length) return '';
+  const done = list.filter(a => Array.isArray(a.race.result) && a.race.result.length), lastMs = Math.max(...list.map(a => startMs(a.race)).filter(isFinite));
+  if (done.length < list.length && !(done.length >= list.length * 0.8 && Date.now() - lastMs > 45 * 60000)) return '';
+  const fin = Live.fin[D] || {}, N = done.length, ordTxt = (k, n) => `${k} of ${n}`;
+  const spOf = (a, n) => { const x = (fin[a.race.id] || []).find(y => y[0] === n); const r = a.act.find(y => y.n === n) || a.rs.find(y => y.n === n); return (x && x[3] > 1 ? x[3] : r && r.win) || 0; };
+  let topW = 0, topPl = 0, expW = 0, favW = 0, h2hW = 0, roughies = [], sumSp = 0;
+  const tiers = { hi: [0, 0], md: [0, 0], lo: [0, 0] }, pace = {}, inside = [0, 0], watchWon = [], ourBets = { n: 0, w: 0, ret: 0 };
+  const moved = { firm: [0, 0], drift: [0, 0] };
+  const chips = done.map(a => {
+    const res = a.race.result, wn = res[0], W = a.act.find(r => r.n === wn) || a.rs.find(r => r.n === wn) || { n: wn, name: '#' + wn }, sp = spOf(a, wn);
+    const top = a.ranked[0], pos = top ? res.indexOf(top.n) : -1, fav = a.act.slice().sort((x, y) => x.win - y.win)[0];
+    if (top) { expW += top.p || 0; if (pos === 0) topW++; if (pos >= 0 && pos < (a.places || 3)) topPl++;
+      const t = top.p >= 0.25 ? 'hi' : top.p >= 0.10 ? 'md' : 'lo'; tiers[t][1]++; if (pos === 0) tiers[t][0]++; }
+    if (fav && fav.n === wn) favW++;
+    sumSp += sp; if (sp >= 10) roughies.push({ a, W, sp });
+    const v = a.race.venue, e = String(W.esp || '').toLowerCase(), g = /lead|^pace|on pace/.test(e) ? 'on' : /back|off midfield/.test(e) ? 'back' : e ? 'mid' : '';
+    if (g) { const x = pace[v] || (pace[v] = { on: 0, mid: 0, back: 0, n: 0 }); x[g]++; x.n++; }
+    if (W.bar) { inside[1]++; if (W.bar <= 4) inside[0]++; }
+    if ((W.hh || []).some(h => h[3] < h[4] && a.act.some(q => q.n === h[0]))) h2hW++;
+    a.act.forEach(r => { const op = r.flucs && r.flucs[0], now = r.win; if (!(op > 1 && now > 1)) return; const ch = (now - op) / op;
+      if (ch <= -0.15) { moved.firm[1]++; if (r.n === wn) moved.firm[0]++; } else if (ch >= 0.25) { moved.drift[1]++; if (r.n === wn) moved.drift[0]++; } });
+    const pk = racePickOf(a);
+    if (pk) { const own = ownOf(pk.o), ppos = res.indexOf(pk.r.n);
+      if (own.ev >= barOf(own)) { ourBets.n++; const ret = payout(pk.o, a, ppos); ourBets.ret += ret; if (ret > 0) ourBets.w++; }
+      else if (ppos === 0) { const tg = targetFor(a, pk.r); watchWon.push({ a, r: pk.r, sp: spOf(a, pk.r.n), tg }); } }
+    const cls = pos === 0 ? 'dr-w' : pos > 0 && pos < (a.places || 3) ? 'dr-p' : 'dr-x';
+    const tag = !top ? '' : pos === 0 ? 'Top pick won' : pos > 0 && pos < (a.places || 3) ? `Top pick ${ordN(pos + 1)}` : 'Top pick missed';
+    return `<button class="dr-c ${cls}" data-act="gorace" data-race="${a.race.id}">${silkPic(W)}<span class="dr-t"><span class="dr-r">${esc(a.race.venue)} R${a.race.no}</span><b>${esc(W.name)}</b><span class="dr-s">${sp > 1 ? odds$(sp) : ''}${tag ? ' · ' + tag : ''}</span></span></button>`;
+  });
+  const big = done.map(a => { const n = a.race.result[0]; return { a, sp: spOf(a, n), W: a.act.find(x => x.n === n) || a.rs.find(x => x.n === n) }; }).sort((x, y) => y.sp - x.sp)[0] || {};
+  // your own bets on the day
+  const mine = S.bets.filter(b => String(b.raceId || '').startsWith(D + '_') && b.result !== 'pending');
+  const myPl = mine.reduce((t, b) => { const x = settle(b); return t + x.ret - x.staked; }, 0), myW = mine.filter(b => { const x = settle(b); return x.ret > x.staked; }).length;
+  const tiles = [
+    ['Races', `${N}`, `Favourites won ${favW} · top pick won ${topW}`],
+    ['Your bets', mine.length ? `${myPl >= 0 ? '+' : '−'}${money(Math.abs(myPl), 2)}` : 'None', mine.length ? `${myW} of ${mine.length} won` : 'No bets logged today', mine.length ? (myPl >= 0 ? 'pos' : 'neg') : ''],
+    ['Our bets', ourBets.n ? `${ourBets.ret - ourBets.n >= 0 ? '+' : '−'}${money(Math.abs(ourBets.ret - ourBets.n) * 10, 2)}` : 'None', ourBets.n ? `${ourBets.w} of ${ourBets.n} paid, at $10 each` : 'Every pick stayed on Watch', ourBets.n ? (ourBets.ret >= ourBets.n ? 'pos' : 'neg') : ''],
+    ['Biggest price', big.sp > 1 ? odds$(big.sp) : '—', big.W ? `${big.W.name}, ${raceLabel(big.a.race)}` : '']
+  ];
+  // what we learnt, most telling first
+  const L = [];
+  const diff = topW - expW;
+  L.push({ s: 99, t: `Our top pick won ${ordTxt(topW, N)} races and placed in ${topPl}. The ratings expected about ${Math.round(expW)} wins, so ${Math.abs(diff) < 1.5 ? 'they were about right today' : diff > 0 ? 'they did better than expected today' : 'it was a tougher day than the ratings expected'}.` });
+  const tl = [['hi', 'High chance (25%+)'], ['md', 'Mid (10–25%)'], ['lo', 'Low (under 10%)']].filter(([k]) => tiers[k][1]).map(([k, l]) => `${l} won ${ordTxt(tiers[k][0], tiers[k][1])}`);
+  if (tl.length) L.push({ s: 90, t: `By chance group, our top picks went: ${tl.join('; ')}.` });
+  const favExp = N / 3; L.push({ s: Math.abs(favW - favExp) * 10, t: `Favourites won ${ordTxt(favW, N)} (usually about 1 in 3)${favW >= favExp + 2 ? ', so the market had the day mostly right' : favW <= favExp - 2 ? ', so there was value away from the favourites' : ''}.` });
+  if (moved.firm[1] >= 3) { const fr = moved.firm[0] / moved.firm[1], dr = moved.drift[1] ? moved.drift[0] / moved.drift[1] : 0;
+    L.push({ s: 40 + fr * 60, t: `Late money: horses that firmed 15% or more from the opening price won ${ordTxt(moved.firm[0], moved.firm[1])}${moved.drift[1] ? `, while ones that drifted 25% or more won ${ordTxt(moved.drift[0], moved.drift[1])}` : ''}.${fr > dr + 0.15 ? ' Following the money paid off.' : fr + 0.1 < dr ? ' The drifters did better than the firmers today.' : ''}` }); }
+  Object.entries(pace).forEach(([v, x]) => { if (x.n < 4) return; const on = x.on / x.n, bk = x.back / x.n;
+    if (on >= 0.6) L.push({ s: 50 + on * 40, t: `${v} suited horses up on the speed: ${ordTxt(x.on, x.n)} winners led or sat on the pace. Next time there, favour the on-pace runners.` });
+    else if (bk >= 0.45) L.push({ s: 50 + bk * 40, t: `${v} suited horses ridden from behind: ${ordTxt(x.back, x.n)} winners came from off midfield or the back.` });
+    else L.push({ s: 20, t: `${v} raced fairly: winners came from all parts of the field (${x.on} on the pace, ${x.mid} midfield, ${x.back} from the back).` }); });
+  if (inside[1] >= 6) { const r = inside[0] / inside[1]; if (r >= 0.6 || r <= 0.25) L.push({ s: 30 + Math.abs(r - 0.4) * 80, t: `Barriers: ${ordTxt(inside[0], inside[1])} winners drew 1 to 4${r >= 0.6 ? ', so inside draws counted' : ', so wide draws were no problem'}.` }); }
+  if (h2hW >= 2) L.push({ s: 35 + h2hW * 4, t: `Form lines held: in ${h2hW} races the winner had already beaten one of the horses it met again.` });
+  if (watchWon.length) L.push({ s: 55, t: `${watchWon.length === 1 ? 'One Watch pick' : watchWon.length + ' Watch picks'} won without reaching its bet price: ${watchWon.slice(0, 3).map(x => `${x.r.name} at ${odds$(x.sp)}${x.tg ? ' (needed ' + odds$(x.tg) + ')' : ''}`).join('; ')}. The bar kept us out because the price was too short for the chance we gave it.` });
+  if (roughies.length >= 3) L.push({ s: 45, t: `A day for roughies: ${roughies.length} winners paid $10 or more (${roughies.slice(0, 3).map(x => `${x.W.name} ${odds$(x.sp)}`).join(', ')}).` });
+  const lessons = [...L.slice(0, 2), ...L.slice(2).sort((x, y) => y.s - x.s).slice(0, 4)];
+  return `<section class="card dayrev"><div class="dr-h"><h3>${D === perthToday() ? "Today's results" : 'Results for ' + esc(dateTxt(D))}</h3><span class="muted">${N} races${done.length < list.length ? ` of ${list.length} resulted` : ''} · ${[...new Set(done.map(a => a.race.venue))].map(esc).join(' and ')}</span></div>
+    <div class="dr-tiles">${tiles.map(([k, v, sub, cls]) => `<div class="dr-tile"><span class="k">${k}</span><span class="v ${cls || ''}">${esc(v)}</span><span class="muted">${esc(sub)}</span></div>`).join('')}</div>
+    <div class="dr-grid">${chips.join('')}</div>
+    <div class="dr-l"><h4>What we learnt</h4><ul>${lessons.map(x => `<li>${esc(x.t)}</li>`).join('')}</ul></div></section>`;
+}
 function renderSnipes(C) {
   if (booting()) {
     $('#v-snipes').innerHTML = `<div class="skel" aria-busy="true" aria-label="Loading race cards"><i class="sk-h"></i><i class="sk-p"></i><i class="sk-hero"></i>${'<i class="sk-r"></i>'.repeat(6)}</div>`;
@@ -2271,7 +2350,7 @@ function renderSnipes(C) {
   }
   const st = S.settings, P = C.plan, B = st.bankroll, all = snipes(C), picks = pickList(C), list = bestPicks(picks, 'all');
   const promosOn = st.bb.on || st.boost.on;
-  let h = dayBar() + searchBox() + `<div class="head-row"><h2>${isScout() ? 'Snipes for ' + esc(dateTxt(Live.date)) : "Today's snipes"}</h2><p>The best bets from every open race: horses priced above what they're worth, with a real chance of winning.</p></div>` + scoutNote();
+  let h = dayBar() + searchBox() + `<div class="head-row"><h2>${isScout() ? 'Snipes for ' + esc(dateTxt(Live.date)) : "Today's snipes"}</h2><p>The best bets from every open race: horses priced above what they're worth, with a real chance of winning.</p></div>` + scoutNote() + dayReview(C);
   { const ms = [...new Set(C.list.map(a => a.race.slug))], on = S.settings.snipeMeets || [];
     if (ms.length > 1) h += `<div class="seg" role="group" aria-label="Meetings on Snipes" style="flex-wrap:wrap">${ms.map(sl => { const a = C.list.find(x => x.race.slug === sl); return `<button data-act="snmeet" data-slug="${esc(sl)}" aria-pressed="${!on.length || on.includes(sl)}">${esc(a.race.venue)}</button>`; }).join('')}<button data-act="snmeet" data-slug="*" aria-pressed="${!on.length}">All</button></div>`; }
   if (P && P.guard && P.guard.msg) h += `<div class="card panel" style="border-left:4px solid #d33"><b>Bank protection:</b> ${esc(P.guard.msg)}</div>`;
