@@ -841,6 +841,18 @@ footer .wrap{display:grid;gap:6px}
 .cal-d{height:30px;flex-direction:row!important;gap:8px;border-radius:6px;background:rgba(15,30,60,.04);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:.78rem;line-height:1.1}
 .cal-d i{font-style:normal;font-size:.68rem;font-weight:700}
 .cal-d.now{outline:2px solid #ffd200}
+.tkc{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px;margin-top:8px}
+.tkc-h{text-align:center;font-size:.72rem;color:var(--muted);font-weight:700;padding-bottom:2px}
+.tkc-d{min-height:60px;border-radius:9px;padding:6px 8px;display:flex;flex-direction:column;justify-content:space-between;border:1px solid var(--line);background:var(--surface);min-width:0}
+.tkc-d.off{border-color:transparent;background:none}
+.tkc-n{font-size:.74rem;color:var(--muted)}
+.tkc-d b{font-family:var(--mono);font-size:.95rem;white-space:nowrap;overflow:hidden;text-overflow:clip}
+.tkc-d.up{background:rgba(16,138,96,var(--a));border-color:transparent}.tkc-d.lo{background:rgba(205,48,48,var(--a));border-color:transparent}
+.tkc-d.up:not(.strong):not(.mid) b{color:var(--pos)}.tkc-d.lo:not(.strong):not(.mid) b{color:var(--neg)}.tkc-d.mid b{color:var(--ink)}.tkc-d.mid .tkc-n{color:var(--ink);opacity:.75}
+.tkc-d.strong{color:#fff}.tkc-d.strong .tkc-n{color:inherit;opacity:.85}
+.tkc-d.now{outline:2px solid var(--yellow);outline-offset:-2px}
+.tkc-f{margin:8px 0 0;font-size:.84rem}
+@media (max-width:560px){.tkc{gap:3px}.tkc-d{min-height:44px;padding:4px 4px;border-radius:7px}.tkc-d b{font-size:.68rem;letter-spacing:-.02em}.tkc-n{font-size:.64rem}}
 #winban{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(10,34,64,.75);z-index:9999;text-align:center;color:#fff}
 #winban.on{display:flex}
 @keyframes wbp{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:none}}
@@ -4703,18 +4715,25 @@ function tkInsights(bets) {
   const badge = (t, bg) => `<span style="width:30px;height:30px;border-radius:50%;background:${bg};color:#fff;display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:.8rem;flex:none">${t}</span>`;
   return box('Top horses', horses, r => silk(r.k)) + box('Top jockeys', jocks, r => badge(esc(r.k.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()), '#1e3a5f')) + box('Best tracks', tracks, (r) => badge(esc(r.k.slice(0, 2).toUpperCase()), '#0b7a3e'));
 }
+// Month calendar on the tracker: every day Monday to Sunday, coloured by the day's profit or loss (stronger colour = bigger day)
 function tkCal(all) {
   const today = perthToday(); TK.mon = TK.mon || today.slice(0, 7);
   const [y, m] = TK.mon.split('-').map(Number), first = new Date(y, m - 1, 1), days = new Date(y, m, 0).getDate();
-  const byDay = {}; all.forEach(b => { if (b.result === 'pending') return; const d = perthDay(b.ts); if (d.slice(0, 7) !== TK.mon) return; byDay[d] = (byDay[d] || 0) + plOfBet(b); });
-  const tot = Object.values(byDay).reduce((a, b) => a + b, 0);
-  const cell = (d) => { if (!d) return '<span class="cal-d off"></span>'; const k = `${TK.mon}-${String(d).padStart(2, '0')}`, v = byDay[k];
-    const bg = v === undefined ? '' : v >= 0 ? `background:rgba(31,157,85,${Math.min(.85, .3 + v / 200)});color:#fff` : `background:rgba(214,45,45,${Math.min(.85, .3 - v / 200)});color:#fff`;
-    return `<span class="cal-d ${k === today ? 'now' : ''}" style="${bg}"><b>${d}</b><i>${v === undefined ? '–' : (v >= 0 ? '+' : '') + Math.round(v)}</i></span>`; };
-  const weeks = []; let w = null;
-  for (let d = 1; d <= days; d++) { const dow = new Date(y, m - 1, d).getDay(); if (dow !== 3 && dow !== 6) continue; if (dow === 3 || !w) { w = [0, 0]; weeks.push(w); } w[dow === 3 ? 0 : 1] = d; }
+  const byDay = {}, nDay = {}; all.forEach(b => { if (b.result === 'pending') return; const d = perthDay(b.ts); if (d.slice(0, 7) !== TK.mon) return; byDay[d] = (byDay[d] || 0) + plOfBet(b); nDay[d] = (nDay[d] || 0) + 1; });
+  const ks = Object.keys(byDay), tot = ks.reduce((a, k) => a + byDay[k], 0), big = Math.max(60, ...ks.map(k => Math.abs(byDay[k])));
+  const up = ks.filter(k => byDay[k] > 0).length, down = ks.filter(k => byDay[k] < 0).length, best = ks.sort((a, b) => byDay[b] - byDay[a])[0];
+  const amt = v => (v >= 0 ? '+' : '−') + '$' + Math.round(Math.abs(v));
+  const cell = d => { const k = `${TK.mon}-${String(d).padStart(2, '0')}`, v = byDay[k];
+    if (v === undefined) return `<div class="tkc-d ${k === today ? 'now' : ''}"><span class="tkc-n">${d}</span></div>`;
+    const a = 0.22 + 0.68 * Math.min(1, Math.abs(v) / big);
+    return `<div class="tkc-d ${v >= 0 ? 'up' : 'lo'}${a > 0.6 ? ' strong' : a > 0.42 ? ' mid' : ''}${k === today ? ' now' : ''}" style="--a:${a.toFixed(2)}" title="${esc(dateTxt(k))}: ${nDay[k]} bet${nDay[k] > 1 ? 's' : ''}, ${amt(v)}"><span class="tkc-n">${d}</span><b>${amt(v)}</b></div>`; };
+  const lead = (first.getDay() + 6) % 7;
+  let g = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(x => `<span class="tkc-h">${x}</span>`).join('') + '<div class="tkc-d off"></div>'.repeat(lead);
+  for (let d = 1; d <= days; d++) g += cell(d);
   const mn = first.toLocaleDateString('en-AU', { month: 'short', year: 'numeric' });
-  return `<div class="card panel cal-w"><div style="display:flex;align-items:center;justify-content:space-between;gap:6px"><button class="btn sm link" data-act="tkmon" data-d="-1">‹</button><b>${mn} <span class="${tot >= 0 ? 'pos' : 'neg'}">${tot >= 0 ? '+' : ''}${money(tot)}</span></b><button class="btn sm link" data-act="tkmon" data-d="1">›</button></div><div class="cal"><span class="cal-h">Wed</span><span class="cal-h">Sat</span>${weeks.map(([a, b]) => cell(a) + cell(b)).join('')}</div></div>`;
+  return `<div class="card panel cal-w"><div style="display:flex;align-items:center;justify-content:space-between;gap:6px"><button class="btn sm link" data-act="tkmon" data-d="-1" aria-label="Previous month">‹</button><b>${mn} <span class="${tot >= 0 ? 'pos' : 'neg'}">${tot >= 0 ? '+' : ''}${money(tot)}</span></b><button class="btn sm link" data-act="tkmon" data-d="1" aria-label="Next month">›</button></div>
+    <div class="tkc">${g}</div>
+    <p class="tkc-f muted">${ks.length ? `${ks.length} betting day${ks.length > 1 ? 's' : ''} · ${up} up, ${down} down${best && byDay[best] > 0 ? ` · best day ${esc(dateTxt(best))} ${amt(byDay[best])}` : ''}` : 'No settled bets this month'}</p></div>`;
 }
 function tkPromos(bets) {
   const pb = bets.filter(b => b.promo || b.promoBack);
