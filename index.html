@@ -604,6 +604,18 @@ html.noanim .pxa{display:none}
 .why .lead{font-weight:600}
 .why ul{margin:0;padding-left:18px;display:grid;gap:2px}
 .why .pro li::marker{color:var(--pos)} .why .con li::marker{color:var(--neg)}
+.podium{display:grid;gap:10px}.podium .ph{display:flex;align-items:baseline;gap:10px}.podium .ph h3{margin:0}
+.pod-g{display:grid;gap:12px;align-items:end;grid-template-columns:1fr 1.18fr 1fr;max-width:760px;margin:0 auto;width:100%}
+.pod-g.pod-c2{grid-template-columns:1fr 1.18fr;max-width:520px}.pod-g.pod-c1{grid-template-columns:minmax(0,300px);justify-content:center}
+.pod{display:flex;flex-direction:column;align-items:center;text-align:center;gap:3px;padding:12px 10px 14px;border:1px solid var(--line);border-radius:14px;background:var(--surface-2);min-width:0}
+.pod1{border:2px solid #e8b434;padding:16px 10px 18px;background:color-mix(in srgb,#e8b434 7%,var(--surface))}
+.pod-b{font-size:.72rem;font-weight:700;border-radius:999px;padding:2px 9px;margin-bottom:4px}
+.pod1 .pod-b{background:#f6d58a;color:#4a3300}.pod2 .pod-b{background:#dfe2e8;color:#2e3440}.pod3 .pod-b{background:#f1c3a4;color:#5a2a0c}
+.pod :is(.silk,.silkpic).pod-sk{width:44px;height:50px;margin:2px 0 4px}.pod1 :is(.silk,.silkpic).pod-sk{width:58px;height:66px}
+.pod-n{font-size:1rem;overflow-wrap:anywhere;line-height:1.2}.pod1 .pod-n{font-size:1.12rem}
+.pod-m{font-size:.8rem;color:var(--muted);overflow-wrap:anywhere}
+.pod-p{font-family:var(--mono);font-weight:700;color:var(--pos);font-size:1.25rem;margin-top:4px}.pod1 .pod-p{font-size:1.6rem}
+@media (max-width:560px){.pod-g{gap:6px}.pod{padding:10px 5px 12px}.pod :is(.silk,.silkpic).pod-sk{width:34px;height:39px}.pod1 :is(.silk,.silkpic).pod-sk{width:44px;height:50px}.pod-n{font-size:.86rem}.pod1 .pod-n{font-size:.95rem}.pod-m{font-size:.72rem}.pod-p{font-size:1rem}.pod1 .pod-p{font-size:1.25rem}.pod-b{font-size:.64rem;padding:2px 6px}}
 .fl{margin:6px 0 14px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);display:grid;gap:8px}
 .fl-h{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}.fl-h h3{margin:0;font-size:1.05rem}.fl-h .muted{font-size:.8rem}
 .fl-row{display:grid;grid-template-columns:40px 30px minmax(120px,230px) minmax(40px,1fr) 56px;align-items:center;gap:10px}
@@ -4616,6 +4628,34 @@ function tkCSV() {
   const csv = rows.map(r => r.map(x => `"${String(x == null ? '' : x).replace(/"/g, '""')}"`).join(',')).join('\n');
   (async () => { try { const dl = window.claude && await claude.use('downloads'); if (!dl) { toast('Download not available here'); return; } await dl.save({ filename: 'lightz-bets-' + perthToday() + '.csv', data: new Blob([csv], { type: 'text/csv' }) }); } catch (e) { if (e && e.code !== 'declined') toast('Download cancelled'); } })();
 }
+// Real silks for a bet: saved on the bet, else the race card's runner, else the same horse on any loaded card
+// (owners' colours follow the horse). Falls back to the app's stand-in silk.
+let SILKS = { n: -1, m: new Map() };
+function silkByName() {
+  const days = Object.values(Live.cards || {}), n = days.reduce((t, d) => t + Object.keys(d || {}).length, 0) + Object.values(Live.fin || {}).reduce((t, d) => t + Object.keys(d || {}).length, 0) * 1e4;
+  if (n === SILKS.n) return SILKS.m;
+  const m = new Map(); days.forEach(d => Object.values(d || {}).forEach(c => (c.runners || []).forEach(r => { if (r.silk && /^https:\/\//.test(r.silk)) m.set(normName(r.name), { silk: r.silk, j: r.j }); })));
+  Object.values(Live.fin || {}).forEach(d => Object.values(d || {}).forEach(f => (f || []).forEach(x => { if (x[4] && /^https:\/\//.test(x[5] || '') && !m.has(normName(x[4]))) m.set(normName(x[4]), { silk: x[5] }); })));
+  return (SILKS = { n, m }).m;
+}
+function betRunner(b) {
+  const race = b.raceId ? poolRaces().find(x => x.id === b.raceId) : null;
+  const r = race ? (race.runners || []).find(x => (b.n && x.n === b.n) || normName(x.name) === normName(b.name)) : null, byName = silkByName().get(normName(b.name));
+  return { name: b.name, j: b.j || (r && r.j) || (byName && byName.j) || '', silk: b.silk || (r && r.silk) || (byName && byName.silk) || '' };
+}
+// Top 3 biggest wins (profit), as a podium: biggest in the middle. Follows the tracker filters.
+function topWins(bets) {
+  const wins = bets.map(b => { const s = settle(b); return { b, pl: s.ret - s.staked }; }).filter(x => x.b.result !== 'pending' && x.pl > 0).sort((x, y) => y.pl - x.pl).slice(0, 3);
+  if (!wins.length) return '';
+  const tile = (x, i) => { const b = x.b, r = betRunner(b), d = b.ts ? new Date(b.ts).toLocaleDateString('en-AU', { timeZone: 'Australia/Perth', day: 'numeric', month: 'short' }) : '';
+    const what = b.type === 'multi' ? esc(b.label || 'Multi') : `${money(b.stake, 2).replace(/\.00$/, '')}${b.type === 'bonus' ? ' bonus' : ''} @ ${odds$(b.odds)}`;
+    return `<div class="pod pod${i + 1}"><span class="pod-b">${['Biggest win', '2nd biggest', '3rd biggest'][i]}</span>${silkPic(r, 'pod-sk')}
+      <b class="pod-n">${esc(b.name)}</b><span class="pod-m">${esc(b.type === 'multi' ? (b.legs || []).length + ' legs' : b.race || '')}${d ? ' · ' + d : ''}</span>
+      <span class="pod-m">${what}${r.j ? ' · ' + esc(jName(r.j)) : ''}</span><span class="pod-p">+${money(x.pl, 2).replace(/\.00$/, '')}</span></div>`; };
+  const order = wins.length === 3 ? [1, 0, 2] : wins.length === 2 ? [1, 0] : [0];
+  return `<div class="card podium"><div class="ph"><h3>Biggest wins</h3><span class="muted">${{ all: 'All time', month: 'This month', week: 'This week', today: 'Today' }[TK.per] || ''}</span></div>
+    <div class="pod-g pod-c${wins.length}">${order.map(i => tile(wins[i], i)).join('')}</div></div>`;
+}
 function renderTracker() {
   loadClosed(); VSTATE = null;
   const all = S.bets;
@@ -4657,7 +4697,7 @@ function renderTracker() {
     <div><div class="k">Return on stakes</div><div class="v"${staked ? ` data-count="${profit / staked}" data-fmt="ev" data-ck="tk-roi"` : ''}>${staked ? evTxt(profit / staked) : '—'}</div><div class="s">${money(staked, 2)} staked</div></div>
     <div><div class="k">Running</div><div class="v" data-count="${open}" data-fmt="money2" data-ck="tk-open">${money(open, 2)}</div><div class="s">${bonus ? money(bonus, 2) + ' bonus won' : best ? 'best ' + esc(best.b.name) + ' +' + money(best.pl) : 'pending'}</div></div>
   </div>`;
-  h += plChart(series) + tierChart(bets);
+  h += topWins(bets) + plChart(series) + tierChart(bets);
   h += tkWeekly(all) + tkMoney(bets) + tkBank(all);
   if (TK.book === 'all' && books.length > 1) {
     h += `<div class="card panel"><h3>By bookie</h3><table class="tbl" style="width:100%">${books.map(k => { const bs = bets.filter(b => bookName(b) === k && b.result !== 'pending'); const p = bs.reduce((x, b) => x + plOfBet(b), 0), st = bs.reduce((x, b) => x + settle(b).staked, 0), w = bs.filter(b => settle(b).ret > 0).length; return `<tr><td>${esc(k)}</td><td class="num">${bs.length} bets</td><td class="num">${bs.length ? Math.round(w / bs.length * 100) : 0}%</td><td class="num ${p >= 0 ? 'pos' : 'neg'}"><b>${p >= 0 ? '+' : ''}${money(p, 2)}</b></td><td class="num muted">${st ? evTxt(p / st) : ''}</td></tr>`; }).join('')}</table></div>`;
@@ -4868,7 +4908,7 @@ function openLog(raceId, n, type, planStake) {
     if (type === 'bonus') evNow = r.p * (oddsTaken - 1);
     else { const ratio = (oddsTaken - 1) / (o.odds - 1); evNow = o.outs.reduce((s, [q, x], i) => s + q * (i === 0 ? x * ratio : x), 0); }
     const id = 'bet-' + Date.now().toString(36) + Math.floor(Math.random() * 1296).toString(36);
-    const bet = { ts: Date.now(), raceId: a.race.id, race: raceLabel(a.race), n: r.n, name: r.name, j: r.j || '', type: o.type, label: o.label, odds: oddsTaken, stake: stk, ev: evNow, places: a.places, positions: o.positions || null, bbMax: o.bbMax || null, refund: o.refund || null, result: 'pending' };
+    const bet = { ts: Date.now(), raceId: a.race.id, race: raceLabel(a.race), n: r.n, name: r.name, j: r.j || '', silk: /^https:\/\//.test(r.silk || '') ? r.silk : '', type: o.type, label: o.label, odds: oddsTaken, stake: stk, ev: evNow, places: a.places, positions: o.positions || null, bbMax: o.bbMax || null, refund: o.refund || null, result: 'pending' };
     S.bets.push(Object.assign({ id }, bet)); Store.put(id, bet);
     closeSheet(); renderAll(); toast('Bet saved to tracker');
   });
