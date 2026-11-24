@@ -3744,7 +3744,7 @@ function finishLine(a) {
     const tags = (pk && pk.n === x.n ? '<span class="tag bestp">Our pick</span>' : '') + (betOn(x.r) ? '<span class="tag promo">Your bet</span>' : '');
     return `<div class="fl-row${i === 0 ? ' fl-win' : ''}"><span class="fl-pl ${cls}">${ordN(x.pl)}</span>${silkPic(x.r)}<span class="fl-nm"><b>${esc(x.r.name)}</b> <span class="muted">#${x.n}${i > 0 && x.sp > 1 ? ' · ' + odds$(x.sp) : ''}</span>${tags}</span><span class="fl-bar"><i class="${cls}" style="width:${Math.max(8, Math.round(w))}%"></i></span><span class="fl-r">${right}</span></div>`; };
   const pkIn = pk && rows.some(x => x.n === pk.n), pkPos = pk && Array.isArray(r0.result) ? r0.result.indexOf(pk.n) : -1;
-  return `<section class="fl"><div class="fl-h"><h3>Result</h3><span class="muted">${Array.isArray(r0.fin) && r0.fin.length ? 'Bars show lengths behind the winner' : 'Margins come with the evening results'}</span></div>
+  return `<section class="fl"><div class="fl-h"><h3>Result</h3><span class="muted">${lens.slice(1).some(v => v != null) ? 'Bars show lengths behind the winner' : 'Margins come in later, with the evening results'}</span></div>
     ${rows.map(line).join('')}
     ${pk && !pkIn ? `<p class="muted fl-note">Our pick ${esc(pk.name)} ${pkPos >= 4 ? 'ran ' + ordN(pkPos + 1) : 'missed the first four'}.</p>` : ''}</section>`;
 }
