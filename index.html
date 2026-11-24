@@ -604,6 +604,18 @@ html.noanim .pxa{display:none}
 .why .lead{font-weight:600}
 .why ul{margin:0;padding-left:18px;display:grid;gap:2px}
 .why .pro li::marker{color:var(--pos)} .why .con li::marker{color:var(--neg)}
+.fl{margin:6px 0 14px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);display:grid;gap:8px}
+.fl-h{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}.fl-h h3{margin:0;font-size:1.05rem}.fl-h .muted{font-size:.8rem}
+.fl-row{display:grid;grid-template-columns:40px 30px minmax(120px,230px) minmax(40px,1fr) 56px;align-items:center;gap:10px}
+.fl-row :is(.silk,.silkpic){width:26px;height:29px}
+.fl-nm{min-width:0;overflow-wrap:anywhere;line-height:1.25}.fl-nm .tag{margin-left:6px;font-size:.68rem}
+.fl-pl{font-size:.74rem;font-weight:700;border-radius:999px;padding:2px 0;text-align:center}
+.fl-bar{height:9px;border-radius:5px;background:color-mix(in srgb,var(--ink) 7%,transparent);overflow:hidden}.fl-bar i{display:block;height:100%;border-radius:5px}
+.fl-r{font-family:var(--mono);font-size:.82rem;text-align:right;color:var(--muted)}.fl-win .fl-r{color:var(--ink);font-weight:700}
+.fl-pl.fl-p1{background:#f6d58a;color:#4a3300}.fl-pl.fl-p2{background:#dfe2e8;color:#2e3440}.fl-pl.fl-p3{background:#f1c3a4;color:#5a2a0c}.fl-pl.fl-p4{background:color-mix(in srgb,var(--ink) 9%,transparent);color:var(--muted)}
+.fl-bar i.fl-p1{background:#e8b434}.fl-bar i.fl-p2{background:#a9b0bd}.fl-bar i.fl-p3{background:#d98a55}.fl-bar i.fl-p4{background:color-mix(in srgb,var(--ink) 28%,transparent)}
+.fl-note{margin:2px 0 0;font-size:.85rem}
+@media (max-width:640px){.fl-row{grid-template-columns:36px 28px minmax(0,1fr) 50px;row-gap:4px}.fl-bar{grid-column:3/5;grid-row:2;height:6px}.fl-row .fl-r{grid-row:1;grid-column:4}}
 .story{margin:0;padding-left:18px;display:grid;gap:3px}.story li::marker{color:var(--muted)}.story li.sp::marker{color:var(--pos)}.story li.sn::marker{color:var(--neg)}
 .story li.sp::marker,.story li.sn::marker{font-weight:700}
 .why .k{font-size:.68rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
@@ -1435,7 +1447,7 @@ const DEFAULTS = {
 const clone = o => JSON.parse(JSON.stringify(o));
 const S = { tab: 'snipes', meet: null, raceId: null, tier: 'all', rtier: (() => { try { const v = localStorage.getItem('ls.rtier'); return ['low', 'mid', 'high'].includes(v) ? v : 'low'; } catch (e) { return 'low'; } })(), settings: clone(DEFAULTS), odds: {}, imported: [], bets: [], blackbook: [], open: new Set(), impPreview: null, pickDate: null,
   legs: [], q: { meet: null, set: 'main', budget: 20, picks: {} }, calWeek: null, why: new Set(), noteOpen: new Set(), shortlist: [], notes: {}, search: '' };
-const Live = { db: null, promos: [], days: [], date: null, cards: {}, raw: {}, res: {}, resAt: {}, odds: {}, oddsAt: {}, unsub: null, closed: null, closedAt: 0, closedBusy: false, cal: {} };
+const Live = { db: null, promos: [], days: [], date: null, cards: {}, raw: {}, res: {}, resAt: {}, fin: {}, odds: {}, oddsAt: {}, unsub: null, closed: null, closedAt: 0, closedBusy: false, cal: {} };
 // "Now a bet" alerts: the plan before the last price update, and the bets already announced
 const NOWBET = { tick: false, prev: null, said: null };
 function mergeSettings(s) {
@@ -1518,8 +1530,8 @@ const saveBlackbook = () => Store.putSoon('blackbook', { list: S.blackbook });
 // Race cards written by the race-day loads: days/<date> (index) and cards/<date>_<track>_r<no> (written once, the night before).
 // Later updates land in two small per-day docs laid over the cards: odds/<date> (prices, scratchings, track) and results/<date>.
 function ovCard(date, c) {
-  const rs = Live.res[date] && Live.res[date][c.id], ox = Live.odds[date] && Live.odds[date][c.id];
-  if (!rs && !ox) return c;
+  const rs = Live.res[date] && Live.res[date][c.id], ox = Live.odds[date] && Live.odds[date][c.id], fin = Live.fin[date] && Live.fin[date][c.id];
+  if (!rs && !ox && !fin) return c;
   const o = Object.assign({}, c);
   if (ox) {
     if (ox.track) o.track = ox.track;
@@ -1533,17 +1545,18 @@ function ovCard(date, c) {
     if (ox.at) o.lateAt = ox.at;
   }
   if (rs) { o.status = 'closed'; o.result = rs; }
+  if (Array.isArray(fin) && fin.length) { o.fin = fin; o.status = 'closed'; if (!rs) o.result = fin.map(x => x[0]); }
   return o;
 }
 function ovMap(date) { const m = Live.raw[date] || {}, out = {}; Object.keys(m).forEach(k => { out[k] = ovCard(date, m[k]); }); return out; }
 function reOverlay() { Object.keys(Live.raw).forEach(d => { Live.cards[d] = ovMap(d); }); }
 function watchLive(db) {
   Live.db = db;
-  // Results: one small doc per race day, { r: { raceId: [1st, 2nd, 3rd, 4th] } }
+  // Results: one small doc per race day, { r: { raceId: [1st, 2nd, 3rd, 4th] }, f: { raceId: [[n, place, margin, SP, name, silk], ...first four] } }
   try {
     db.collection('results').onSnapshot(snap => {
-      const m = {}, at = {}; snap.docs.forEach(d => { if (d.exists) { const x = d.data(); if (x && x.date && x.r) { m[x.date] = x.r; at[x.date] = x.updatedAt; } } });
-      Live.res = m; Live.resAt = at; reOverlay(); loadClosed(true); autoSettle(); renderAll();
+      const m = {}, at = {}, f = {}; snap.docs.forEach(d => { if (d.exists) { const x = d.data(); if (x && x.date && (x.r || x.f)) { m[x.date] = x.r || {}; at[x.date] = x.updatedAt; if (x.f) f[x.date] = x.f; } } });
+      Live.res = m; Live.resAt = at; Live.fin = f; reOverlay(); loadClosed(true); autoSettle(); renderAll();
     }, () => {});
   } catch (e) {}
   // Prices, scratchings and track ratings refreshed on race mornings, { races: { raceId: { track, scr: [n], px: { n: [win, place] } } } }
@@ -3561,6 +3574,26 @@ window.lsUpcoming = async (fromMin = 8, toMin = 70, D) => {
     .sort((x, y) => x.ms - y.ms)
     .map(x => ({ id: x.c.id, path: String(x.c.url || '').replace(/^https?:\/\/(www\.)?sportsbet\.com\.au/, ''), jumps: clockTxt(x.ms), mins: Math.round((x.ms - now) / 60000), label: raceLabel(x.c) }));
 };
+// Races that jumped at least minAgo minutes ago and have no finish saved yet (for the results reads), [{id, path, label}]
+window.lsFinished = async (minAgo = 8, D) => {
+  const day = D || perthToday();
+  if (Live.db && Live.date !== day) { S.pickDate = day; subscribeDay(day); }
+  for (let i = 0; i < 20 && !Object.keys(Live.cards[day] || {}).length; i++) await new Promise(r => setTimeout(r, 400));
+  const now = Date.now(), fin = Live.fin[day] || {};
+  return Object.values(Live.cards[day] || {}).filter(c => !fin[c.id]).map(c => ({ c, ms: startMs(c) })).filter(x => isFinite(x.ms) && now - x.ms >= minAgo * 60000)
+    .sort((x, y) => x.ms - y.ms).map(x => ({ id: x.c.id, path: String(x.c.url || '').replace(/^https?:\/\/(www\.)?sportsbet\.com\.au/, ''), label: raceLabel(x.c) }));
+};
+// Saves finishes read with the reader's 'result' mode into results/<D>: lsResults(D, { raceId: { fin: [[n, place, margin, SP, name, silk], ...] } }, note)
+window.lsResults = async (D, races, note) => {
+  if (!window.lsGet || !window.lsWrite) throw new Error('lsResults needs the signed-in app');
+  const old = (await window.lsGet('results/' + D)) || {}, r = Object.assign({}, old.r || {}), f = Object.assign({}, old.f || {}), done = [];
+  Object.entries(races || {}).forEach(([id, x]) => { const fin = x && Array.isArray(x.fin) ? x.fin.filter(y => Array.isArray(y) && y[0] > 0 && y[1] > 0) : [];
+    if (!fin.length) return; f[id] = fin.slice(0, 6); if (!Array.isArray(r[id]) || r[id].length < fin.length) r[id] = fin.map(y => y[0]); done.push(id); });
+  const nowIso = new Date().toISOString(), doc = { date: D, updatedAt: nowIso, note: note || old.note || 'Sportsbet results', r, f };
+  const w = await window.lsWrite([{ op: 'set', path: 'results/' + D, data: doc }]);
+  Live.res[D] = r; Live.fin[D] = f; Live.resAt[D] = nowIso; reOverlay(); try { renderAll(); } catch (e) {}
+  return { written: w.written, saved: done.length, races: done };
+};
 window.lsLate = async (D, races, note) => {
   if (!window.lsGet || !window.lsWrite) throw new Error('lsLate needs the signed-in app');
   const old = (await window.lsGet('odds/' + D)) || {}, out = Object.assign({}, old.races || {});
@@ -3695,6 +3728,26 @@ const BKCOL = { Sportsbet: '#0a2240;color:#ffd200', TABtouch: '#6a2cd8', TAB: '#
 const cdBar = ms => isFinite(ms) ? `<div class="cdbar" data-start="${ms}"><i></i></div>` : '';
 function cdBarPaint() { document.querySelectorAll('.cdbar[data-start]').forEach(el => { const d = +el.dataset.start - Date.now(), f = Math.max(0, Math.min(1, d / 7200000)); const i = el.firstChild; if (!i) return; i.style.width = (d <= 0 ? 100 : (1 - f) * 100).toFixed(1) + '%'; i.style.background = d <= 0 ? '#9aa4b2' : d < 5 * 60000 ? '#d62d2d' : d < 20 * 60000 ? '#f0a020' : '#1f9d55'; }); }
 setInterval(cdBarPaint, 15000);
+// Finish line for a run race: the first four home with their silks, bars showing how far behind the winner each finished.
+// Uses the finish saved by the results run (place, margin, starting price); older days only have the first three numbers.
+const lenOf = m => { const t = String(m || '').trim().toUpperCase(), x = /^(\d+(?:\.\d+)?)L?$/.exec(t);
+  return x ? +x[1] : { NSE: .05, NOSE: .05, SHD: .1, SH: .1, HD: .2, HFHD: .1, NK: .3, LNK: .4, DH: 0 }[t.replace(/[^A-Z]/g, '')] ?? null; };
+function finishLine(a) {
+  const r0 = a.race, src = Array.isArray(r0.fin) && r0.fin.length ? r0.fin : Array.isArray(r0.result) && r0.result.length ? r0.result.slice(0, 4).map((n, i) => [n, i + 1]) : null;
+  if (!src) return '';
+  const byN = new Map((a.rs || a.act).map(r => [r.n, r])), pk = bestPickOf(a) || a.ranked[0];
+  const myBets = S.bets.filter(b => b.raceId === r0.id), betOn = r => myBets.some(b => (b.n && b.n === r.n) || normName(b.name) === normName(r.name));
+  const rows = src.slice(0, 4).map((x, i) => { const [n, pl, mg, sp, nm, sk] = x, c = byN.get(n) || {}; return { n, pl: pl || i + 1, mg, sp, r: Object.assign({ n, name: nm || '#' + n }, c, !c.silk && sk ? { silk: sk } : {}) }; });
+  const lens = rows.map((x, i) => i === 0 ? 0 : lenOf(x.mg)), maxL = Math.max(3, ...lens.filter(v => v != null));
+  const line = (x, i) => { const L = lens[i], w = i === 0 ? 100 : L != null ? 100 - (L / maxL) * 50 : 100 - i * 12, cls = 'fl-p' + Math.min(x.pl, 4);
+    const right = i === 0 ? (x.sp > 1 ? odds$(x.sp) : '') : (x.mg ? esc(x.mg) : '');
+    const tags = (pk && pk.n === x.n ? '<span class="tag bestp">Our pick</span>' : '') + (betOn(x.r) ? '<span class="tag promo">Your bet</span>' : '');
+    return `<div class="fl-row${i === 0 ? ' fl-win' : ''}"><span class="fl-pl ${cls}">${ordN(x.pl)}</span>${silkPic(x.r)}<span class="fl-nm"><b>${esc(x.r.name)}</b> <span class="muted">#${x.n}${i > 0 && x.sp > 1 ? ' · ' + odds$(x.sp) : ''}</span>${tags}</span><span class="fl-bar"><i class="${cls}" style="width:${Math.max(8, Math.round(w))}%"></i></span><span class="fl-r">${right}</span></div>`; };
+  const pkIn = pk && rows.some(x => x.n === pk.n), pkPos = pk && Array.isArray(r0.result) ? r0.result.indexOf(pk.n) : -1;
+  return `<section class="fl"><div class="fl-h"><h3>Result</h3><span class="muted">${Array.isArray(r0.fin) && r0.fin.length ? 'Bars show lengths behind the winner' : 'Margins come with the evening results'}</span></div>
+    ${rows.map(line).join('')}
+    ${pk && !pkIn ? `<p class="muted fl-note">Our pick ${esc(pk.name)} ${pkPos >= 4 ? 'ran ' + ordN(pkPos + 1) : 'missed the first four'}.</p>` : ''}</section>`;
+}
 function raceCard(a) {
   const r0 = a.race, inRace = a.act.filter(r => r.plan).reduce((s, r) => s + r.plan.stake, 0);
   const res = Array.isArray(r0.result) && r0.result.length ? r0.result : null;
@@ -3707,6 +3760,7 @@ function raceCard(a) {
         <div class="facts"><span>Chances from <b>${a.nBooks > 1 ? a.books.map(k => bookOf(k).name).join(' + ') : 'Sportsbet only'}</b></span>${a.ctx && a.ctx.src === 'tab' ? '<span>Pace from TAB speed map</span>' : ''}${a.ctx && a.ctx.bias && (Math.abs(a.ctx.bias.inside) >= .2 || Math.abs(a.ctx.bias.lead) >= .2) ? `<span class="tag str">${biasTxt(a.ctx.bias)}</span>` : ''}</div></div>
       <div class="ra">${a.closed ? '' : `<button class="btn sm ${PINS.has(r0.id) ? 'pri' : ''}" data-act="pinrace" data-race="${r0.id}">${PINS.has(r0.id) ? '📌 Pinned' : '📌 Pin'}</button>`}<a class="btn sm" href="${esc(r0.url || '#')}" target="_blank" rel="noopener">Sportsbet ↗</a><button class="btn sm" data-act="reset-race" data-race="${r0.id}">Reset prices</button></div>
     </div>
+    ${a.closed ? finishLine(a) : ''}
     ${pickBox(a)}
     ${raceStrip(a)}
     ${speedMap(a)}
