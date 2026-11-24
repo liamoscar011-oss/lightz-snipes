@@ -604,6 +604,8 @@ html.noanim .pxa{display:none}
 .why .lead{font-weight:600}
 .why ul{margin:0;padding-left:18px;display:grid;gap:2px}
 .why .pro li::marker{color:var(--pos)} .why .con li::marker{color:var(--neg)}
+.tag.valp{background:color-mix(in srgb,#1fa37a 16%,transparent);color:var(--pos);border:1px solid color-mix(in srgb,#1fa37a 45%,transparent);font-weight:700;white-space:nowrap}
+.valp-l{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.valp-l b{font-weight:700}.nx-v{font-size:.84rem}.nx-v .tag{font-size:.66rem;padding:1px 6px}
 .dayrev{padding:16px;display:grid;gap:14px;margin:4px 0 16px;border-top:4px solid var(--yellow)}
 .dr-h{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}.dr-h h3{margin:0;font-size:1.25rem}
 .dr-tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
@@ -2428,6 +2430,7 @@ function nextUp(C) {
     return `<button class="nx-c" data-act="gorace" data-race="${a.race.id}"><span class="nx-r">${esc(a.race.venue)} R${a.race.no}<i>${a.race.dist ? a.race.dist + 'm' : ''}</i></span>
       ${isFinite(ms) ? `<span class="nx-p"><span class="num">${clockTxt(ms)}</span>${cdSpan(ms)}</span>` : ''}
       <span class="nx-p">${pl ? `<span class="status go">Bet ${money(pl.plan.stake)}</span><b>${esc(pl.name)}</b>` : top ? `<span class="muted">Top</span><b>${esc(top.name)}</b><span class="num">${odds$(top.win)}</span>` : ''}</span>
+      ${(() => { const v = !pl ? valueAlt(a) : null; return v ? `<span class="nx-p nx-v" title="${esc(valueTip(v))}"><span class="tag valp">Value</span><b>${esc(v.r.name)}</b><span class="num">${odds$(v.r.win)}</span></span>` : ''; })()}
       ${bk ? `<span class="nx-p" style="color:#e0a800">★ <b>${esc(bk.name)}</b></span>` : ''}</button>`;
   }).join('')}</div></div>`;
 }
@@ -3118,7 +3121,8 @@ function tpRow(p) {
     <span class="no">R${a.race.no}<small>${isFinite(ms) ? clockTxt(ms) : (a.race.dist ? a.race.dist + 'm' : '')}</small>${clsChip(a.race)}</span>
     ${silk(r.name)}
     <span class="who"><b>${bk ? '★ ' : ''}#${r.n} ${esc(r.name)}</b><span class="sub">${isFinite(ms) ? cdSpan(ms) : ''}${agreeChip(a, r)}${moneyChip(r)}<span class="m-only num">${odds$(r.win)} · ${pct(r.p, 0)}</span>${reasons.map(x => `<span class="rsn">${esc(x)}</span>`).join('')}</span>
-      <span class="sub">${danger ? `<span>Danger: #${danger.n} ${esc(danger.name)} (${odds$(danger.win)})</span>` : ''}${safePl ? `<span>Safer: place ${odds$(r.place)}, ${pct(r.pPl, 0)} to place</span>` : ''}</span>${noteLine(a.race.id)}${noteLine(a.race.id + ':' + r.n)}<span class="acts-r tp-acts">${pickBtn(a.race.id, r)}${sbLink(a.race, true)}${copyBtn(a.race, r, null, true)}</span></span>
+      ${(() => { const v = r === a.ranked[0] ? valueAlt(a) : null; return v ? `<span class="sub valp-l" title="${esc(valueTip(v))}"><span class="tag valp">Value pick</span><b>#${v.r.n} ${esc(v.r.name)}</b> ${odds$(v.r.win)} · ${pct(v.r.p, 0)} chance · ${evTxt(v.ev)} edge</span>` : ''; })()}
+      <span class="sub">${danger && !(valueAlt(a) && valueAlt(a).r === danger) ? `<span>Danger: #${danger.n} ${esc(danger.name)} (${odds$(danger.win)})</span>` : ''}${safePl ? `<span>Safer: place ${odds$(r.place)}, ${pct(r.pPl, 0)} to place</span>` : ''}</span>${noteLine(a.race.id)}${noteLine(a.race.id + ':' + r.n)}<span class="acts-r tp-acts">${pickBtn(a.race.id, r)}${sbLink(a.race, true)}${copyBtn(a.race, r, null, true)}</span></span>
     <span class="n c-p">${odds$(r.win)}</span>
     <span class="n c-c muted">${pct(r.p, 0)}</span>
     <span class="cf">${conf ? `<span class="conf ${conf.k}" title="${esc(conf.tip)}">${conf.txt}</span>` : ''}${p.stake ? `<span class="status go">Bet ${money(p.stake)}</span>` : isVal ? `<span class="tag bestp">Value ${evTxt(ownOf(o).ev)}</span>` : p.near ? `<span class="status wait" title="Best price for its chance in this race, but not a bet yet">Closest to value ${evTxt(ownOf(o).ev)}</span>` : value ? `<span class="muted" style="font-size:.76rem">Value: #${value.n}</span>` : ''}</span>
@@ -3337,13 +3341,24 @@ function bestPickOf(a) {
   const planned = ok.filter(r => r.plan).sort((x, y) => y.plan.stake - x.plan.stake);
   return planned[0] || ok.sort((x, y) => y.own.ev - x.own.ev)[0];
 }
+// Value pick: when the race's top pick is under $2, the other horse we rate highest against its price
+// (biggest edge on a win bet, among horses we give a 15%+ chance). None when nobody is priced above what we think it's worth.
+const VALUE_TOP_MAX = 2, VALUE_MIN_P = 0.15;
+function valueAlt(a) {
+  if (!a || a.closed) return null;
+  if (a._va !== undefined) return a._va;
+  const top = a.ranked[0];
+  a._va = top && top.win > 1 && top.win < VALUE_TOP_MAX ? a.act.filter(r => r !== top && !r.scr && r.p >= VALUE_MIN_P && r.win > 1).map(r => ({ r, ev: r.p * r.win - 1 })).filter(x => x.ev > 0).sort((x, y) => y.ev - x.ev)[0] || null : null;
+  return a._va;
+}
+const valueTip = v => `Value pick: ${v.r.name} at ${odds$(v.r.win)}. We give it a ${pct(v.r.p, 0)} chance, so the price is ${evTxt(v.ev)} better than it should be. The top pick is under $2.`;
 function raceLine(a) {
   const t = a.ranked[0];
   if (!t) return '';
   const planned = a.act.filter(r => r.plan), stake = planned.reduce((s, r) => s + r.plan.stake, 0);
   return `<button class="rl" data-act="race" data-race="${a.race.id}">
     <span class="no">R${a.race.no}${clsChip(a.race)}</span><span class="dist">${isFinite(startMs(a.race)) ? clockTxt(startMs(a.race)) + '<br>' : ''}${a.race.dist ? a.race.dist + 'm' : ''}</span>
-    <span class="pk">${silk(t.name)}<span class="cloth lead">${t.n}</span><b>${esc(t.name)}</b>${(() => { const bp = bestPickOf(a); return bp ? `<span class="tag bestp" title="Best pick: ${esc(bp.name)}">${bp === t ? 'Best pick' : 'Best #' + bp.n}</span>` : ''; })()}</span>
+    <span class="pk">${silk(t.name)}<span class="cloth lead">${t.n}</span><b>${esc(t.name)}</b>${(() => { const bp = bestPickOf(a); return bp ? `<span class="tag bestp" title="Best pick: ${esc(bp.name)}">${bp === t ? 'Best pick' : 'Best #' + bp.n}</span>` : ''; })()}${(() => { const v = valueAlt(a); return v ? `<span class="tag valp" title="${esc(valueTip(v))}">Value #${v.r.n} ${odds$(v.r.win)}</span>` : ''; })()}</span>
     <span class="n">${odds$(t.win)}</span><span class="n pc muted">${pct(t.p, 0)}</span>
     <span class="bet">${a.closed ? `<span class="muted">${Array.isArray(a.race.result) && a.race.result.length ? 'Result ' + a.race.result.join('-') : 'Run'}</span>` : stake ? `<span class="tag promo">${money(stake)} · ${planned.length} bet${planned.length > 1 ? 's' : ''}</span>` : '<span class="muted">No bet</span>'}</span>
   </button>`;
@@ -3376,6 +3391,8 @@ function pickBox(a) {
   let h = `<div class="pick ${planned.length ? 'go' : ''}"><div class="pk-h">${planned.length ? `YOUR BET${planned.length > 1 ? 'S' : ''} IN THIS RACE` : 'NO BET IN THIS RACE'}</div>`;
   if (planned.length) h += planned.map(r => line(r, `${money(r.plan.stake)} ${shortLabel(r.plan.o)}`, r.plan.o.odds, chanceOfP(r, r.plan.o), r.plan.o.ev, betBtns(a, r, r.plan.o, r.plan.stake))).join('');
   else if (top) { const tg = targetFor(a, top); h += line(top, 'Most likely winner', top.win, top.p, top.p * top.win - 1, `<span class="status wait">${tg ? 'Watch · ' + odds$(tg) + '+' : 'No value'}</span>`); }
+  { const v = valueAlt(a); if (v && !(v.r.plan)) { const wo = (v.r.opts || []).find(o => o.type === 'win' && !o.promo), ok = wo && wo.ev >= barOf(wo), tg = targetFor(a, v.r);
+    h += `<div class="pk-h sub">VALUE PICK <span class="muted" style="font-weight:400;letter-spacing:0">the top pick is under $2</span></div>` + line(v.r, 'Value pick', v.r.win, v.r.p, v.ev, ok ? betBtns(a, v.r, wo, 0) : `<span class="status wait">${tg ? 'Watch · ' + odds$(tg) + '+' : 'Small edge'}</span>`); } }
   if (pl) { const planP = pl.r.plan && pl.r.plan.o.type === 'place', ok = pl.ev >= MIN_PLACE;
     h += `<div class="pk-h sub">BEST PLACE BET</div>` + line(pl.r, 'Place', pl.r.place, pl.r.pPl, pl.ev, planP ? '<span class="status go">In your plan</span>' : ok ? betBtns(a, pl.r, pl.r.opts.find(o => o.type === 'place') || pl.r.best, 0) : `<span class="status wait">Watch · ${odds$((1 + MIN_PLACE) / pl.r.pPl)}+</span>`); }
   return h + `</div>`;
@@ -3687,6 +3704,9 @@ window.lsResults = async (D, races, note) => {
   Live.res[D] = r; Live.fin[D] = f; Live.resAt[D] = nowIso; reOverlay(); try { renderAll(); } catch (e) {}
   return { written: w.written, saved: done.length, races: done };
 };
+// Read-only check of the value picks on the day on screen: [{race, top, topPrice, value, price, chance, edge}]
+window.lsValuePicks = (max = VALUE_TOP_MAX) => (LASTC || compute()).list.filter(a => !a.closed && a.ranked[0] && a.ranked[0].win < max).map(a => { const t = a.ranked[0], v = valueAlt(a), alt = a.act.filter(r => r !== t && r.win > 1).map(r => ({ r, ev: r.p * r.win - 1 })).sort((x, y) => y.ev - x.ev)[0];
+  return { race: raceLabel(a.race), top: t.name, topPrice: t.win, topChance: Math.round(t.p * 100), value: v ? v.r.name : null, price: v ? v.r.win : null, chance: v ? Math.round(v.r.p * 100) : null, edge: v ? Math.round(v.ev * 100) : null, bestOther: alt ? `${alt.r.name} $${alt.r.win} ${Math.round(alt.r.p * 100)}% ${Math.round(alt.ev * 100)}%` : null }; });
 window.lsLate = async (D, races, note) => {
   if (!window.lsGet || !window.lsWrite) throw new Error('lsLate needs the signed-in app');
   const old = (await window.lsGet('odds/' + D)) || {}, out = Object.assign({}, old.races || {});
