@@ -3574,13 +3574,15 @@ window.lsUpcoming = async (fromMin = 8, toMin = 70, D) => {
     .sort((x, y) => x.ms - y.ms)
     .map(x => ({ id: x.c.id, path: String(x.c.url || '').replace(/^https?:\/\/(www\.)?sportsbet\.com\.au/, ''), jumps: clockTxt(x.ms), mins: Math.round((x.ms - now) / 60000), label: raceLabel(x.c) }));
 };
-// Races that jumped at least minAgo minutes ago and have no finish saved yet (for the results reads), [{id, path, label}]
-window.lsFinished = async (minAgo = 8, D) => {
+// Races that jumped at least minAgo minutes ago and have no finish saved yet (for the results reads), [{id, path, label}].
+// With needMargins, also races whose saved finish has no margins yet (Sportsbet adds them a while after the race).
+window.lsFinished = async (minAgo = 8, D, needMargins) => {
   const day = D || perthToday();
   if (Live.db && Live.date !== day) { S.pickDate = day; subscribeDay(day); }
   for (let i = 0; i < 20 && !Object.keys(Live.cards[day] || {}).length; i++) await new Promise(r => setTimeout(r, 400));
   const now = Date.now(), fin = Live.fin[day] || {};
-  return Object.values(Live.cards[day] || {}).filter(c => !fin[c.id]).map(c => ({ c, ms: startMs(c) })).filter(x => isFinite(x.ms) && now - x.ms >= minAgo * 60000)
+  const want = c => !fin[c.id] || (needMargins && !fin[c.id].slice(1).some(y => y[2]));
+  return Object.values(Live.cards[day] || {}).filter(want).map(c => ({ c, ms: startMs(c) })).filter(x => isFinite(x.ms) && now - x.ms >= minAgo * 60000)
     .sort((x, y) => x.ms - y.ms).map(x => ({ id: x.c.id, path: String(x.c.url || '').replace(/^https?:\/\/(www\.)?sportsbet\.com\.au/, ''), label: raceLabel(x.c) }));
 };
 // Saves finishes read with the reader's 'result' mode into results/<D>: lsResults(D, { raceId: { fin: [[n, place, margin, SP, name, silk], ...] } }, note)
